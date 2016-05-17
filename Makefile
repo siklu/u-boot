@@ -182,8 +182,13 @@ export	ARCH CPU BOARD VENDOR SOC DDR3LIB DDRTYPE
 
 # set default to nothing for native builds
 ifeq ($(HOSTARCH),$(ARCH))
-CROSS_COMPILE ?=
+# CROSS_COMPILE ?=                                 #SIKLU changed, see line below
 endif
+
+# SIKLU Cross compiler defined explicitly here
+export CROSS_COMPILE := $(CROSS_COMPILE_UBOOT)
+export CROSS_COMPILE_BH := ${CROSS_COMPILE_UBOOT}
+
 
 # load other configuration
 include $(TOPDIR)/config.mk
