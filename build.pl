@@ -46,13 +46,23 @@ sub HELP_MESSAGE
 	print "Environment Variables:\n";
 	print "\tCROSS_COMPILE     Cross compiler to build U-BOOT\n";
 	print "\tCROSS_COMPILE_BH  Cross compiler to build bin hdr\n";
+	print "---------------\n";	
+	print "\t-t\tTarget platform. if value = SIKLU build binary for Siklu WIGIG board\n";
 	print "\n";
 }
 
 # Main
 use Getopt::Std;
 
-getopt('f:b:o:i:v:d:m:r:u:g:z:a:k:j:x:l:');
+getopt('f:b:o:i:v:d:m:r:u:g:z:a:k:j:x:l:t:');
+
+$siklu=0;
+if ((defined $opt_t) and ($opt_t eq "SIKLU")) {
+	printf "Configure code for Siklu WIGIG board\n";
+	$siklu=1;
+}
+
+
 
 if((!defined $opt_b) or
 	(!defined $opt_f)) {
@@ -277,7 +287,11 @@ if (($boardID eq "a38x") or
 		$rsa_opts = "";
 		$id_opts = "";
 	}
-
+	
+	if ($siklu eq "1")
+	{
+		system("echo \"#define MV_SIKLU_WIGIG_BOARD\" >> include/config.h");
+	}
 }
 
 
