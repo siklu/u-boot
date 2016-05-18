@@ -312,7 +312,9 @@ init_fnc_t *init_sequence[] = {
 	dram_init,         /* configure available RAM banks */
 	NULL,
 };
-
+/*
+ * init procedure in FLASH
+ */
 void board_init_f(ulong bootflag)
 {
 	bd_t *bd;
