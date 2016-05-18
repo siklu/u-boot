@@ -84,7 +84,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int dram_init(void)
 {
-	gd->ram_size = (phys_size_t)mvDramIfHwSizeGetFromWindows();
+	gd->ram_size = (phys_size_t)mvDramIfHwSizeGetFromWindows();// edikk extract here only DRAM size
 
 #ifdef MV_INC_DRAM_MFG_TEST
 	mvDramMfgTrst();
@@ -105,7 +105,7 @@ int dram_init(void)
 *		Currently reading only Fast Path windows
 *
 *******************************************************************************/
-MV_U32 mvDramIfHwSizeGetFromWindows(MV_VOID)
+MV_U32 mvDramIfHwSizeGetFromWindows(MV_VOID) // edikk
 {
 #if !defined(CONFIG_MACH_AVANTA_LP_FPGA)
 	MV_U32 base = 0;
@@ -309,3 +309,4 @@ static MV_STATUS mv_mem_cmp(MV_U32* pMem, MV_U32 pattern, MV_U32 count)
 }
 
 #endif /* MV_INC_DRAM_MFG_TEST */
+
