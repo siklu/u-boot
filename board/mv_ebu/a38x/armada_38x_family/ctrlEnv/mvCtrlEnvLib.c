@@ -187,7 +187,7 @@ MV_UNIT_ID mvCtrlSocUnitNums[MAX_UNITS_ID][MAX_DEV_ID_NUM] = {
 #define ON_BOARD_RGMII(x)	(0x1 << x)	/* bits 0,1,2,3 : RGMII port 0,1,2,3 indication */
 #define SERDES_SGMII(x)		(0x10 << x)	/* bits 4,5,6,7 : SGMII port 0,1,2,3 indication */
 #define SERDES_RXAUI(x)		(0x100 << x)	/* bits 8       : RXAUI port 0 indication */
-static MV_U32 ethComPhy;
+static MV_U32 ethComPhy; // edikk siklu board 1st and 2nd ports SGMII, 3rd TBD
 
 /* Only the first unit, only the second unit or both can be active on the specific board */
 static MV_BOOL sataUnitActive[MV_SATA_MAX_UNIT] = {MV_FALSE, MV_FALSE};

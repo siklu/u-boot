@@ -90,7 +90,7 @@
 *       Mode of the port
 *
 *******************************************************************************/
-MV_U32 mvBoardPortTypeGet(MV_U32 ethPortNum)
+MV_U32 mvBoardPortTypeGet(MV_U32 ethPortNum) // edikk Siklu board network type SGMII, eval board - RGMII
 {
 	if (mvBoardIsPortInSgmii(ethPortNum))
 		return MV_PORT_TYPE_SGMII;

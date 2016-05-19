@@ -808,7 +808,7 @@ struct MV_BOARD_IO_EXPANDER dbGP88f68XXInfoBoardioExpValue[] = {
 
 MV_U8 dbGP88f68XXInfoBoardPicGpio[] = {33, 34, 35};
 
-MV_BOARD_INFO dbGP88f68XX_board_info = {
+MV_BOARD_INFO dbGP88f68XX_board_info = { // edikk Marvell EVB uses this
 	.boardName			= "DB-88F6820-GP",
 	.compatibleDTName		= "a388-db-gp",
 	.numBoardNetComplexValue	= 0,

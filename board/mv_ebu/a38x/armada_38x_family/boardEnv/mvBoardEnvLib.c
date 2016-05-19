@@ -183,7 +183,7 @@ MV_VOID mvBoardEnvInit(MV_VOID)
 	}
 
 	/* Set GPP Out value */
-	MV_REG_WRITE(GPP_DATA_OUT_REG(0), board->gppOutValLow);
+	MV_REG_WRITE(GPP_DATA_OUT_REG(0), board->gppOutValLow);  // edikk example for GPIO control
 	MV_REG_WRITE(GPP_DATA_OUT_REG(1), board->gppOutValMid);
 	MV_REG_WRITE(GPP_DATA_OUT_REG(2), board->gppOutValHigh);
 
