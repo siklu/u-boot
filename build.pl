@@ -79,9 +79,14 @@ if((!defined $opt_b) or
 $cross    = $ENV{'CROSS_COMPILE'};
 $cross_bh = $ENV{'CROSS_COMPILE_BH'};
 if(!defined $opt_v){
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
-	$month = $mon + 1;
-	$opt_v = "$month-$mday";
+	# my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+	# $month = $mon + 1;
+	# $opt_v = "$month-$mday"; 
+	######  instead date and month add to file name svn version
+	$svn_info = `svn info 2>/dev/null | grep '^Last Changed Rev'`;
+    my ($text, $svn_ver) = split /:/, $svn_info;
+    $svn_ver =~ s/^\s*(.*?)\s*$/$1/; # remove white spaces
+    $opt_v = "svn$svn_ver";
 }
 if(!defined $cross){
 	printf " *** Error: Please set environment variables CROSS_COMPILE\n";
@@ -431,6 +436,9 @@ else {
 print "\n**** [Creating Image]\t*****\n\n";
 
 $failUart = system("./tools/marvell/doimage -T uart -D 0 -E 0 -G ./tools/marvell/bin_hdr/bin_hdr.uart.bin u-boot.bin u-boot-$boardID-$opt_v-$flash_name$targetBoard-uart.bin");
+#print "Create SPI image\n";
+#print "./tools/marvell/doimage -T $img_type -D 0x0 -E 0x0 $img_opts $rsa_opts $id_opts $extra_opt -G ./tools/marvell/bin_hdr/$bin_hdr_n u-boot.bin u-boot-$boardID-$opt_v-$flash_name$targetBoard.bin\n";
+#print "---------------\n";
 $fail = system("./tools/marvell/doimage -T $img_type -D 0x0 -E 0x0 $img_opts $rsa_opts $id_opts $extra_opt -G ./tools/marvell/bin_hdr/$bin_hdr_n u-boot.bin u-boot-$boardID-$opt_v-$flash_name$targetBoard.bin");
 
 if($fail){
