@@ -61,6 +61,7 @@ Copyright (C) Marvell International Ltd. and its affiliates
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 *******************************************************************************/
+#include "siklu_config.h"
 #include "config_marvell.h"     /* Required to identify SOC and Board */
 
 #include "ddr3_init.h"
@@ -212,15 +213,13 @@ MV_STATUS ddr3GetTopologyMap(MV_HWS_TOPOLOGY_MAP** tMap)
 	MV_U32 boardIdIndex = mvBoardIdIndexGet(mvBoardIdGet());
 	//MV_U32 oldBoardIdIndex = boardIdIndex;
 
-
+#ifdef MV_SIKLU_WIGIG_BOARD
 	// edikk dangerous for original Armada EVB!!!!!
 	// Siklu specific code: we put our definitions in last entry in a table,
 	// therefore set boardIdIndex to last index in a table
-	//int numEntriesInATable = sizeof(TopologyMap)/sizeof(MV_HWS_TOPOLOGY_MAP*);
 	boardIdIndex = 7;   // edikk disable this line for EVB!
 	// debugp("%s()  Called, line %d, boardIndex = %d, change it to %d\n", __func__, __LINE__, oldBoardIdIndex, boardIdIndex);// edikk
-
-
+#endif // MV_SIKLU_WIGIG_BOARD
 
 	/*Get topology data by board ID*/
 	if (sizeof(TopologyMap)/sizeof(MV_HWS_TOPOLOGY_MAP*) > boardIdIndex)
@@ -365,7 +364,7 @@ MV_U32 ddr3Init(void) // edikk !
 
 	/* Switching CPU to MRVL ID */
 	socNum = (MV_REG_READ(REG_SAMPLE_RESET_HIGH_ADDR) & SAR1_CPU_CORE_MASK) >> SAR1_CPU_CORE_OFFSET;
-	debugp("%s() Called for debug SIKLU board, socnum %d\n", __func__, socNum); // edikk
+
 	switch (socNum) {
 	case 0x3:
 		MV_REG_BIT_SET(CPU_CONFIGURATION_REG(3), CPU_MRVL_ID_OFFSET);
@@ -382,11 +381,8 @@ MV_U32 ddr3Init(void) // edikk !
 	 * i.e the DRAM values will not be overwritten / reset when waking from suspend*/
 	if (mvSysEnvSuspendWakeupCheck() == MV_SUSPEND_WAKEUP_ENABLED_GPIO_DETECTED) {
 		MV_REG_BIT_SET(REG_SDRAM_INIT_CTRL_ADDR, 1 << REG_SDRAM_INIT_RESET_MASK_OFFS);
-		debugp("%s() line %d\n",__func__, __LINE__);
 	}
-	else {
-		debugp("%s() line %d\n",__func__, __LINE__);
-	}
+
 
 	/************************************************************************************/
 	/* Stage 0 - Set board configuration                                                */
@@ -394,7 +390,6 @@ MV_U32 ddr3Init(void) // edikk !
 
 	/* Check if DRAM is already initialized  */
 	if (MV_REG_READ(REG_BOOTROM_ROUTINE_ADDR) & (1 << REG_BOOTROM_ROUTINE_DRAM_INIT_OFFS)) {
-		debugp("%s() line %d\n",__func__, __LINE__);
 		mvPrintf("%s Training Sequence - 2nd boot - Skip \n", ddrType);
 		return MV_OK;
 	}

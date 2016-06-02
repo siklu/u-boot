@@ -60,6 +60,7 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
+#include "siklu_config.h"
 #include "config_marvell.h"     /* Required to identify SOC and Board */
 #include "mv_os.h"
 #include "mvSysEnvLib.h"
@@ -841,6 +842,7 @@ MV_U32 mvSysEnvConfigGet(MV_CONFIG_TYPE_ID configField)
 #endif /* CONFIG_CMD_BOARDCFG */
 
 #ifdef MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI
+
 /*******************************************************************************
 * mvSysEnvGetTopologyUpdateInfo
 *

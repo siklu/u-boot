@@ -67,11 +67,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_INTERFACE_NUM  		(1)
 #define MAX_BUS_NUM        		(5)
-
+#include "siklu_config.h"
 #include "ddr3_hws_hw_training_def.h"
 
 /*Allow topolgy update from board TWSI device*/
-#if !defined(CONFIG_CUSTOMER_BOARD_SUPPORT)
+#if !defined(CONFIG_CUSTOMER_BOARD_SUPPORT) && !defined(MV_SIKLU_WIGIG_BOARD)
 # define MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI // edikk disable for siklu, enable for EVB!
 #endif
 
