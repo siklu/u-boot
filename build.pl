@@ -296,10 +296,11 @@ if (($boardID eq "a38x") or
 	if ($siklu eq "1")
 	{
 		system("echo \"#define MV_SIKLU_WIGIG_BOARD\" >> include/config.h");
+		#system("echo \"#define CONFIG_CUSTOMER_BOARD_SUPPORT 1\" >> include/config.h");
+		#system("echo \"#define CONFIG_CUSTOMER_BOARD_SKL 1\" >> include/config.h");   	# siklu board
+		#system("echo \"#define SUPPORT_STATIC_DUNIT_CONFIG 1\" >> include/config.h");   # siklu board		
 	}
 }
-
-
 
 # Big endian place holder
 if(defined $opt_e) {

@@ -96,6 +96,15 @@ Copyright (C) Marvell International Ltd. and its affiliates
 
 #include "bootstrap_os.h"
 
+// #define SIKLU_DDR_DEBUG 1// edikk SIKLU debug,
+
+#ifdef SIKLU_DDR_DEBUG
+# define debugp mvPrintf
+#else // SIKLU_DDR_DEBUG
+# define debugp(fmt, a...)
+#endif //SIKLU_DDR_DEBUG
+
+
 
 
 #if defined(MV_MSYS_BC2)
@@ -201,6 +210,16 @@ MV_VOID levelLogPrintDD(MV_U32 dec_num, MV_U32 length, MV_LOG_LEVEL eLogLevel)
 MV_STATUS ddr3GetTopologyMap(MV_HWS_TOPOLOGY_MAP** tMap)
 {
 	MV_U32 boardIdIndex = mvBoardIdIndexGet(mvBoardIdGet());
+	//MV_U32 oldBoardIdIndex = boardIdIndex;
+
+
+	// edikk dangerous for original Armada EVB!!!!!
+	// Siklu specific code: we put our definitions in last entry in a table,
+	// therefore set boardIdIndex to last index in a table
+	//int numEntriesInATable = sizeof(TopologyMap)/sizeof(MV_HWS_TOPOLOGY_MAP*);
+	boardIdIndex = 7;   // edikk disable this line for EVB!
+	// debugp("%s()  Called, line %d, boardIndex = %d, change it to %d\n", __func__, __LINE__, oldBoardIdIndex, boardIdIndex);// edikk
+
 
 
 	/*Get topology data by board ID*/
@@ -210,6 +229,18 @@ MV_STATUS ddr3GetTopologyMap(MV_HWS_TOPOLOGY_MAP** tMap)
 		mvPrintf("Failed get DDR3 Topology map (invalid board ID #d)\n",boardIdIndex);
 		return MV_NOT_SUPPORTED;
 	}
+
+	debugp("numOfBusPerInterface     %x\n", (*tMap)->numOfBusPerInterface );
+	debugp("csBitmask                %x\n",(*tMap)->interfaceParams[0].asBusParams[0].csBitmask);
+	debugp("mirrorEnableBitmask      %x\n",  (*tMap)->interfaceParams[0].asBusParams[0].mirrorEnableBitmask );
+	debugp("isDqsSwap                %x\n",(*tMap)->interfaceParams[0].asBusParams[0].isDqsSwap);
+	debugp("isCkSwap                 %x\n",(*tMap)->interfaceParams[0].asBusParams[0].isCkSwap);
+	debugp("===\n");
+	debugp("memorySize               %x\n",(*tMap)->interfaceParams[0].memorySize);
+	debugp("memoryFreq               %x\n",(*tMap)->interfaceParams[0].memoryFreq);  // DDR_FREQ_667 on Siklu board
+	debugp("busWidth                 %x\n",(*tMap)->interfaceParams[0].busWidth);
+	debugp("speedBinIndex            %x\n",(*tMap)->interfaceParams[0].speedBinIndex);
+	debugp("===\n");
 
 	return MV_OK;
 }
@@ -317,7 +348,7 @@ return MV_OK;
  * Notes:
  * Returns:  None.
  */
-MV_U32 ddr3Init(void)
+MV_U32 ddr3Init(void) // edikk !
 {
 	MV_U32 uiReg = 0;
 	MV_U32 socNum;
@@ -331,8 +362,10 @@ MV_U32 ddr3Init(void)
 	/*Add sub_version string*/
 	DEBUG_INIT_C("",SUB_VERSION,1);
 
+
 	/* Switching CPU to MRVL ID */
 	socNum = (MV_REG_READ(REG_SAMPLE_RESET_HIGH_ADDR) & SAR1_CPU_CORE_MASK) >> SAR1_CPU_CORE_OFFSET;
+	debugp("%s() Called for debug SIKLU board, socnum %d\n", __func__, socNum); // edikk
 	switch (socNum) {
 	case 0x3:
 		MV_REG_BIT_SET(CPU_CONFIGURATION_REG(3), CPU_MRVL_ID_OFFSET);
@@ -347,8 +380,13 @@ MV_U32 ddr3Init(void)
 
 	/* Set DRAM Reset Mask in case detected GPIO indication of wakeup from suspend
 	 * i.e the DRAM values will not be overwritten / reset when waking from suspend*/
-	if (mvSysEnvSuspendWakeupCheck() == MV_SUSPEND_WAKEUP_ENABLED_GPIO_DETECTED)
+	if (mvSysEnvSuspendWakeupCheck() == MV_SUSPEND_WAKEUP_ENABLED_GPIO_DETECTED) {
 		MV_REG_BIT_SET(REG_SDRAM_INIT_CTRL_ADDR, 1 << REG_SDRAM_INIT_RESET_MASK_OFFS);
+		debugp("%s() line %d\n",__func__, __LINE__);
+	}
+	else {
+		debugp("%s() line %d\n",__func__, __LINE__);
+	}
 
 	/************************************************************************************/
 	/* Stage 0 - Set board configuration                                                */
@@ -356,6 +394,7 @@ MV_U32 ddr3Init(void)
 
 	/* Check if DRAM is already initialized  */
 	if (MV_REG_READ(REG_BOOTROM_ROUTINE_ADDR) & (1 << REG_BOOTROM_ROUTINE_DRAM_INIT_OFFS)) {
+		debugp("%s() line %d\n",__func__, __LINE__);
 		mvPrintf("%s Training Sequence - 2nd boot - Skip \n", ddrType);
 		return MV_OK;
 	}
@@ -387,6 +426,17 @@ MV_U32 ddr3Init(void)
 	/* Set X-BAR windows for the training sequence */
 	ddr3SaveAndSetTrainingWindows(auWinBackup);
 
+#ifdef SIKLU_DDR_DEBUG	// edikk
+	{
+		int count;
+		debugp(" auWinBackup:\n");
+		for (count=0;count< 16;count++) {
+			debugp("   %d, 0x%x\n", count, auWinBackup[count]);
+		}
+	}
+#endif //
+
+
 #ifdef SUPPORT_STATIC_DUNIT_CONFIG
 	/* load static controller configuration (in case dynamic/geenric init is not enabled */
 	if( genericInitController == 0){
@@ -400,36 +450,37 @@ MV_U32 ddr3Init(void)
 		mvPrintf("%s Training Sequence topology load - FAILED\n", ddrType);
 		return status;
 	}
-
+	debugp("%s() line %d\n",__func__, __LINE__);
 	/*Tune training algo paramteres*/
 	status = ddr3HwsTuneTrainingParams(0);
 	if (MV_OK != status) {
 		return status;
 	}
-
+	debugp("%s() line %d AAAAA\n",__func__, __LINE__);
 	/*Set log level for training lib*/
 	ddr3HwsSetLogLevel(MV_DEBUG_BLOCK_ALL, DEBUG_LEVEL_ERROR);
 
 	/*Start New Training IP*/
 	status = ddr3HwsHwTraining();
+	debugp("%s() line %d BBBBBB\n",__func__, __LINE__);
 	if (MV_OK != status) {
 		mvPrintf("%s Training Sequence - FAILED\n", ddrType);
 		return status;
 	}
-
+	debugp("%s() line %d\n",__func__, __LINE__);
 	/************************************************************************************/
 	/* Stage 3 - Finish                                                                 */
 	/************************************************************************************/
 	/* Restore and set windows */
 	ddr3RestoreAndSetFinalWindows(auWinBackup);
-
+	debugp("%s() line %d\n",__func__, __LINE__);
 	/* Update DRAM init indication in bootROM register */
 	uiReg = MV_REG_READ(REG_BOOTROM_ROUTINE_ADDR);
 	MV_REG_WRITE(REG_BOOTROM_ROUTINE_ADDR, uiReg | (1 << REG_BOOTROM_ROUTINE_DRAM_INIT_OFFS));
-
+	debugp("%s() line %d\n",__func__, __LINE__);
 	/* DLB config */
 	ddr3NewTipDlbConfig();
-
+	debugp("%s() line %d\n",__func__, __LINE__);
 #if defined(ECC_SUPPORT)
 	if( MV_TRUE == ddr3IfEccEnabled()){
 		ddr3NewTipEccScrub();
@@ -552,17 +603,21 @@ MV_STATUS ddr3LoadTopologyMap(void)
 	MV_HWS_TOPOLOGY_MAP* toplogyMap = NULL;
 	MV_U8 	devNum = 0;
 
+	debugp("%s()  Called, line %d\n", __func__, __LINE__);
 	CHECK_STATUS(ddr3GetTopologyMap(&toplogyMap));
+	debugp("%s()  Called, line %d\n", __func__, __LINE__);
 
-#if defined(MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI)
+#if defined(MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI)  // edikk should be disabled for Siklu, enable for EVB!
 	/*Update topology data*/
-	if(MV_OK != ddr3UpdateTopologyMap(toplogyMap))
+	if(MV_OK != ddr3UpdateTopologyMap(toplogyMap)) {
 		DEBUG_INIT_FULL_S("Failed update of DDR3 Topology map\n");
+		debugp("%s()  Called, line %d\n", __func__, __LINE__);
+	}
 #endif
-
+	debugp("%s()  Called, line %d\n", __func__, __LINE__);
 	/*Set topology data for internal DDR training usage*/
 	ddr3TipSetTopologyMap(devNum, toplogyMap);
-
+	debugp("%s()  Called, line %d\n", __func__, __LINE__);
 	return MV_OK;
 }
 

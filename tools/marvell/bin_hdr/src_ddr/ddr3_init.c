@@ -74,6 +74,7 @@ Copyright (C) Marvell International Ltd. and its affiliates
 #include "ddr3_spd.h"
 #include "bin_hdr_twsi.h"
 #include "mvUart.h"
+// edikk - the file not used, instead it see ddr3_init_tipv2.c
 
 #if defined(MV88F672X)|| defined (MV88F66XX) || defined(MV_MSYS_BC2) || defined(MV_MSYS_AC3) || defined(MV88F68XX)
 #include "mvSysEnvLib.h"
