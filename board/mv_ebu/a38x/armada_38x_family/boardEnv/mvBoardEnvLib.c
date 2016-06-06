@@ -673,6 +673,11 @@ MV_32 mvBoarGpioPinNumGet(MV_BOARD_GPP_CLASS gppClass, MV_U32 index)
 *******************************************************************************/
 MV_VOID mvBoardReset(MV_VOID)
 {
+#ifdef MV_SIKLU_WIGIG_BOARD
+	printf(">>>...\n");
+	MV_REG_BIT_SET( CPU_RSTOUTN_MASK_REG , BIT0);
+	MV_REG_BIT_SET( CPU_SYS_SOFT_RST_REG , BIT0);
+#else
 	MV_32 resetPin;
 
 	/* Get gpp reset pin if define */
@@ -685,6 +690,7 @@ MV_VOID mvBoardReset(MV_VOID)
 		MV_REG_BIT_SET( CPU_RSTOUTN_MASK_REG , BIT0);
 		MV_REG_BIT_SET( CPU_SYS_SOFT_RST_REG , BIT0);
 	}
+#endif // MV_SIKLU_WIGIG_BOARD
 }
 
 /*******************************************************************************

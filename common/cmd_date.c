@@ -31,6 +31,13 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+
+extern int siklu_rtc_get(struct rtc_time *val);
+extern int siklu_rtc_set(struct rtc_time *val);
+extern void siklu_rtc_reset(void);
+
+static int use_siklu_external_pcf8523 = 0;
+
 static const char * const weekdays[] = {
 	"Sun", "Mon", "Tues", "Wednes", "Thurs", "Fri", "Satur",
 };
@@ -42,6 +49,29 @@ static const char * const weekdays[] = {
 #endif
 
 int mk_date (const char *, struct rtc_time *);
+
+static int _rtc_get(struct rtc_time *tm)
+{
+	if (use_siklu_external_pcf8523)
+		return siklu_rtc_get(tm);
+	else
+		return rtc_get(tm);
+}
+static int _rtc_set(struct rtc_time *tm)
+{
+	if (use_siklu_external_pcf8523)
+		return siklu_rtc_set(tm);
+	else
+		return rtc_set(tm);
+}
+static void _rtc_reset(void)
+{
+	if (use_siklu_external_pcf8523)
+		siklu_rtc_reset();
+	else
+		rtc_reset();
+}
+
 
 static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
@@ -57,10 +87,10 @@ static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	case 2:			/* set date & time */
 		if (strcmp(argv[1],"reset") == 0) {
 			puts ("Reset RTC...\n");
-			rtc_reset ();
+			_rtc_reset ();
 		} else {
 			/* initialize tm with current time */
-			rcode = rtc_get (&tm);
+			rcode = _rtc_get (&tm);
 
 			if(!rcode) {
 				/* insert new date & time */
@@ -69,7 +99,7 @@ static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 					break;
 				}
 				/* and write to RTC */
-				rcode = rtc_set (&tm);
+				rcode = _rtc_set (&tm);
 				if(rcode)
 					puts("## Set date failed\n");
 			} else {
@@ -78,7 +108,7 @@ static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		/* FALL TROUGH */
 	case 1:			/* get date & time */
-		rcode = rtc_get (&tm);
+		rcode = _rtc_get (&tm);
 
 		if (rcode) {
 			puts("## Get date failed\n");
@@ -223,3 +253,34 @@ U_BOOT_CMD(
 	"  - with numeric argument: set the system date & time\n"
 	"  - with 'reset' argument: reset the RTC"
 );
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+
+static int do_switch_rtc_dev(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int rc = 0;
+	int val = simple_strtoul (argv[1], NULL, 10);
+
+	if (argc > 1) {
+	if (val==0)
+		use_siklu_external_pcf8523 = 0;
+	else
+		use_siklu_external_pcf8523 = 1;
+	}
+	else {
+		if (use_siklu_external_pcf8523)
+			printf(" Use Siklu external PCF8523 RTC Chip\n");
+		else
+			printf(" Use Marvell SoC internal RTC\n");
+	}
+	return rc;
+}
+
+
+U_BOOT_CMD(
+	switch_rtc,	2,	1,	do_switch_rtc_dev ,
+	"get/set current RTC device",
+	"[0/1] - 0 Internal Marvell SoC RTC, 1 - External PCF8523 Chip\n"
+);
+#endif // MV_SIKLU_WIGIG_BOARD
+
