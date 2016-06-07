@@ -60,6 +60,12 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
+
+
+// #define MV_DEBUG_INIT_FULL 1 // edikk remove
+
+
+#include "siklu_config.h"
 #include "config_marvell.h"     /* Required to identify SOC and Board */
 #include "mvHighSpeedEnvSpec.h"
 #include "mvHighSpeedTopologySpec.h"
@@ -338,7 +344,7 @@ MV_OP_PARAMS sataElectricalConfigSerdesRev2Params[] =
     { G2_SETTINGS_1_REG,			0x800,	  0x3FF,	{ 0x3D2		},	0,	    0	},  /* G2_RX SELMUFF, SELMUFI, SELMUPF and SELMUPI */
     { G3_SETTINGS_0_REG,			0x800,	  0xFFFF,	{ 0xE6E		},	0,	    0	},  /* G3_TX SLEW, EMPH1 and AMP */
     { G3_SETTINGS_1_REG,			0x800,	  0x47FF,	{ 0x7D2		},	0,	    0	},  /* G3_RX SELMUFF, SELMUFI, SELMUPF and SELMUPI & DFE_En Gen3, DC wander calibration dis */
-    { PCIE_REG0,        			0x800,    0x1000,	{ 0x0		},	0,	    0   },  /* Bit[12]=0x0 – idle_sync_en */
+    { PCIE_REG0,        			0x800,    0x1000,	{ 0x0		},	0,	    0   },  /* Bit[12]=0x0 ï¿½ idle_sync_en */
     { RX_REG2,          			0x800,    0xF0,		{ 0x70,		},	0,	    0   },  /* Dtl Clamping disable and Dtl clamping Sel(6000ppm) */
     { VTHIMPCAL_CTRL_REG,			0x800,	  0xFF00,	{ 0x3000	},	0,	    0	}, /* tximpcal_th and rximpcal_th */
     { DFE_REG0,         			0x800,    0xA00F,	{ 0x800A	},	0,	    0   }, /* DFE_STEP_FINE_FX[3:0] =0xA */
@@ -714,6 +720,7 @@ MV_STATUS mvHwsSerdesSeqDbInit(MV_VOID)
 	DEBUG_INIT_FULL_S("\n### serdesSeq38xInit ###\n");
 	MV_U8 serdesRev = mvHwsCtrlSerdesRevGet();
 
+	mvPrintf("%s: line %d, serdes rev %x\n",__func__, __LINE__, serdesRev); // edikk remove
 	if(serdesRev == MV_SERDES_REV_NA) {
 		mvPrintf("mvHwsSerdesSeqDbInit: serdes revision number is not supported\n");
 		return MV_NOT_SUPPORTED;
@@ -1055,6 +1062,7 @@ MV_STATUS mvHwsBoardTopologyLoad(SERDES_MAP  *serdesMapArray)
 	MV_U32 boardIdIndex = mvBoardIdIndexGet(boardId);
 
 	DEBUG_INIT_FULL_S("\n### mvHwsBoardTopologyLoad ###\n");
+
 	/* getting board topology according to the board id */
 	DEBUG_INIT_FULL_S("Getting board topology according to the board id\n");
 
@@ -1194,11 +1202,14 @@ MV_STATUS mvHwsPowerUpSerdesLanes(SERDES_MAP  *serdesConfigMap)
 
 	/* per Serdes Power Up */
 	for (serdesId = 0; serdesId < mvHwsSerdesGetMaxLane(); serdesId++) {
+
+		serdesLaneNum = mvHwsGetPhysicalSerdesNum(serdesId);
+
 		DEBUG_INIT_FULL_S("calling serdesPowerUpCtrl: serdes lane number ");
 		DEBUG_INIT_FULL_D_10(serdesLaneNum, 1);
 		DEBUG_INIT_FULL_S("\n");
 
-		serdesLaneNum = mvHwsGetPhysicalSerdesNum(serdesId);
+
 
 		serdesType = serdesConfigMap[serdesId].serdesType;
 		serdesSpeed = serdesConfigMap[serdesId].serdesSpeed;

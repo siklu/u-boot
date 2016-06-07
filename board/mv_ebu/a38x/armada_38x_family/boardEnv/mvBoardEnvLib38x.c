@@ -92,11 +92,17 @@
 *******************************************************************************/
 MV_U32 mvBoardPortTypeGet(MV_U32 ethPortNum) // edikk Siklu board network type SGMII, eval board - RGMII
 {
+	MV_U32 rc = MV_PORT_TYPE_UNKNOWN;
+
+
 	if (mvBoardIsPortInSgmii(ethPortNum))
-		return MV_PORT_TYPE_SGMII;
+		rc = MV_PORT_TYPE_SGMII;
 	if (mvBoardIsPortInRgmii(ethPortNum))
-		return MV_PORT_TYPE_RGMII;
-	return MV_PORT_TYPE_UNKNOWN;
+		rc = MV_PORT_TYPE_RGMII;
+
+	mvOsPrintf("%s: ethPortNum %d, type %d\n" , __func__, ethPortNum, rc); // edikk remove
+
+	return rc;
 }
 
 /*******************************************************************************

@@ -214,11 +214,11 @@ MV_STATUS ddr3GetTopologyMap(MV_HWS_TOPOLOGY_MAP** tMap)
 	//MV_U32 oldBoardIdIndex = boardIdIndex;
 
 #ifdef MV_SIKLU_WIGIG_BOARD
-	// edikk dangerous for original Armada EVB!!!!!
+	// dangerous for original Armada EVB!!!!!
 	// Siklu specific code: we put our definitions in last entry in a table,
 	// therefore set boardIdIndex to last index in a table
 	boardIdIndex = 7;   // edikk disable this line for EVB!
-	// debugp("%s()  Called, line %d, boardIndex = %d, change it to %d\n", __func__, __LINE__, oldBoardIdIndex, boardIdIndex);// edikk
+
 #endif // MV_SIKLU_WIGIG_BOARD
 
 	/*Get topology data by board ID*/

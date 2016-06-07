@@ -2053,7 +2053,7 @@ MV_VOID mvBoardSet(MV_U32 boardId)
 *       32bit board ID number, '-1' if board is undefined.
 *
 *******************************************************************************/
-MV_U32 mvBoardIdGet(MV_VOID)
+MV_U32 mvBoardIdGet(MV_VOID) // edikk ???
 {
 	if (gBoardId != -1)
 		return gBoardId;
@@ -2580,14 +2580,96 @@ MV_STATUS mvBoardTwsiSatRSet(MV_U8 devNum, MV_U8 regNum, MV_U8 regVal)
 *******************************************************************************/
 MV_U32 mvBoardSatRRead(MV_SATR_TYPE_ID satrField)
 {
-	MV_BOARD_SATR_INFO satrInfo;
-	MV_U8 data, data1;
-	MV_U32 c;
+	__maybe_unused MV_BOARD_SATR_INFO satrInfo;
+	MV_U8 data = 0;
+	__maybe_unused MV_U8 data1;
+	__maybe_unused MV_U32 c;
 
+	// mvOsPrintf("%s: Called for field %x\n", __func__, satrField);
 	if (satrField >= MV_SATR_MAX_OPTION) {
 		mvOsPrintf("%s: Error: wrong MV_SATR_TYPE_ID field value (%d).\n", __func__ , satrField);
 		return MV_ERROR;
 	}
+#ifdef 	MV_SIKLU_WIGIG_BOARD
+	// put here static declarations instead really read SATR
+
+	switch(satrField)
+	{
+	case MV_SATR_CPU_DDR_L2_FREQ:
+		data = 0x8; // see MV_SAR_FREQ_MODES table: { 0x8,   1332, 666, 666, MV_TRUE  },
+		break;
+	case MV_SATR_CORE_CLK_SELECT:
+		data = 0; // 250MHz
+		break;
+	case MV_SATR_CPU1_ENABLE:
+		data = 1; // Dual CPU
+		break;
+	case MV_SATR_SSCG_DISABLE:
+		data = 1; // SSCG now disabled, Ask Ziv whe we enable it
+		break;
+	case MV_SATR_DDR4_SELECT:
+		data = 0; // DDR3
+		break;
+	case MV_SATR_DDR_BUS_WIDTH:
+		data = 1; // 32bit
+		break;
+	case MV_SATR_DDR_ECC_ENABLE:
+		data = 0; // why no ECC?
+		break;
+	case MV_SATR_DDR_ECC_PUP_SEL:
+		break;
+	case MV_SATR_SGMII_SPEED:
+		data = 0; //  SGMII speed 1.25 ???
+		break;
+	case MV_SATR_BOOT_DEVICE:
+		data = 0x34;
+		break;
+	case MV_SATR_BOARD_ID:
+		data = 2;  // connect it to:         db88f68xx_board_info ???
+		break;
+	case MV_SATR_DB_USB3_PORT0:
+		data = 0; // NO usb
+		break;
+	case MV_SATR_DB_USB3_PORT1:
+		data = 0; // NO usb
+		break;
+	case MV_SATR_DB_SERDES1_CFG:// SGMII0 ?
+		data = 3;
+		break;
+	case MV_SATR_DB_SERDES2_CFG:// SGMII1 ?
+		data = 4;
+		break;
+	case MV_SATR_SGMII_MODE:
+		data = 1;  // out of band (PHY)
+		break;
+	case MV_SATR_DEVICE_ID:
+		data = 1; //6820 (A385)
+		break;
+	// cases below shouldn't availcase MV_SATR_DEVICE_ID2:
+	case MV_SATR_BOOT2_DEVICE:
+	case MV_SATR_BOARD_ECO_VERSION:
+	case MV_SATR_GP_SERDES1_CFG:
+	case MV_SATR_GP_SERDES2_CFG:
+	case MV_SATR_RD_SERDES4_CFG:
+	case MV_SATR_GP_SERDES5_CFG:
+		mvOsPrintf("%s: ERROR satrField value 0x%x is wrong!\n", __func__, satrField);
+		break;
+	// max avail value
+	case MV_SATR_MAX_OPTION:
+		mvOsPrintf("%s: ERROR satrField value 0x%x is > MAX!\n", __func__, satrField);
+		break;
+	default :
+		mvOsPrintf("%s: ERROR satrField value 0x%x UNKNOWN!\n", __func__, satrField);
+		break;
+
+	}
+
+
+
+#else // !MV_SIKLU_WIGIG_BOARD
+
+
+
 
 	if (mvBoardSatrInfoConfig(satrField, &satrInfo) != MV_OK) {
 		mvOsPrintf("%s: Error: Requested S@R field (%d) is not relevant for this board\n", __func__, satrField);
@@ -2632,7 +2714,7 @@ MV_U32 mvBoardSatRRead(MV_SATR_TYPE_ID satrField)
 		data = data | ((tmp & MV_SATR_DEVICE_ID2_VALUE_OFFSET) << MV_SATR_DEVICE_ID2_VALUE_MASK);
 	}
 #endif
-
+#endif // MV_SIKLU_WIGIG_BOARD
 	return data;
 }
 

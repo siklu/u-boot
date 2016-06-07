@@ -60,6 +60,7 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
+#include "siklu_config.h"
 #include "mvHighSpeedTopologySpec.h"
 #include "mvSysEnvLib.h"
 #include "printf.h"
@@ -246,14 +247,23 @@ loadTopologyFuncPtr loadTopologyFuncArr[] =
 /** Load topology - Marvell 380 DB - BP **/
 /*****************************************/
 /* Configuration options */
-SERDES_MAP DbConfigDefault[MAX_SERDES_LANES] =
+SERDES_MAP DbConfigDefault[MAX_SERDES_LANES] =  // edikk serdes configuration here!
 {
+#ifdef 	MV_SIKLU_WIGIG_BOARD
+	{ PEX0, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
+	{ SGMII0,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
+	{ SGMII1,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
+	{ SGMII2,   __3_125Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
+	{ PEX2, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
+	{ PEX3, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
+#else // !MV_SIKLU_WIGIG_BOARD
 	{ SATA0,	 __3Gbps,   	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ PEX0, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ PEX1, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ SATA3,	 __3Gbps,   	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ USB3_HOST0, __5Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ USB3_HOST1, __5Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE }
+#endif // MV_SIKLU_WIGIG_BOARD
 };
 
 SERDES_MAP DbConfigSLM1363_C[MAX_SERDES_LANES] =
@@ -453,6 +463,11 @@ SERDES_MAP* topologyConfigDB381[] =
 /***************************************************************************/
 MV_U8 topologyConfigDBModeGet(MV_VOID)
 {
+#ifdef MV_SIKLU_WIGIG_BOARD
+	DEBUG_INIT_S("\nInit Siklu DB board default topology\n");
+	return DB_CONFIG_DEFAULT;
+#else // !MV_SIKLU_WIGIG_BOARD
+
 	MV_TWSI_SLAVE twsiSlave;
 	MV_U8 mode;
 
@@ -509,6 +524,7 @@ MV_U8 topologyConfigDBModeGet(MV_VOID)
 		DEBUG_INIT_S("\nInit DB board default topology\n");
 		return DB_CONFIG_DEFAULT;
 	}
+#endif // MV_SIKLU_WIGIG_BOARD
 }
 
 MV_U8 topologyConfigDB381ModeGet(MV_VOID)
@@ -716,6 +732,7 @@ MV_STATUS mvHwsUpdateDeviceToplogy(SERDES_MAP* topologyConfigPtr, TOPOLOGY_CONFI
 			mvPrintf("Device 6810 does not supports SerDes Lane #4: replaced topology entry with lane #5\n");
 			topologyConfigPtr[4] = topologyConfigPtr[5];
 		case MV_6820: /* no break between cases since the 1st 6820 limitation apply on 6810 */
+#ifndef MV_SIKLU_WIGIG_BOARD
 			/* DB-GP & DB-BP: default for Lane3=SATA3 --> 6810/20 supports only 2 SATA interfaces: lane 3 disabled */
 			if ((BoardId == DB_68XX_ID) || (BoardId == DB_GP_68XX_ID)) {
 				mvPrintf("Device 6810/20 supports only 2 SATA interfaces: SATA Port 3 @ lane3 disabled\n");
@@ -726,6 +743,7 @@ MV_STATUS mvHwsUpdateDeviceToplogy(SERDES_MAP* topologyConfigPtr, TOPOLOGY_CONFI
 				mvPrintf("Device 6820 supports only 2 SATA interfaces: SATA Port 2 @ lane4 disabled\n");
 				topologyConfigPtr[4] = DefaultLane;
 			}
+#endif // MV_SIKLU_WIGIG_BOARD
 			break;
 		default:
 			break;
@@ -795,7 +813,11 @@ MV_STATUS loadTopologyDB(SERDES_MAP  *serdesMapArray)
 	MV_U8 twsiData;
 	MV_U8 usb3Host0OrDevice = 0, usb3Host1OrDevice = 0;
 
+#ifdef MV_SIKLU_WIGIG_BOARD
+	mvPrintf("\nInitialize DB-88F6820-BP SIKLU board topology\n");
+#else
 	mvPrintf("\nInitialize DB-88F6820-BP board topology\n");
+#endif // MV_SIKLU_WIGIG_BOARD
 
 	/* Getting the relevant topology mode (index) */
 	topologyMode = topologyConfigDBModeGet();
@@ -835,13 +857,14 @@ MV_STATUS loadTopologyDB(SERDES_MAP  *serdesMapArray)
 					serdesMapArray[laneNum].serdesType = USB3_DEVICE;
 		}
 	}
+#ifndef MV_SIKLU_WIGIG_BOARD
 	/* if not detected any SerDes Site module, read 'SatR' lane setup */
 	if (topologyMode == DB_CONFIG_DEFAULT)
 		updateTopologySatR(serdesMapArray);
 
 	/* update 'sgmiispeed' settings */
 	updateTopologySgmiiSpeed(serdesMapArray);
-
+#endif // MV_SIKLU_WIGIG_BOARD
 	return MV_OK;
 }
 

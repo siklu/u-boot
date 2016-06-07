@@ -72,7 +72,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*Allow topolgy update from board TWSI device*/
 #if !defined(CONFIG_CUSTOMER_BOARD_SUPPORT) && !defined(MV_SIKLU_WIGIG_BOARD)
-# define MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI // edikk disable for siklu, enable for EVB!
+# define MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI // disable for Siklu, enable for EVB!
 #endif
 
 

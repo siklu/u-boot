@@ -125,7 +125,7 @@ int do_sar_default(void)
 	return 0;
 }
 
-int sar_cmd_get(const char *cmd)
+int  sar_cmd_get(const char *cmd)
 {
 	int i;
 	MV_BOARD_SATR_INFO satrInfo;
@@ -291,11 +291,11 @@ int do_sar_read(MV_U32 mode, MV_BOARD_SATR_INFO *satrInfo)
 {
 	MV_U32 i, tmp;
 
-	if (mode != CMD_DUMP) {
+	if (mode != CMD_DUMP) {  // edik SATR continue here
 	    tmp = mvBoardSatRRead(satrInfo->satrId);
 	    if (tmp == MV_ERROR) {
-		mvOsPrintf("Error reading from TWSI\n");
-		return 1;
+	    	mvOsPrintf("Error reading from TWSI\n");
+	    	return 1;
 	    }
 	}
 	switch (mode) {

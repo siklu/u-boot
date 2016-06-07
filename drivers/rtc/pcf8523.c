@@ -85,7 +85,8 @@ static int pcf8523_select_capacitance(int high)
     return err;
 }
 
-static int pcf8523_set_pm(uchar pm)
+
+static __attribute__((unused)) int pcf8523_set_pm(uchar pm)
 {
     uchar value;
     int err = 0;

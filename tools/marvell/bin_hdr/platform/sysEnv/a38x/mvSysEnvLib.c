@@ -110,6 +110,11 @@ MV_UNIT_ID mvSysEnvSocUnitNums[MAX_UNITS_ID][MAX_DEV_ID_NUM] = {
 MV_U32 gBoardId = -1;
 MV_U32 mvBoardIdGet(MV_VOID)
 {
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+	gBoardId = MV_DEFAULT_BOARD_ID;
+#else // !MV_SIKLU_WIGIG_BOARD
+
 	if (gBoardId != -1)
 		return gBoardId;
 
@@ -119,7 +124,7 @@ MV_U32 mvBoardIdGet(MV_VOID)
 	#elif CONFIG_CUSTOMER_BOARD_1
 		gBoardId = CUSTOMER_BOARD_ID1;
 	#endif
-#else
+#else // !CONFIG_CUSTOMER_BOARD_SUPPORT
 	/* For Marvell Boards: read board ID from TWSI*/
 	MV_TWSI_SLAVE twsiSlave;
 	MV_U8 boardId;
@@ -155,8 +160,10 @@ MV_U32 mvBoardIdGet(MV_VOID)
 		DEBUG_INIT_S("is out of range. Using default board ID\n");
 		gBoardId = MV_DEFAULT_BOARD_ID;
 	}
-#endif
+#endif // CONFIG_CUSTOMER_BOARD_SUPPORT
+#endif // MV_SIKLU_WIGIG_BOARD
 	return gBoardId;
+
 }
 
 MV_U32 mvBoardTclkGet(MV_VOID)

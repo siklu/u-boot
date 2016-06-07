@@ -221,7 +221,7 @@ static int eh2000_memtest_random(ulong start_addr, ulong end_addr,
 	printf("Random memory fill test.  range [%08lx - %08lx] %s ###\n\n",
 			start_addr, end_addr, (is_cycling) ? ("periodic") : ("one time"));
 
-	seed_offs = 0x100; // edikk TBD cvmx_clock_get_count(CVMX_CLOCK_RCLK) & 0xFFFF;
+	seed_offs = 0x100; // TBD cvmx_clock_get_count(CVMX_CLOCK_RCLK) & 0xFFFF;
 
 	do {
 		if (pass_num > 1) {
