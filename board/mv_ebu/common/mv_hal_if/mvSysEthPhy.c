@@ -97,16 +97,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *       None
 *
 *******************************************************************************/
-MV_STATUS mvSysEthPhyInit(void)
+MV_STATUS mvSysEthPhyInit(void)   // edikk
 {
 	MV_ETHPHY_HAL_DATA halData;
 	MV_U32 port;
 
 	for (port=0; port < mvCtrlEthMaxPortGet(); port++) {
+#ifdef 	MV_SIKLU_WIGIG_BOARD
+		halData.phyAddr[port] = port; // Siklu port0 phy addr = 0, port1 phy addr =1
+#else
 		halData.phyAddr[port] = mvBoardPhyAddrGet(port);
+#endif
 		halData.boardSpecInit = MV_FALSE;
 		halData.isSgmii[port] = mvBoardIsPortInSgmii(port);
 		halData.QuadPhyPort0[port] = mvBoardQuadPhyAddr0Get(port);
+		mvOsPrintf("%s() port %d: phyAddr %x,  isSgmii %d\n", __func__, port, halData.phyAddr[port], halData.isSgmii[port]); // edikk
 	}
 	halData.ethPhySmiReg = ETH_SMI_REG(MV_ETH_SMI_PORT);
 	halData.ctrlModel = mvCtrlModelGet();

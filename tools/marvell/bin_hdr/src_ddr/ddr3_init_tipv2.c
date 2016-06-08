@@ -217,7 +217,7 @@ MV_STATUS ddr3GetTopologyMap(MV_HWS_TOPOLOGY_MAP** tMap)
 	// dangerous for original Armada EVB!!!!!
 	// Siklu specific code: we put our definitions in last entry in a table,
 	// therefore set boardIdIndex to last index in a table
-	boardIdIndex = 7;   // edikk disable this line for EVB!
+	boardIdIndex = 7;
 
 #endif // MV_SIKLU_WIGIG_BOARD
 

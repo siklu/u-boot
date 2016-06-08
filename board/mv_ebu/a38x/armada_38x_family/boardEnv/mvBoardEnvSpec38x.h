@@ -153,14 +153,14 @@
 * A380 DB-68xx board
 *******************************************************************************/
 #ifdef MV_SIKLU_WIGIG_BOARD
-	#define DB_88F68XX_MPP0_7               0x11111111	// 0x18000
-	#define DB_88F68XX_MPP8_15              0x11111111	// 0x18004,
-	#define DB_88F68XX_MPP16_23             0x55266011  // 0x18008,
-	#define DB_88F68XX_MPP24_31             0x25252051	// 0x1800C,
-	#define DB_88F68XX_MPP32_39             0x25255555	// 0x18010,
-	#define DB_88F68XX_MPP40_47             0x40042565	// 0x18014,
-	#define DB_88F68XX_MPP48_55             0x55550555
-	#define DB_88F68XX_MPP56_63             0x00005550
+	#define DB_88F68XX_MPP0_7               0x00111111	// 0x18000
+	#define DB_88F68XX_MPP8_15              0x00000000	// 0x18004,
+	#define DB_88F68XX_MPP16_23             0x55066000  // 0x18008,
+	#define DB_88F68XX_MPP24_31             0x05053350	// 0x1800C,
+	#define DB_88F68XX_MPP32_39             0x05055555	// 0x18010,
+	#define DB_88F68XX_MPP40_47             0x01100565	// 0x18014,
+	#define DB_88F68XX_MPP48_55             0x00000000
+	#define DB_88F68XX_MPP56_63             0x00004444
 #else // !MV_SIKLU_WIGIG_BOARD
 	#define DB_88F68XX_MPP0_7               0x11111111
 	#define DB_88F68XX_MPP8_15              0x11111111

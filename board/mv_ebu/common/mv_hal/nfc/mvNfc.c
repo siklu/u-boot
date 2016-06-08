@@ -892,7 +892,7 @@ MV_STATUS mvNfcInit(MV_NFC_INFO *nfcInfo, MV_NFC_CTRL *nfcCtrl, struct MV_NFC_HA
 			break;
 	}
 	if (i == (sizeof(flashDeviceInfo) / sizeof(MV_NFC_FLASH_INFO))) {
-		mvOsPrintf("## %s() Error on line %d. NAND type 0x%d Not supported\n", __func__, __LINE__, read_id);  // edikk remove
+		mvOsPrintf("## %s() Error on line %d. NAND type 0x%d Not supported\n", __func__, __LINE__, read_id);
 		return MV_NOT_SUPPORTED;
 	}
 	else

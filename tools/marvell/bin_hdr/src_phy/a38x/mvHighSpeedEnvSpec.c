@@ -62,7 +62,7 @@
 *******************************************************************************/
 
 
-// #define MV_DEBUG_INIT_FULL 1 // edikk remove
+// #define MV_DEBUG_INIT_FULL 1
 
 
 #include "siklu_config.h"

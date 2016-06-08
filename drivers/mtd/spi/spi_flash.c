@@ -7,6 +7,8 @@
  * Licensed under the GPL-2 or later.
  */
 
+// #define DEBUG
+
 #include <common.h>
 #include <malloc.h>
 #include <spi.h>

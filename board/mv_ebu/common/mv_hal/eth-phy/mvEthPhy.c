@@ -120,11 +120,34 @@ MV_STATUS mvEthPhyHalInit(MV_ETHPHY_HAL_DATA *halData)
 *       MV_OK on success, MV_ERROR otherwise.
 *
 *******************************************************************************/
-MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)
+MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // edikk
 {
 	MV_U32     phyAddr = 0;
 	MV_U16     deviceId;
 	MV_U16     id1, id2;
+
+
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+	extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
+	extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
+#define GPP6 6
+#define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
+#define MV_GPP_OUT	0		/* GPP output */
+	// release PHY reset
+	//*       Set GPP8 value of '0' and GPP15 value of '1'.
+	//*       mvGppActiveSet(0, (GPP8 | GPP15), ((0 & GPP8) | (GPP15)) );
+
+
+	mvGppTypeSet(0, GPP6, (MV_GPP_OUT & GPP6));  // enable 1st PHY
+	mvGppValueSet(0, GPP6, (GPP6));
+
+	// edikk un-reset 2nd PHY TBD
+
+#endif
+
+
+
 
 	if (ethPortNum != ((MV_U32) -1))
 		phyAddr = ethphyHalData.phyAddr[ethPortNum];
