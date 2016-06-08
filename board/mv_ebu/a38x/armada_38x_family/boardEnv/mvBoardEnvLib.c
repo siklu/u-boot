@@ -452,7 +452,7 @@ MV_VOID mvBoardQuadPhyAddr0Set(MV_U32 ethPortNum, MV_U32 smiAddr)
 *******************************************************************************/
 MV_BOARD_SPEC_INIT *mvBoardSpecInitGet(MV_VOID)
 {
-	return board->pBoardSpecInit;
+	return board->pBoardSpecInit;  // edikk Board spec
 }
 
 /*******************************************************************************
@@ -1348,25 +1348,31 @@ MV_U32 mvBoardSwitchPortForceLinkGet(MV_U32 switchIdx)
 *       None.
 *
 *******************************************************************************/
-MV_VOID mvBoardConfigWrite(void)
+MV_VOID mvBoardConfigWrite(void)   // edikk write MPP configuration
 {
 	MV_U32 mppGroup, i, reg;
 	MV_BOARD_SPEC_INIT *boardSpec;
-
+	//mvOsPrintf("## %s()\n", __func__);
 	for (mppGroup = 0; mppGroup < MV_MPP_MAX_GROUP; mppGroup++) {
+		//mvOsPrintf("\tmppGroup %d, Value 0x%08x\n", mppGroup, mvBoardMppGet(mppGroup));
 		MV_REG_WRITE(mvCtrlMppRegGet(mppGroup), mvBoardMppGet(mppGroup));
 	}
 
 	boardSpec = mvBoardSpecInitGet();
 	if (boardSpec != NULL) {
+		//mvOsPrintf("## %s() Board Spec isn't empty!\n",__func__);
 		i = 0;
 		while (boardSpec[i].reg != TBL_TERM) {
 			reg = MV_REG_READ(boardSpec[i].reg);
 			reg &= ~boardSpec[i].mask;
 			reg |= (boardSpec[i].val & boardSpec[i].mask);
+			mvOsPrintf(" %x - %x\n", boardSpec[i].reg, reg);
 			MV_REG_WRITE(boardSpec[i].reg, reg);
 			i++;
 		}
+	}
+	else {
+		; //mvOsPrintf("## %s() Board Spec empty!\n",__func__);
 	}
 }
 

@@ -22,6 +22,19 @@ int board_nand_init(struct nand_chip *nand)
 	MV_NAND_IF_MODE mode = NAND_IF_NFC;
 #endif
 
+
+
+
+	if (0)
+	{
+		MV_U32 mppGroup, reg;
+		for (mppGroup = 0; mppGroup < MV_MPP_MAX_GROUP; mppGroup++) {
+				reg = MV_REG_READ(mvCtrlMppRegGet(mppGroup));
+				mvOsPrintf("\tmppGroup %d, Value 0x%08x\n", mppGroup, reg);
+			}
+	}
+
+
 	switch (mode) {
 #if defined(MV_NAND)
 	case NAND_IF_NFC:

@@ -1726,6 +1726,7 @@ int board_nand_nfc_init(struct nand_chip *nand)  // edikk init NAND here
 #endif
 
 	info->ecc_type = mvBoardNandECCModeGet();
+
 	if (info->ecc_type >= MV_NFC_ECC_DISABLE) {
 		dev_err(&pdev->dev, "NAND ECC mode is not defined!\n");
 		ret = -ENODEV;

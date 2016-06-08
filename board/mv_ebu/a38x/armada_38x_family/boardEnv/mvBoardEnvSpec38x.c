@@ -327,7 +327,7 @@ MV_BOARD_INFO *customerBoardInfoTbl[] = {
 #define DB_88F68XX_BOARD_NOR_READ_PARAMS	0x403E07CF
 #define DB_88F68XX_BOARD_NOR_WRITE_PARAMS	0x000F0F0F
 
-MV_BOARD_MPP_INFO db88f68xxInfoBoardMppConfigValue[] = {
+MV_BOARD_MPP_INFO db88f68xxInfoBoardMppConfigValue[] = {  // edikk Siklu Board MPP defines.
 	{ {
 		  DB_88F68XX_MPP0_7,
 		  DB_88F68XX_MPP8_15,
@@ -380,7 +380,7 @@ MV_BOARD_TDM_INFO db88f68xxTdm880[] = { {0} };
 
 MV_BOARD_TDM_SPI_INFO db88f68xxTdmSpiInfo[] = { {1} };
 
-MV_BOARD_INFO db88f68xx_board_info = {
+MV_BOARD_INFO db88f68xx_board_info = {  // edikk Siklu Board
 	.boardName		= "DB-88F6820-BP",
 	.compatibleDTName	= "a385-db",
 	.numBoardNetComplexValue	= 0,

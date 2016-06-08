@@ -71,6 +71,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include "mvNfc.h"
 
+// #define _DEBUG__
+
+
 #ifdef _DEBUG__
 #define DB(x)	x
 #else
@@ -674,7 +677,33 @@ MV_NFC_FLASH_INFO flashDeviceInfo[] = {
 	.model = "Micron 2Gb 8bit ABAFA",
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
 	.flags = NFC_CLOCK_UPSCALE_200M
+	},
+	{	/* Macronix 1Gb Siklu Card MX30LF2G18AC */
+		/* 3.3v parametrs */
+	.tADL = 70,		/* tADL, Address to write data delay */
+	.tCH = 5,		/* tCH, Enable signal hold time */
+	.tCS = 15,		/* tCS, Enable signal setup time */
+	.tWC = 20,		/* tWC, ND_nWE cycle duration, limited to 35 by the ARMADA-XP CPU */
+	.tWH = 7,		/* tWH, ND_nWE high duration */
+	.tWP = 10,		/* tWP, ND_nWE pulse time */
+	.tRC = 20,		/* tRC, ND_nRE cycle duration, limited to 35 by the ARMADA-XP CPU */
+	.tRH = 7,		/* tRH, ND_nRE high duration */
+	.tRP = 10,		/* tRP, ND_nRE pulse width */
+	.tR = 25121,	/* tR = data transfer from cell to register tR = tR+tRR+tWB+1 */
+	.tWHR = 60,		/* tWHR, ND_nWE high to ND_nRE low delay for status read */
+	.tAR = 10,		/* tAR, ND_ALE low to ND_nRE low delay */
+	.tRHW = 60, //100,		/* tRHW, ND_nRE high to ND_nWE low delay */
+	.pgPrBlk = 64,		/* Pages per block - detected */
+	.pgSz = 2048,		/* Page size */
+	.oobSz = 64, //224,		/* Spare size */
+	.blkNum = 1024, 2048,		/* Number of blocks/sectors in the flash */
+	.id = 0xF1C2,		/* Device ID 0xDevice,Vendor */
+	.model = "Macronix 1Gb",
+	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
+	.flags = NFC_FLAGS_NONE, // NFC_CLOCK_UPSCALE_200M   /* edikk  */
 	}
+
+
 };
 
 /* Defined Command set */
@@ -790,6 +819,7 @@ MV_STATUS mvNfcInit(MV_NFC_INFO *nfcInfo, MV_NFC_CTRL *nfcCtrl, struct MV_NFC_HA
 	 ECC engine clock = (2Ghz / divider)
 	 NFC clock = ECC clock / 2
 	 */
+
 	nand_clock = halData->mvCtrlNandClkSetFunction(_100MHz); /* Go down to 100MHz */
 	if (nand_clock != _100MHz)
 		DB(mvOsPrintf("%s: Warning: set NFC Clock frequency to %dHz instead of %dHz\n",
@@ -842,30 +872,39 @@ MV_STATUS mvNfcInit(MV_NFC_INFO *nfcInfo, MV_NFC_CTRL *nfcCtrl, struct MV_NFC_HA
 #ifdef MTD_NAND_NFC_INIT_RESET
 	/* reset the device */
 	ret = mvNfcReset();
-	if (ret != MV_OK)
+	if (ret != MV_OK) {
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		return ret;
+	}
 #endif
 
 	/* Read the device ID */
 	ret = mvNfcReadIdNative(nfcCtrl->currCs, &read_id);
-	if (ret != MV_OK)
+	if (ret != MV_OK) {
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		return ret;
+	}
+
 
 	/* Look for device ID in knwon device table */
 	for (i = 0; i < (sizeof(flashDeviceInfo) / sizeof(MV_NFC_FLASH_INFO)); i++) {
 		if (flashDeviceInfo[i].id == read_id)
 			break;
 	}
-	if (i == (sizeof(flashDeviceInfo) / sizeof(MV_NFC_FLASH_INFO)))
+	if (i == (sizeof(flashDeviceInfo) / sizeof(MV_NFC_FLASH_INFO))) {
+		mvOsPrintf("## %s() Error on line %d. NAND type 0x%d Not supported\n", __func__, __LINE__, read_id);  // edikk remove
 		return MV_NOT_SUPPORTED;
+	}
 	else
 		nfcCtrl->flashIdx = i;
 
 	/* In case of ONFI Mode set needed */
 	if (flashDeviceInfo[i].flags & NFC_FLAGS_ONFI_MODE_3_SET) {
 		ret = mvNfcDeviceModeSet(nfcCtrl, MV_NFC_ONFI_MODE_3);
-		if (ret != MV_OK)
+		if (ret != MV_OK) {
+			mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 			return ret;
+		}
 		if (MV_OK == mvNfcReadParamPage(&paramPage)) {
 			DB(mvNfcPrintParamPage());
 			switch (paramPage.num_ECC_bits) {
@@ -913,6 +952,7 @@ MV_STATUS mvNfcInit(MV_NFC_INFO *nfcInfo, MV_NFC_CTRL *nfcCtrl, struct MV_NFC_HA
 	ret = mvNfcTimingSet(nand_clock, &flashDeviceInfo[i]);
 	if (ret != MV_OK) {
 		DB(mvOsPrintf("mvNfcInit: mvNfcTimingSet failed for clock %d\n", nand_clock));
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		return ret;
 	}
 
@@ -977,6 +1017,7 @@ MV_STATUS mvNfcInit(MV_NFC_INFO *nfcInfo, MV_NFC_CTRL *nfcCtrl, struct MV_NFC_HA
 		break;
 
 	default:
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		return MV_BAD_PARAM;
 	}
 
@@ -2725,8 +2766,10 @@ MV_STATUS mvNfcReset(void)
 
 	/* Wait for Command WRITE request */
 	errCode = mvDfcWait4Complete(NFC_SR_WRCMDREQ_MASK, 1);
-	if (errCode != MV_OK)
+	if (errCode != MV_OK) {
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		goto Error_3;
+	}
 
 	/* Send Command */
 	MV_NAND_REG_WRITE(NFC_COMMAND_BUFF_0_REG, 0x00A000FF);	/* DFC_NDCB0_RESET */
@@ -2735,8 +2778,10 @@ MV_STATUS mvNfcReset(void)
 
 	/* Wait for Command completion */
 	errCode = mvDfcWait4Complete(NFC_SR_RDY0_MASK, 1000);
-	if (errCode != MV_OK)
+	if (errCode != MV_OK) {
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		goto Error_3;
+	}
 
 	/* Wait for ND_RUN bit to get cleared. */
 	while (timeout > 0) {
@@ -2745,8 +2790,10 @@ MV_STATUS mvNfcReset(void)
 			break;
 		timeout--;
 	}
-	if (timeout == 0)
+	if (timeout == 0) {
+		mvOsPrintf("## %s() Error on line %d\n", __func__, __LINE__);
 		return MV_BAD_STATE;
+	}
 
 Error_3:
 	return errCode;
