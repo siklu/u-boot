@@ -2711,8 +2711,9 @@ static const struct nand_flash_dev *nand_get_flash_type(struct mtd_info *mtd,
 		return ERR_PTR(-ENODEV);
 	}
 
-	if (!type)
+	if (!type) {
 		type = nand_flash_ids;
+	}
 
 	for (; type->name != NULL; type++)
 		if (*dev_id == type->id)

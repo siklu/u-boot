@@ -97,7 +97,7 @@ Copyright (C) Marvell International Ltd. and its affiliates
 
 #include "bootstrap_os.h"
 
-// #define SIKLU_DDR_DEBUG 1// edikk SIKLU debug,
+// #define SIKLU_DDR_DEBUG 1
 
 #ifdef SIKLU_DDR_DEBUG
 # define debugp mvPrintf

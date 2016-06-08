@@ -720,7 +720,6 @@ MV_STATUS mvHwsSerdesSeqDbInit(MV_VOID)
 	DEBUG_INIT_FULL_S("\n### serdesSeq38xInit ###\n");
 	MV_U8 serdesRev = mvHwsCtrlSerdesRevGet();
 
-	mvPrintf("%s: line %d, serdes rev %x\n",__func__, __LINE__, serdesRev); // edikk remove
 	if(serdesRev == MV_SERDES_REV_NA) {
 		mvPrintf("mvHwsSerdesSeqDbInit: serdes revision number is not supported\n");
 		return MV_NOT_SUPPORTED;

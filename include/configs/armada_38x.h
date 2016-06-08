@@ -349,7 +349,11 @@ extern unsigned int mvUartPortGet(void);
 	   the pre-defined ECC mode is always required
 	 */
 	#ifndef MV_NAND_BOOT
-		#define MV_NAND_8BIT_MODE
+		#ifndef MV_SIKLU_WIGIG_BOARD
+				#define MV_NAND_8BIT_MODE
+		#else
+			#define MV_NAND_4BIT_MODE
+		#endif
 	#endif
 	#define MTD_NAND_NFC_INIT_RESET
 
