@@ -69,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 /*******************************************************************************
-* mvSysNetaInit - Initialize the Eth subsystem
+* mvSysNfcInit - Initialize the NAND subsystem
 *
 * DESCRIPTION:
 *
