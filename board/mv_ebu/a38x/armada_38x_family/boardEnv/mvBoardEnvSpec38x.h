@@ -152,14 +152,25 @@
 /*******************************************************************************
 * A380 DB-68xx board
 *******************************************************************************/
-#define DB_88F68XX_MPP0_7               0x11111111
-#define DB_88F68XX_MPP8_15              0x11111111
-#define DB_88F68XX_MPP16_23             0x11266011
-#define DB_88F68XX_MPP24_31             0x22222011
-#define DB_88F68XX_MPP32_39             0x22200002
-#define DB_88F68XX_MPP40_47             0x40042022
-#define DB_88F68XX_MPP48_55             0x55550555
-#define DB_88F68XX_MPP56_63             0x00005550
+#ifdef MV_SIKLU_WIGIG_BOARD
+	#define DB_88F68XX_MPP0_7               0x11111111	// 0x18000
+	#define DB_88F68XX_MPP8_15              0x11111111	// 0x18004,
+	#define DB_88F68XX_MPP16_23             0x55266011  // 0x18008,  edikk Siklu Board MPP defines.
+	#define DB_88F68XX_MPP24_31             0x25252051	// 0x1800C,  edikk Siklu Board MPP defines.
+	#define DB_88F68XX_MPP32_39             0x25255555	// 0x18010,  edikk Siklu Board MPP defines.
+	#define DB_88F68XX_MPP40_47             0x40042565	// 0x18014,  edikk Siklu Board MPP defines.
+	#define DB_88F68XX_MPP48_55             0x55550555
+	#define DB_88F68XX_MPP56_63             0x00005550
+#else // !MV_SIKLU_WIGIG_BOARD
+	#define DB_88F68XX_MPP0_7               0x11111111
+	#define DB_88F68XX_MPP8_15              0x11111111
+	#define DB_88F68XX_MPP16_23             0x11266011  // edikk EVB Board MPP defines.
+	#define DB_88F68XX_MPP24_31             0x22222011	// edikk EVB Board MPP defines.
+	#define DB_88F68XX_MPP32_39             0x22200002	// edikk EVB Board MPP defines.
+	#define DB_88F68XX_MPP40_47             0x40042022	// edikk EVB Board MPP defines.
+	#define DB_88F68XX_MPP48_55             0x55550555
+	#define DB_88F68XX_MPP56_63             0x00005550
+#endif // MV_SIKLU_WIGIG_BOARD
 
 #define DB_88F68XX_GPP_OUT_ENA_LOW      0xFFFFFFFF
 #define DB_88F68XX_GPP_OUT_ENA_MID      (~(0x0E))
