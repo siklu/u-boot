@@ -25,7 +25,7 @@ static inline void flash_all_dcache(void) //
 {
 	flush_dcache_all();
 	invalidate_dcache_all(); // both functions work
-	// edikk TBD
+
 }
 
 static long a = 1; // could be made the seed value
