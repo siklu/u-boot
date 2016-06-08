@@ -296,6 +296,8 @@ if (($boardID eq "a38x") or
 	if ($siklu eq "1")
 	{
 		system("echo \"#define MV_SIKLU_WIGIG_BOARD 1\" >> include/config.h");
+		# system("echo \"#define CONFIG_CMD_NAND 1\" >> include/config.h");	   already defined in armada_38x.h
+			
 		system("echo \"#define MV_SIKLU_WIGIG_BOARD 1\" > include/siklu_config.h");
 		#system("echo \"#define CONFIG_CUSTOMER_BOARD_SUPPORT 1\" >> include/config.h");
 		#system("echo \"#define CONFIG_CUSTOMER_BOARD_SKL 1\" >> include/config.h");   # siklu board
