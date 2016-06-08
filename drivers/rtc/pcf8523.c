@@ -123,7 +123,7 @@ static int pcf8523_start_rtc(void)
 /*
  * Get the current time from the RTC
  */
-int siklu_rtc_get(struct rtc_time *val) // edikk
+int siklu_rtc_get(struct rtc_time *val)
 {
     int rc = 0;
     uchar sec, min, hour, mday, wday, mon, year;
@@ -171,7 +171,7 @@ int siklu_rtc_get(struct rtc_time *val) // edikk
 /*
  * Set the RTC
  */
-int siklu_rtc_set(struct rtc_time *val) // edikk
+int siklu_rtc_set(struct rtc_time *val)
 {
     int old_bus = i2c_get_bus_num();
 
@@ -221,7 +221,7 @@ int siklu_rtc_set(struct rtc_time *val) // edikk
  * on the square wave output increases the current drain on the backup
  * battery to something between 480nA and 800nA.
  */
-void siklu_rtc_reset(void) // edikk
+void siklu_rtc_reset(void)
 {
     struct rtc_time tmp;
 
