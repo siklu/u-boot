@@ -65,7 +65,7 @@ BOARD_OBJS += $(sort $(BOARD_OBJS-y))
 
 # Siklu add files here
 #BOARD_OBJS-$(MV_SIKLU_WIGIG_BOARD) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o
-BOARD_OBJS-$(CONFIG_ARMADA_38X) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o
+BOARD_OBJS-$(CONFIG_ARMADA_38X) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o    $(BOARD_ENV_DIR)/mvBoardSikluHw.o
 
 
 # SEE README.arm-unaligned-accesses

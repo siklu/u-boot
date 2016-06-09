@@ -350,7 +350,7 @@ MV_32 mvBoardPhyAddrGet(MV_U32 ethPortNum)
 		return MV_ERROR;
 	}
 
-	return board->pBoardMacInfo[ethPortNum].boardEthSmiAddr;
+	return board->pBoardMacInfo[ethPortNum].boardEthSmiAddr; // edikk put here MAC address
 }
 
 /*******************************************************************************

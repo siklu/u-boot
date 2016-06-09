@@ -363,9 +363,11 @@ MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {
 
 MV_BOARD_USB_INFO db88f68xxInfoBoardUsbInfo[] = {
 /* {MV_UNIT_ID usbType, MV_U8 usbPortNum, MV_BOOL isActive} */
+#ifndef MV_SIKLU_WIGIG_BOARD
 	{ USB3_UNIT_ID, 0, MV_TRUE},
 	{ USB3_UNIT_ID, 1, MV_TRUE},
 	{ USB_UNIT_ID,  0, MV_TRUE},
+#endif // MV_SIKLU_WIGIG_BOARD
 };
 
 MV_DEV_CS_INFO db88f68xxInfoBoardDeCsInfo[] = {

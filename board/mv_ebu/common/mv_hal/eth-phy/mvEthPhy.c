@@ -128,7 +128,7 @@ MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // edikk
 
 
 
-#ifdef MV_SIKLU_WIGIG_BOARD
+#ifdef MV_SIKLU_WIGIG_BOARD  // edikk release PHY reset !
 	extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 	extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 #define GPP6 6
