@@ -129,6 +129,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 	kernel_addr = getenv("kernel_addr_r");
 
 	/* initialize interfaces */
+#ifndef MV_SIKLU_WIGIG_BOARD
 	ide_init();
 	args_to_func[0]="usb";
 	args_to_func[1]="start";
@@ -136,7 +137,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 	args_to_func[0]="mmc";
 	args_to_func[1]="rescan";
 	do_mmcops(cmdtb, 1, 2, args_to_func);
-
+#endif // MV_SIKLU_WIGIG_BOARD
 	/* get device and partition number from 'device_partition' variable */
 	dev_part_ptr = getenv("device_partition");
 	if (dev_part_ptr == NULL)
@@ -188,6 +189,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 				args_to_func[1] = INTERFACE_HD;
 				max_dev_count = CONFIG_SYS_IDE_MAXDEVICE;
 			}
+#ifndef MV_SIKLU_WIGIG_BOARD
 			else if (strcmp(argv[device],"mmc_scr") == 0)
 			{
 				args_to_func[1] = INTERFACE_MMC;
@@ -198,6 +200,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 				args_to_func[1] = INTERFACE_USB;
 				max_dev_count = USB_MAX_STOR_DEV;
 			}
+#endif // 		MV_SIKLU_WIGIG_BOARD
 			printf("\nscanning %s devices beginning from: %d:%d\n",
 			    args_to_func[1], devnum, partnum);
 			for ( j = devnum; i==1 && j < max_dev_count; j++ )
@@ -249,6 +252,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 				args_to_func[1] = INTERFACE_HD;
 				max_dev_count = CONFIG_SYS_IDE_MAXDEVICE;
 			}
+#ifndef MV_SIKLU_WIGIG_BOARD
 			else if (strcmp(argv[device],"mmc_img") == 0)
 			{
 				args_to_func[1] = INTERFACE_MMC;
@@ -259,6 +263,7 @@ int do_stage_boot(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 				args_to_func[1] = INTERFACE_USB;
 				max_dev_count = USB_MAX_STOR_DEV;
 			}
+#endif // 	MV_SIKLU_WIGIG_BOARD
 			printf("\nscanning %s devices beginning from: %d:%d\n",
 			    args_to_func[1], devnum, partnum);
 			for ( j = devnum; i==1 && j < max_dev_count; j++ )

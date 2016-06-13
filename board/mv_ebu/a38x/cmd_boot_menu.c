@@ -145,6 +145,7 @@ int do_boot_menu(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 	/* Initialize proper interface and check if the device exists. */
 	if (strcmp(ifname, "ide") == 0)
 		ide_init();
+#ifndef MV_SIKLU_WIGIG_BOARD
 	else if (strcmp(ifname, "usb") == 0) {
 		args_to_func[0]=ifname;
 		args_to_func[1]="start";
@@ -159,6 +160,7 @@ int do_boot_menu(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 		do_mmcops(cmdtb, 1, 3, args_to_func);
 
 	}
+#endif //	MV_SIKLU_WIGIG_BOARD
 	filename = BM_SCRIPTS_LOCATION;
 
 	printf("Search for boot scripts in %s directory, on %s %d:%d [%s] device.\n",

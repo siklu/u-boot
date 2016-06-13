@@ -26,7 +26,9 @@ disclaimer.
 #include <environment.h>
 
 #if defined(MV_INCLUDE_USB)
-#include <usb.h>
+# include <usb.h>
+#else
+#undef MV_INCLUDE_USB
 #endif
 
 #include <fs.h>

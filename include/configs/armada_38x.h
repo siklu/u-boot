@@ -71,7 +71,11 @@
 #define CONFIG_CUSTOMER_BOARD_SUPPORT
 #endif
 
-#define MV_USB
+
+#ifndef  MV_SIKLU_WIGIG_BOARD
+ #define MV_USB
+#endif // MV_SIKLU_WIGIG_BOARD
+
 #define MV_FS
 #define CONFIG_CMD_DATE
 #define CONFIG_BOARD_EARLY_INIT_F
@@ -446,7 +450,13 @@ extern unsigned int mvUartPortGet(void);
 #define CONFIG_SYS_PROMPT_HUSH_PS2      "> "
 
 #define CONFIG_SYS_LONGHELP                                                                     /* undef to save memory		*/
-#define CONFIG_SYS_PROMPT               "Marvell>> "                                            /* Monitor Command Prompt	*/
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+# define CONFIG_SYS_PROMPT               "Skl>> "              /* Monitor Command Prompt Siklu	*/
+#else // !MV_SIKLU_WIGIG_BOARD
+# define CONFIG_SYS_PROMPT               "Marvell>> "          /* Monitor Command Prompt	*/
+#endif // MV_SIKLU_WIGIG_BOARD
+
 #define CONFIG_SYS_CBSIZE               1024                                                    /* Console I/O Buffer Size	*/
 #define CONFIG_SYS_PBSIZE               (CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)    /* Print Buffer Size */
 
@@ -502,53 +512,54 @@ extern unsigned int mvUartPortGet(void);
 	#undef CONFIG_USB_STORAGE
 #endif /* MV_USB */
 
-/************/
-/* SDIO/MMC */
-/************/
-#define CONFIG_MMC
-#define CONFIG_CMD_MMC
-#define CONFIG_GENERIC_MMC		1
-#undef	CONFIG_MRVL_MMC
-#define CONFIG_MV_SDHCI			1
-#define CONFIG_SDHCI			1
-#define CONFIG_MMC_SDMA			1
-#define CONFIG_MMC_SDHCI_IO_ACCESSORS	1
-#define CONFIG_SYS_MMC_MAX_DEVICE	1
-#define CONFIG_SYS_MMC_MAX_BLK_COUNT	0x100
-#define CONFIG_SYS_MMC_NUM		1
+#ifndef  MV_SIKLU_WIGIG_BOARD
+	/************/
+	/* SDIO/MMC */
+	/************/
+	#define CONFIG_MMC
+	#define CONFIG_CMD_MMC
+	#define CONFIG_GENERIC_MMC		1
+	#undef	CONFIG_MRVL_MMC
+	#define CONFIG_MV_SDHCI			1
+	#define CONFIG_SDHCI			1
+	#define CONFIG_MMC_SDMA			1
+	#define CONFIG_MMC_SDHCI_IO_ACCESSORS	1
+	#define CONFIG_SYS_MMC_MAX_DEVICE	1
+	#define CONFIG_SYS_MMC_MAX_BLK_COUNT	0x100
+	#define CONFIG_SYS_MMC_NUM		1
 
-#ifndef MV_SDMMC_REGS_OFFSET
-#define MV_SDMMC_REGS_OFFSET			(0xD8000)
-#endif
-#define CONFIG_SYS_MMC_BASE			(INTER_REGS_BASE + MV_SDMMC_REGS_OFFSET)
+	#ifndef MV_SDMMC_REGS_OFFSET
+	#define MV_SDMMC_REGS_OFFSET			(0xD8000)
+	#endif
+	#define CONFIG_SYS_MMC_BASE			(INTER_REGS_BASE + MV_SDMMC_REGS_OFFSET)
 
-/* MMC configuration   */
-/*****************************/
-//#define CONFIG_MMC_TRACE
-/* Boot from MMC settings */
-#if defined(MV_MMC_BOOT)
-	#define CONFIG_ENV_IS_IN_MMC	/* Environment is at absolute location (RAW) */
-//	#define CONFIG_ENV_IS_IN_FAT	/* Environment is in file on FAT partition */
-//	#define CONFIG_FAT_WRITE
-//	#define FAT_ENV_INTERFACE		"mmc"
-//	#define FAT_ENV_DEVICE			0
-//	#define FAT_ENV_PART			1
-//	#define FAT_ENV_FILE			"u-boot.env"
+	/* MMC configuration   */
+	/*****************************/
+	//#define CONFIG_MMC_TRACE
+	/* Boot from MMC settings */
+	#if defined(MV_MMC_BOOT)
+		#define CONFIG_ENV_IS_IN_MMC	/* Environment is at absolute location (RAW) */
+	//	#define CONFIG_ENV_IS_IN_FAT	/* Environment is in file on FAT partition */
+	//	#define CONFIG_FAT_WRITE
+	//	#define FAT_ENV_INTERFACE		"mmc"
+	//	#define FAT_ENV_DEVICE			0
+	//	#define FAT_ENV_PART			1
+	//	#define FAT_ENV_FILE			"u-boot.env"
 
-//	#define CONFIG_SYS_MMC_ENV_PART			1 /* Valid for MMC/eMMC for separating boot image and env */
-	#define CONFIG_SYS_MMC_ENV_DEV			0
-	#define CONFIG_ENV_SECT_SIZE			0x200
-	#define CONFIG_ENV_SIZE					0x80000
-	/* For SD - reserve 1 LBA for MBR + 1M for u-boot image. The MMC/eMMC boot image starts @ LBA-0.
-	   As result in MMC/eMMC case it will be a 1 sector gap between u-boot image and environment */
-	#define CONFIG_ENV_OFFSET				(_1M + CONFIG_ENV_SECT_SIZE)
-	#define CONFIG_ENV_ADDR					CONFIG_ENV_OFFSET
-	#define MONITOR_HEADER_LEN				0x200
-	#define CONFIG_SYS_MONITOR_BASE			0
-	#define CONFIG_SYS_MONITOR_LEN			0x80000					/*(512 << 10) Reserve 512 kB for Monitor */
+	//	#define CONFIG_SYS_MMC_ENV_PART			1 /* Valid for MMC/eMMC for separating boot image and env */
+		#define CONFIG_SYS_MMC_ENV_DEV			0
+		#define CONFIG_ENV_SECT_SIZE			0x200
+		#define CONFIG_ENV_SIZE					0x80000
+		/* For SD - reserve 1 LBA for MBR + 1M for u-boot image. The MMC/eMMC boot image starts @ LBA-0.
+		   As result in MMC/eMMC case it will be a 1 sector gap between u-boot image and environment */
+		#define CONFIG_ENV_OFFSET				(_1M + CONFIG_ENV_SECT_SIZE)
+		#define CONFIG_ENV_ADDR					CONFIG_ENV_OFFSET
+		#define MONITOR_HEADER_LEN				0x200
+		#define CONFIG_SYS_MONITOR_BASE			0
+		#define CONFIG_SYS_MONITOR_LEN			0x80000					/*(512 << 10) Reserve 512 kB for Monitor */
 
 #endif /* #if defined(MV_MMC_BOOT) */
-
+#endif // MV_SIKLU_WIGIG_BOARD
 
 /*
  * Linux boot and other

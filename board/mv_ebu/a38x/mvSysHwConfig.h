@@ -29,7 +29,10 @@ disclaimer.
 #define MV_INCLUDE_PEX
 #define MV_INCLUDE_GIG_ETH
 #define OLD_CESA_HAL
-#define MV_INCLUDE_USB
+#ifndef MV_SIKLU_WIGIG_BOARD
+ #define MV_INCLUDE_USB
+#endif // MV_SIKLU_WIGIG_BOARD
+
 #define MV_INCLUDE_TWSI
 #define MV_INCLUDE_UART
 #define MV_INCLUDE_TDM

@@ -2213,7 +2213,7 @@ int mvCtrlNandClkSet(int nfc_clk_freq)
 	/* Return calculated nand clock frequency */
 	return (MV_PLL_IN_CLK)/(2 * divider);
 }
-
+#ifndef MV_SIKLU_WIGIG_BOARD
 /*******************************************************************************
 * mvCtrlUsbMapGet
 *
@@ -2280,6 +2280,9 @@ MV_U32 mvCtrlUsbMapGet(MV_U32 usbUnitId, MV_U32 usbActive)
 
 	return usbActive;
 }
+#endif // MV_SIKLU_WIGIG_BOARD
+
+
 
 #ifdef CONFIG_ARMADA_39X
 
