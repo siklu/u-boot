@@ -600,7 +600,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	malloc_start = dest_addr - TOTAL_MALLOC_LEN;
 	mem_malloc_init(malloc_start, TOTAL_MALLOC_LEN);
 
-#ifdef CONFIG_ARCH_EARLY_INIT_R
+#if defined(CONFIG_ARCH_EARLY_INIT_R) || defined(MV_SIKLU_WIGIG_BOARD)
 	arch_early_init_r();
 #endif
 	power_init_board();
@@ -670,7 +670,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 		set_default_env(NULL);
 
 #if defined(CONFIG_CMD_PCI) || defined(CONFIG_PCI)
-	arm_pci_init();
+	arm_pci_init();  // edikk
 #endif
 
 	stdio_init();   /* get the devices list going. */
