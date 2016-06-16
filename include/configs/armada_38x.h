@@ -315,7 +315,12 @@ extern unsigned int mvUartPortGet(void);
 		#endif
 
 		#define CONFIG_ENV_SIZE                         CONFIG_ENV_SECT_SIZE    /* environment takes one sector */
+#ifdef MV_SIKLU_WIGIG_BOARD
+		#define CONFIG_ENV_OFFSET                       (0x200000 -  (2 * CONFIG_ENV_SECT_SIZE)) /* (2MB -128k) siklu environment starts here  */
+		// edikk write environment into SPI FLASH offs 0x1e0000, size 0x10000 see file env_sf.c
+#else
 		#define CONFIG_ENV_OFFSET                       0x100000                /* (1MB For Image) environment starts here  */
+#endif // MV_SIKLU_WIGIG_BOARD
 		#define CONFIG_ENV_ADDR                         CONFIG_ENV_OFFSET
 		#define MONITOR_HEADER_LEN                      0x200
 		#define CONFIG_SYS_MONITOR_BASE                 0
