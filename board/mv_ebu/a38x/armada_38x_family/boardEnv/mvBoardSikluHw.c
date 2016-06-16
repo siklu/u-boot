@@ -127,7 +127,7 @@ static int mvSikluCpuGpioConf(void) {
 
 	// configure MPP6 GPHY port2 reset, active low output
 	mvSikluCpuGpioSetDirection(6, 1);
-	mvSikluCpuGpioSetVal(6, 1);
+	mvSikluCpuGpioSetVal(6, 1);// edikk change to reset
 
 	// configure MPP12 Power Led Yellow output
 	mvSikluCpuGpioSetDirection(12, 1);
@@ -307,7 +307,16 @@ int mvSikluHwResetCntrl(SKL_MODULE_RESET_CNTRL_E dev, int isEna) {
 		mvSikluCpuGpioSetVal(47, !isEna);
 		break;
 	case SKL_WIGIG2_CHIP_RESET:
-		mvSikluCpuGpioSetVal(51, !isEna); // edikk change to reset
+		mvSikluCpuGpioSetVal(51, !isEna);
+		break;
+	case SKL_GPHY_0_RESET:
+		mvSikluCpuGpioSetVal(53, !isEna);
+		break;
+	case SKL_GPHY_1_RESET:
+		mvSikluCpuGpioSetVal(6, !isEna);
+		break;
+	case SKL_GPHY_2_RESET:
+		mvSikluCpuGpioSetVal(50, !isEna);
 		break;
 	default:
 		break;
@@ -332,6 +341,13 @@ int arch_early_init_r(void) {
 
 	mvSikluHwResetCntrl(SKL_WIGIG0_CHIP_RESET, 0);
 	mvSikluHwResetCntrl(SKL_WIGIG1_CHIP_RESET, 0);
+	mvSikluHwResetCntrl(SKL_WIGIG2_CHIP_RESET, 0);
+
+	mvSikluHwResetCntrl(SKL_GPHY_0_RESET, 0);
+	mvSikluHwResetCntrl(SKL_GPHY_1_RESET, 0);
+	mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);
+
+
 
 	udelay(10000);
 

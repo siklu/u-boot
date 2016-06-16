@@ -1678,6 +1678,10 @@ MV_STATUS mvHwsUpdateSerdesPhySelectors(SERDES_MAP* serdesConfigMap)
 
 		laneData = mvHwsSerdesGetPhySelectorVal(serdesLaneHwNum, serdesType);
 
+		//mvPrintf("%s: SerDes serdesIdx %x, serdesType %x, serdesMode %x, serdesLaneHwNum %x, laneData %x\n",__func__,
+		//		serdesIdx, serdesType, serdesMode, serdesLaneHwNum, laneData);
+
+
 		if(serdesType == DEFAULT_SERDES) {
 			continue;
 		}

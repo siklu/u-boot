@@ -100,7 +100,7 @@ MV_U32 mvBoardPortTypeGet(MV_U32 ethPortNum) // edikk Siklu board network type S
 	if (mvBoardIsPortInRgmii(ethPortNum))
 		rc = MV_PORT_TYPE_RGMII;
 
-	mvOsPrintf("%s: ethPortNum %d, type %d\n" , __func__, ethPortNum, rc); // edikk remove
+	// mvOsPrintf("%s: ethPortNum %d, type %d\n" , __func__, ethPortNum, rc);
 
 	return rc;
 }

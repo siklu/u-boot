@@ -247,15 +247,15 @@ loadTopologyFuncPtr loadTopologyFuncArr[] =
 /** Load topology - Marvell 380 DB - BP **/
 /*****************************************/
 /* Configuration options */
-SERDES_MAP DbConfigDefault[MAX_SERDES_LANES] =  // edikk serdes configuration here!
+SERDES_MAP DbConfigDefault[MAX_SERDES_LANES] =  // edikk siklu serdes topology configuration here!
 {
 #ifdef 	MV_SIKLU_WIGIG_BOARD
 	{ PEX0, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ SGMII0,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ SGMII1,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ SGMII2,   __3_125Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
+	{ PEX1, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ PEX2, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
-	{ PEX3, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 #else // !MV_SIKLU_WIGIG_BOARD
 	{ SATA0,	 __3Gbps,   	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ PEX0, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },

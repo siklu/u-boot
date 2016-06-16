@@ -421,7 +421,7 @@ MV_U32 ddr3Init(void) // edikk !
 	/* Set X-BAR windows for the training sequence */
 	ddr3SaveAndSetTrainingWindows(auWinBackup);
 
-#ifdef SIKLU_DDR_DEBUG	// edikk
+#ifdef SIKLU_DDR_DEBUG
 	{
 		int count;
 		debugp(" auWinBackup:\n");

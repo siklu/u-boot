@@ -197,15 +197,21 @@ MV_STATUS mvHwsGetExtBaseAddr
 *******************************************************************************/
 MV_U32 mvHwsSerdesGetPhySelectorVal(MV_32 serdesNum, SERDES_TYPE serdesType)
 {
+	MV_U32 retval = 0;
     if (serdesType >= LAST_SERDES_TYPE) {
-        return 0xFF;
+    	retval = 0xFF;
+    	//mvPrintf("   %s:  serdesNum %x,  serdesType %x, line %d, rc = %x\n", __func__, serdesNum, serdesType, __LINE__, retval);
+    }
+    else if (mvHwsCtrlSerdesRevGet() == MV_SERDES_REV_1_2) {
+    	retval = commonPhysSelectorsSerdesRev1Map[serdesType][serdesNum];
+    	//mvPrintf("   %s:  serdesNum %x,  serdesType %x, line %d, rc = %x\n", __func__, serdesNum, serdesType, __LINE__, retval);
+    }
+    else {
+        retval = commonPhysSelectorsSerdesRev2Map[serdesType][serdesNum];
+    	//mvPrintf("   %s:  serdesNum %x,  serdesType %x, line %d, rc = %x\n", __func__, serdesNum, serdesType, __LINE__, retval);
     }
 
-    if (mvHwsCtrlSerdesRevGet() == MV_SERDES_REV_1_2) {
-        return commonPhysSelectorsSerdesRev1Map[serdesType][serdesNum];
-    }
-    else
-        return commonPhysSelectorsSerdesRev2Map[serdesType][serdesNum];
+    return retval;
 }
 
 /***************************************************************************/

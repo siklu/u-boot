@@ -102,9 +102,9 @@
 /************************************ enums ***********************************/
 /* Serdes lane types */
 typedef enum {
-	PEX0,	// 0
-	PEX1,	//
-	PEX2,	//
+	PEX0,	// 0 PCIe 0
+	PEX1,	// 1 PCIe 1
+	PEX2,	// 2 PCIe 2
 	PEX3,
 	SATA0,
 	SATA1,

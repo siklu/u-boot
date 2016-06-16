@@ -130,7 +130,7 @@ MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value)
 		return MV_BAD_PARAM;
 	}
 
-	//printf("%s()  group %d, mask 0x%x, value 0x%x\n", __func__, group, mask, value); // edikk remove !!
+	//printf("%s()  group %d, mask 0x%x, value 0x%x\n", __func__, group, mask, value);
 
 	gppRegSet(group, GPP_DATA_OUT_EN_REG(group), mask, value);
 
@@ -278,7 +278,7 @@ MV_U32 mvGppValueGet(MV_U32 group, MV_U32 mask)
 	gppData = MV_REG_READ(GPP_DATA_IN_REG(group));
 
 	gppData &= mask;
-	//printf("%s()  group 0x%x, gppData 0x%x\n", __func__, group, gppData); // edikk remove !!
+	//printf("%s()  group 0x%x, gppData 0x%x\n", __func__, group, gppData);
 
 	return gppData;
 
@@ -380,7 +380,7 @@ MV_VOID gppRegSet(MV_U32 group, MV_U32 regOffs, MV_U32 mask, MV_U32 value)
 
 	MV_REG_WRITE(regOffs, gppData);
 
-	//printf("   %s()  reg 0x%x, val 0x%x\n", __func__, regOffs, gppData); // edikk remove !!
+	//printf("   %s()  reg 0x%x, val 0x%x\n", __func__, regOffs, gppData);
 
 }
 
