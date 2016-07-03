@@ -40,7 +40,7 @@
 #include "mv_version.h"
 
 /*
- * Plaform
+ * Platform
  */
 
 /*
@@ -51,6 +51,16 @@
 
 /* Version number passed to kernel */
 #define VER_NUM 0x13010000              /* 2013.01 */
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+
+# define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
+# define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
+# define MTDIDS_DEFAULT		"nand0=armada-nand" // ;spi0=spi-flash     edikk
+# define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
+    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)" // ;mtdparts=spi-flash:1984k(u-boot),-(seeprom)
+#endif //
+
 
 /*
  * General

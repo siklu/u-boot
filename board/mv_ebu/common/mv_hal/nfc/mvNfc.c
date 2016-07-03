@@ -678,7 +678,7 @@ MV_NFC_FLASH_INFO flashDeviceInfo[] = {
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
 	.flags = NFC_CLOCK_UPSCALE_200M
 	},
-	{	/* Macronix 1Gb Siklu Card MX30LF2G18AC */
+	{	/* Macronix 1Gb SIKLU Card MX30LF2G18AC */
 		/* 3.3v parametrs */
 	.tADL = 70,		/* tADL, Address to write data delay */
 	.tCH = 5,		/* tCH, Enable signal hold time */
