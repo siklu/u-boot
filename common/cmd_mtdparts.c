@@ -88,7 +88,7 @@
  */
 
 
-// #define DEBUG // edikk remove
+// #define DEBUG
 
 #include <common.h>
 #include <command.h>

@@ -56,9 +56,9 @@
 
 # define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 # define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
-# define MTDIDS_DEFAULT		"nand0=armada-nand" // ;spi0=spi-flash     edikk
+# define MTDIDS_DEFAULT		"nand0=armada-nand" //      edikk SPI  ;spi1=spi_flash
 # define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
-    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)" // ;mtdparts=spi-flash:1984k(u-boot),-(seeprom)
+    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)" // ;mtdparts=spi_flash:1984k(u-boot),-(seeprom)
 #endif //
 
 
