@@ -406,8 +406,8 @@ void restore_env(void)
 
 int fsload (cmd_tbl_t *cmdtp, int flag, int argc, char * argv[])
 {
-	int result;
-
+	int result = 0;
+#ifdef CONFIG_CMD_EXT2
 	argv[0] = "ext2load";
 	result = do_ext2load (cmdtp, flag, argc, argv);
 	if (result) {
@@ -415,7 +415,7 @@ int fsload (cmd_tbl_t *cmdtp, int flag, int argc, char * argv[])
 		argv[0] = "fatload";
 		result = do_fat_fsload (cmdtp, flag, argc, argv);
 	}
-
+#endif // CONFIG_CMD_EXT2
 	return result;
 }
 

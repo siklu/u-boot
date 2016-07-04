@@ -27,7 +27,7 @@ static block_dev_desc_t *fs_dev_desc;
 static disk_partition_t fs_partition;
 static int fs_type = FS_TYPE_ANY;
 
-static inline int fs_ls_unsupported(const char *dirname)
+static inline int fs_ls_unsupported(const char *dirname, ...)
 {
 	printf("** Unrecognized filesystem type **\n");
 	return -1;

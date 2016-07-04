@@ -174,12 +174,13 @@ int do_boot_menu(cmd_tbl_t * cmdtb, int flag, int argc, char * const argv[])
 		return 1;
 
 	/* set the device as block device */
+#ifdef CONFIG_CMD_EXT4
 	ext4fs_set_blk_dev(dev_desc, &info);
 
 	if (ext4fs_mount(info.size))
 		ext4fs_ls (filename, out_buffer, BM_OUT_BUF_SIZE);
 	ext4fs_close();
-
+#endif // CONFIG_CMD_EXT4
 	/* Prepare a menu to select one of boot scripts. */
 	putc('\n');
 	putc('\n');

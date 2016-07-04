@@ -163,7 +163,7 @@ extern unsigned int mvUartPortGet(void);
 #define CONFIG_CMD_RUN
 #define CONFIG_CMD_MISC
 #define CONFIG_CMD_IDE
-#define CONFIG_CMD_SCSI
+// #define CONFIG_CMD_SCSI
 #define CONFIG_CMD_SAR
 #define CONFIG_CMD_STAGE_BOOT
 #define CONFIG_CMD_RCVR
@@ -204,20 +204,20 @@ extern unsigned int mvUartPortGet(void);
 
 #ifdef MV_FS
 /* FS supported */
-#define CONFIG_CMD_EXT2
-#define CONFIG_CMD_EXT4
-#define CONFIG_FS_EXT4
-#define CONFIG_CMD_EXT4_WRITE
-#define CONFIG_EXT4_WRITE
-#define CONFIG_CMD_JFFS2
-#define CONFIG_CMD_FAT
-#define CONFIG_FS_FAT
-#define CONFIG_SUPPORT_VFAT
+//#define CONFIG_CMD_EXT2
+//#define CONFIG_CMD_EXT4
+//#define CONFIG_FS_EXT4
+//#define CONFIG_CMD_EXT4_WRITE
+//#define CONFIG_EXT4_WRITE
+//#define CONFIG_CMD_JFFS2
+//#define CONFIG_CMD_FAT
+//#define CONFIG_FS_FAT
+//#define CONFIG_SUPPORT_VFAT
 
 #define CONFIG_SYS_USE_UBI
 #ifdef CONFIG_SYS_USE_UBI
 	#define CONFIG_CMD_UBI
-	#define CONFIG_CMD_UBIFS
+	// #define CONFIG_CMD_UBIFS   edikk do not use ubifs
 	#define CONFIG_MTD_DEVICE
 	#define CONFIG_MTD_PARTITIONS
 	#define CONFIG_CMD_MTDPARTS
@@ -248,15 +248,15 @@ extern unsigned int mvUartPortGet(void);
 #define CONFIG_SYS_ATA_IDE0_OFFSET	0x0000
 
 #undef CONFIG_MAC_PARTITION
-#define CONFIG_DOS_PARTITION
-#define CONFIG_EFI_PARTITION
+//#define CONFIG_DOS_PARTITION
+//#define CONFIG_EFI_PARTITION
 
 
-#define CONFIG_SYS_64BIT_LBA			/*    Support disk over 2TB        */
+//#define CONFIG_SYS_64BIT_LBA			/*    Support disk over 2TB        */
 #define CONFIG_LBA48
 
-#define CONFIG_SCSI_MV92XX
-#define CONFIG_SCSI_6820
+//#define CONFIG_SCSI_MV92XX
+//#define CONFIG_SCSI_6820
 
 #if defined(CONFIG_SCSI_MV92XX) || defined(CONFIG_SCSI_6820)
 #define CONFIG_LIBATA
@@ -384,7 +384,7 @@ extern unsigned int mvUartPortGet(void);
 	#define CONFIG_SYS_64BIT_VSPRINTF
 	#define CONFIG_SKIP_BAD_BLOCK
 	#undef MV_NFC_DBG
-	#define CONFIG_JFFS2_NAND
+	//#define CONFIG_JFFS2_NAND
 
 /* Boot from NAND settings */
 	#if defined(MV_NAND_BOOT)
@@ -639,8 +639,8 @@ extern unsigned int mvUartPortGet(void);
 	#define CONFIG_PCI_PNP                  /* do pci plug-and-play         */
 
 /* PnP PCI Network cards */
-	#define CONFIG_EEPRO100 /* Support for Intel 82557/82559/82559ER chips */
-	#define CONFIG_E1000
+	//#define CONFIG_EEPRO100 /* Support for Intel 82557/82559/82559ER chips */
+	//#define CONFIG_E1000
 	#define CONFIG_SK98
 	#define YUK_ETHADDR                     "00:00:00:EE:51:81"
 #endif
