@@ -678,25 +678,25 @@ MV_NFC_FLASH_INFO flashDeviceInfo[] = {
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
 	.flags = NFC_CLOCK_UPSCALE_200M
 	},
-	{	/* Macronix 1Gb SIKLU Card MX30LF2G18AC */
+	{	/* Macronix 1Gb SIKLU Card MX30LF2G18AC  edikk NAND optimize timing access!*/
 		/* 3.3v parametrs */
-	.tADL = 70,		/* tADL, Address to write data delay */
-	.tCH = 5,		/* tCH, Enable signal hold time */
-	.tCS = 15,		/* tCS, Enable signal setup time */
-	.tWC = 20,		/* tWC, ND_nWE cycle duration, limited to 35 by the ARMADA-XP CPU */
-	.tWH = 7,		/* tWH, ND_nWE high duration */
-	.tWP = 10,		/* tWP, ND_nWE pulse time */
-	.tRC = 20,		/* tRC, ND_nRE cycle duration, limited to 35 by the ARMADA-XP CPU */
-	.tRH = 7,		/* tRH, ND_nRE high duration */
-	.tRP = 10,		/* tRP, ND_nRE pulse width */
+	.tADL = 100,		/* tADL, Address to write data delay */
+	.tCH = 10,		/* tCH, Enable signal hold time */
+	.tCS = 25,		/* tCS, Enable signal setup time */
+	.tWC = 35,		/* tWC, ND_nWE cycle duration, limited to 35 by the ARMADA-XP CPU */
+	.tWH = 15,		/* tWH, ND_nWE high duration */
+	.tWP = 15,		/* tWP, ND_nWE pulse time */
+	.tRC = 35,		/* tRC, ND_nRE cycle duration, limited to 35 by the ARMADA-XP CPU */
+	.tRH = 15,		/* tRH, ND_nRE high duration */
+	.tRP = 18,		/* tRP, ND_nRE pulse width */
 	.tR = 25121,	/* tR = data transfer from cell to register tR = tR+tRR+tWB+1 */
-	.tWHR = 60,		/* tWHR, ND_nWE high to ND_nRE low delay for status read */
-	.tAR = 10,		/* tAR, ND_ALE low to ND_nRE low delay */
-	.tRHW = 60, //100,		/* tRHW, ND_nRE high to ND_nWE low delay */
+	.tWHR = 70,		/* tWHR, ND_nWE high to ND_nRE low delay for status read */
+	.tAR = 20,		/* tAR, ND_ALE low to ND_nRE low delay */
+	.tRHW = 100, //100,		/* tRHW, ND_nRE high to ND_nWE low delay */
 	.pgPrBlk = 64,		/* Pages per block - detected */
 	.pgSz = 2048,		/* Page size */
 	.oobSz = 64, //224,		/* Spare size */
-	.blkNum = 1024, 2048,		/* Number of blocks/sectors in the flash */
+	.blkNum = 1024,//  2048,		/* Number of blocks/sectors in the flash */
 	.id = 0xF1C2,		/* Device ID 0xDevice,Vendor */
 	.model = "Macronix 1Gb",
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
