@@ -209,7 +209,7 @@ extern unsigned int mvUartPortGet(void);
 //#define CONFIG_FS_EXT4
 //#define CONFIG_CMD_EXT4_WRITE
 //#define CONFIG_EXT4_WRITE
-//#define CONFIG_CMD_JFFS2
+#define CONFIG_CMD_JFFS2
 //#define CONFIG_CMD_FAT
 //#define CONFIG_FS_FAT
 //#define CONFIG_SUPPORT_VFAT
@@ -379,12 +379,18 @@ extern unsigned int mvUartPortGet(void);
 	#define CONFIG_SYS_MAX_NAND_DEVICE 1
 	#define CONFIG_CMD_NAND
 	#define CONFIG_CMD_NAND_TRIMFFS
+	#define CONFIG_MTD_NAND_VERIFY_WRITE
+
+	// #define CONFIG_SYS_NAND_SELF_INIT
+	#define CONFIG_SYS_NAND_ONFI_DETECTION
+
+
 	#define CONFIG_MV_MTD_GANG_SUPPORT
 	#define CONFIG_MV_MTD_MLC_NAND_SUPPORT
 	#define CONFIG_SYS_64BIT_VSPRINTF
 	#define CONFIG_SKIP_BAD_BLOCK
 	#undef MV_NFC_DBG
-	//#define CONFIG_JFFS2_NAND
+	#define CONFIG_JFFS2_NAND
 
 /* Boot from NAND settings */
 	#if defined(MV_NAND_BOOT)
