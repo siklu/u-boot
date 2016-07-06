@@ -15,19 +15,20 @@
 
 #define BOOT_DEBUG // edikk remove
 
-
 #ifdef BOOT_DEBUG
-static inline int _run_command(const char *cmd, int flag)
-{
+static inline int _run_command(const char *cmd, int flag) {
 	int rc;
-	printf(" *** Run command: %s\n", cmd);
+	printf(" *** Run command: \"%s\" end command\n", cmd);
 	rc = run_command(cmd, flag);
 	printf(" ***                  rc %d\n", rc);
 	return rc;
 
 }
+# define debugp printf
+
 #else
 # define _run_command(a,b) run_command(a,b)
+# define debugp(fmt, a...)
 #endif
 
 #define BOOT_FROM_IMAGE_IN_ENV    (-1)
@@ -35,11 +36,23 @@ static inline int _run_command(const char *cmd, int flag)
 #define MAX_ACTIVE_UIMAGE_SIZE    22000000 // 22M
 
 #define INITRAMFS_SIZE      0x1800000
-#define KERNEL_ADDR        "20000000"
 
-static ulong ramd_addr = 0;
-static ulong ramd_size = INITRAMFS_SIZE;
+#define KERNEL_ADDR_STR      "3000000"   // address to copy kernel from uimage
+#define KERNEL_ADDR_HEX     0x3000000   // address where booter founds the kernel (same above)
 
+#define RAMD_ADDR           0x5000000 // address to copy RAMD from uimage
+
+#define DTB_ADDR_STR		 "4000000"
+#define DTB_ADDR_HEX		0x4000000
+
+
+
+
+
+
+
+static ulong ramd_addr = RAMD_ADDR;
+// static ulong ramd_size = INITRAMFS_SIZE;
 
 static int rescue_restore_boot_image(void);
 
@@ -92,35 +105,22 @@ static int validate_sw_image(int img2load) {
 
 	return rc;
 }
+
 /*
  *
  */
-static int allocate_mem_space(void) {
-	int rc = 0;
-//#define RAMD_MIN_ADDR  0x21000000
-//#define RAMD_MAX_ADDR  0x30000000
-//#define RAMD_ALIGNMENT 0x100000
-
-#define RAMD_SIZE	0x2000000
-#define RAMD_ADDR   0x21000000
-
-	// ramd_addr = cvmx_bootmem_phy_named_block_alloc(ramd_size + 0x1000, RAMD_MIN_ADDR, RAMD_MAX_ADDR, RAMD_ALIGNMENT, "skl_initrd", 0);
-	ramd_addr = RAMD_ADDR;
-	printf(" namedalloc for <skl_initrd> addr 0x%x, size 0x%x(%d)\n",
-			(uint) ramd_addr, (uint) ramd_size, (uint) ramd_size);
-	return rc;
-}
 static int unpack_uimage(uint uimage_ram_addr) {
 	int rc = 0;
 	char buf[256];
 
-	// extract kernel to RAM locations
-	sprintf(buf, "imx %x 2 " KERNEL_ADDR, uimage_ram_addr);
+	//############################# extract kernel to RAM locations
+	sprintf(buf, "imx %x 2 " KERNEL_ADDR_STR, uimage_ram_addr);
 	rc = _run_command(buf, 0);
 	if (rc != 0) {
-		printf(" Execute command \"%s\" FAIL\n", buf);
+		printf(" Kernel: Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
+	// ############################# extract RAMD
 	// ROOTFS is SQUASHFS compressed image, no need to decompress it
 	// simply extract and copy it to dest address
 	int part = 1; // This is root file system part number inside a siklu uimage!!!!
@@ -132,9 +132,18 @@ static int unpack_uimage(uint uimage_ram_addr) {
 		printf(" Get ROOTFS param FAIL\n");
 		return -1;
 	}
-	uint32_t ramd_hex_addr = 0;
-	ramd_hex_addr = ramd_addr; //simple_strtoul(INITRAMFS_ADDR, NULL, 16);
+	uint32_t ramd_hex_addr = ramd_addr;
+	debugp(" Copy ROOTFS from %x to %x, size %x\n", (uint32_t)data, (uint32_t)ramd_hex_addr, (uint32_t)len);
 	memcpy((char*) ramd_hex_addr, (char*) data, len + 100);
+
+	// ############################# extract DEvice tree DTB file
+	sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr);
+	rc = _run_command(buf, 0);
+	if (rc != 0) {
+		printf(" DTB: Execute command \"%s\" FAIL\n", buf);
+		return -1;
+	}
+
 	return rc;
 }
 
@@ -146,18 +155,26 @@ static int run_linux_code(int is_system_in_bist) {
 	char buf[600];
 	int i = 0;
 	const char* mtd_str = getenv("user_mtdparts");
-
-	if (mtd_str) {
-		// use user predefined MTD partition table
-	} else {
+	const char* nand_ecc = getenv("nandEcc");
+	if (!mtd_str) {
 		mtd_str = MTDPARTS_DEFAULT;
 	}
+
+	if (!nand_ecc) {
+		nand_ecc = "nfcConfig=4bitecc";
+	}
+
 	// edikk !!!!----------------------------  build a command line ---------------------------------------------------------------------
-	//
+	/* set boot arguments
+
+	 env set bootargs console=ttyS0,115200   $nandEcc $mtdparts  mem=128M  fdt_skip_update=yes  root=/dev/ram0 rw initrd=0x4000000  root=/dev/ram0  rw  ip=dhcp raid=noautodetect'
+	 env set net_ram  'dhcp;run ramdargs; tftpboot ${kernel_addr_r} ${sbootfile}; tftp ${fdt_addr_r} ${fdt_file};bootz ${kernel_addr_r} - ${fdt_addr_r}'
+
+	 */
 	i +=
 			sprintf(buf + i,
-					"bootoctlinux " KERNEL_ADDR " numcores=1 coremask=0x1 endbootargs rd_name=skl_initrd mtdparts=%s ",
-					mtd_str);
+					"env set bootargs console=ttyS0,115200 %s %s   mem=128M  fdt_skip_update=yes  root=/dev/ram0 rw initrd=%x root=/dev/ram0  rw  ip=dhcp raid=noautodetect ",
+					nand_ecc, mtd_str, RAMD_ADDR);
 
 	if (is_system_in_bist) { // add string to command line says about BIST mode
 		const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
@@ -170,13 +187,22 @@ static int run_linux_code(int is_system_in_bist) {
 
 	i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION,
 			U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
-
-	// run the command line
+	// run the command line for preset boot environment
 	rc = _run_command(buf, 0);
 	if (rc != 0) {
 		printf(" Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
+
+	// edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return!
+	i=0;
+	i += sprintf(buf + i, "bootz 0x%x - 0x%x", KERNEL_ADDR_HEX, DTB_ADDR_HEX);
+	rc = _run_command(buf, 0);
+	if (rc != 0) {
+		printf(" Execute command \"%s\" FAIL\n", buf);
+		return -1;
+	}
+
 	return rc;
 }
 
@@ -221,12 +247,7 @@ static int execute_siklu_boot(int forced_image) {
 		}
 	}
 	printf("\nTrying %s uimage... \n", (img2load == 0) ? ("1st") : ("2nd"));
-	// allocate pools for NPU, kernel and rootfs
-	rc = allocate_mem_space();
-	if (rc != 0) {
-		printf(" Execute command allocate_mem_space FAIL\n");
-		return -1;
-	}
+
 	rc = unpack_uimage(ADDR_IN_RAM4ACTIVE_UIMAGE);
 	if (rc != 0) {
 		printf(" ERROR, exit\n");
@@ -255,12 +276,7 @@ static int execute_siklu_boot_from_ram(ulong img_addr) {
 		is_system_in_bist = 0;
 
 	printf("\nTrying load uimage from address 0x%x... \n", (uint) img_addr);
-	// allocate pools for NPU, kernel and rootfs
-	rc = allocate_mem_space();
-	if (rc != 0) {
-		printf(" Execute command allocate_mem_space FAIL\n");
-		return -1;
-	}
+
 	rc = unpack_uimage(img_addr);
 	if (rc != 0) {
 		printf("Unpack ERROR, exit\n");
@@ -391,26 +407,25 @@ static int do_siklu_boot(cmd_tbl_t * cmdtp, int flag, int argc,
 	(void) argc;
 	(void) argv;
 
-	if (siklu_mutable_env_get("SK_primary_image") /*  getenv("SK_primary_image") */== 0)
-	{
-		printf("No SK_primary_image environment!... The SW should be restored\n");
+	if (siklu_mutable_env_get("SK_primary_image") /*  getenv("SK_primary_image") */
+			== 0) {
+		printf(
+				"No SK_primary_image environment!... The SW should be restored\n");
 		rc = rescue_restore_boot_image();
-		if (rc >= 0)
-		{
+		if (rc >= 0) {
 			siklu_wait_user4prevent_card_reboot();
 		}
 	}
 
-	switch (argc)
+	switch (argc) {
+	case 2:  // command called with 1 parameter
 	{
-		case 2:  // command called with 1 parameter
-		{
-			int img = simple_strtoul(argv[1], NULL, 10);
-			if ((img >= 0) && (img <= 1))
+		int img = simple_strtoul(argv[1], NULL, 10);
+		if ((img >= 0) && (img <= 1))
 			rc = execute_siklu_boot(img);
-		}
+	}
 		break;
-		default:
+	default:
 		execute_siklu_boot(BOOT_FROM_IMAGE_IN_ENV);
 		break;
 	}
@@ -426,11 +441,9 @@ static int do_siklu_ram_boot(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = -1;
 
-
 	ulong img_addr = 0;
 
-	if (argc != 2)
-	{
+	if (argc != 2) {
 		printf(" Called with wrong args num %d\n", argc);
 		return 0;
 	}
@@ -449,12 +462,11 @@ static int do_siklu_set_dflt_env(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE; // the command isn't repeatable!
 
-
-
 	extern uint32_t get_nand_part_offset_by_name(const char* name);
 	extern int primary_format_mutual_env(uint32_t env_part_offs);
 
-	uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name("env_var0");
+	uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name(
+			"env_var0");
 	primary_format_mutual_env(mut_env_in_nand_flash_start);
 
 	return rc;
@@ -466,8 +478,6 @@ static int do_siklu_set_dflt_env(cmd_tbl_t * cmdtp, int flag, int argc,
 static int do_siklu_show_mut_env_area(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_SUCCESS;
-
-
 
 	extern void siklu_print_mut_env_area(void);
 	siklu_print_mut_env_area();
