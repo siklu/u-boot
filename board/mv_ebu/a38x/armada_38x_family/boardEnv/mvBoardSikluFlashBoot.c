@@ -197,7 +197,7 @@ static int run_linux_code(int is_system_in_bist) {
 		return -1;
 	}
 
-	/* edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return!
+	/* edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return! */
 	i=0;
 	i += sprintf(buf + i, "bootz 0x%x - 0x%x", KERNEL_ADDR_HEX, DTB_ADDR_HEX);
 	rc = _run_command(buf, 0);
@@ -205,7 +205,7 @@ static int run_linux_code(int is_system_in_bist) {
 		printf(" Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
-	 */
+
 	return rc;
 }
 
