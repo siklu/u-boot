@@ -13,7 +13,7 @@
 #include <version.h>
 #include <siklu_api.h>
 
-#define BOOT_DEBUG // edikk remove
+// #define BOOT_DEBUG
 
 #ifdef BOOT_DEBUG
 static inline int _run_command(const char *cmd, int flag) {
@@ -40,7 +40,7 @@ static inline int _run_command(const char *cmd, int flag) {
 #define KERNEL_ADDR_STR      "3000000"   // address to copy kernel from uimage
 #define KERNEL_ADDR_HEX     0x3000000   // address where booter founds the kernel (same above)
 
-#define RAMD_ADDR           0x5000000 // address to copy RAMD from uimage
+#define RAMD_ADDR           0x10000000 // 0x5000000 // address to copy RAMD from uimage
 
 #define DTB_ADDR_STR		 "4000000"
 #define DTB_ADDR_HEX		0x4000000
@@ -167,14 +167,14 @@ static int run_linux_code(int is_system_in_bist) {
 	// edikk !!!!----------------------------  build a command line ---------------------------------------------------------------------
 	/* set boot arguments
 
-	 env set bootargs console=ttyS0,115200   $nandEcc $mtdparts  mem=128M  fdt_skip_update=yes  root=/dev/ram0 rw initrd=0x4000000  root=/dev/ram0  rw  ip=dhcp raid=noautodetect'
-	 env set net_ram  'dhcp;run ramdargs; tftpboot ${kernel_addr_r} ${sbootfile}; tftp ${fdt_addr_r} ${fdt_file};bootz ${kernel_addr_r} - ${fdt_addr_r}'
-
+			be careful - limit filesystem size to 32M!
 	 */
-	i +=
-			sprintf(buf + i,
-					"env set bootargs console=ttyS0,115200 %s %s   mem=128M  fdt_skip_update=yes  root=/dev/ram0 rw initrd=%x root=/dev/ram0  rw  ip=dhcp raid=noautodetect ",
+	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x2000000 rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
 					nand_ecc, mtd_str, RAMD_ADDR);
+
+	// mem=128M ip=dhcp
+
+
 
 	if (is_system_in_bist) { // add string to command line says about BIST mode
 		const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
@@ -185,8 +185,11 @@ static int run_linux_code(int is_system_in_bist) {
 		i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
 	}
 
+	/* edikk temporary disabled
 	i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION,
 			U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
+	*/
+
 	// run the command line for preset boot environment
 	rc = _run_command(buf, 0);
 	if (rc != 0) {
@@ -194,7 +197,7 @@ static int run_linux_code(int is_system_in_bist) {
 		return -1;
 	}
 
-	// edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return!
+	/* edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return!
 	i=0;
 	i += sprintf(buf + i, "bootz 0x%x - 0x%x", KERNEL_ADDR_HEX, DTB_ADDR_HEX);
 	rc = _run_command(buf, 0);
@@ -202,7 +205,7 @@ static int run_linux_code(int is_system_in_bist) {
 		printf(" Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
-
+	 */
 	return rc;
 }
 
