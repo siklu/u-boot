@@ -339,9 +339,7 @@ void misc_init_r_env(void)
 #  ifndef MV_SIKLU_WIGIG_BOARD
 		setenv("mtdparts", "'mtdparts=armada-nand:8m(boot)ro,8m@8m(kernel),-(rootfs);mtdparts=spi_flash:4m(boot),-(spi-rootfs)'");
 #  else
-		//setenv("mtdparts", "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
-		//		"128k(hdr1),40M(uimage1),16M(conf),-(log)");
-		setenv("mtdparts", MTDPARTS_DEFAULT);// edikk: add ";mtdparts=spi_flash:1984k(u-boot),-(seeprom)" doesnt work. why?
+		setenv("mtdparts", MTDPARTS_DEFAULT);
 #  endif
 #elif defined(MV_NAND)
 		setenv("mtdparts", "mtdparts=armada-nand:8m(boot)ro,8m@8m(kernel),-(rootfs)");

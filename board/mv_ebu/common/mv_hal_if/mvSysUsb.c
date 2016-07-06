@@ -86,7 +86,7 @@ MV_STATUS mvSysUsbInit(MV_VOID)
 {
 	MV_USB_HAL_DATA halData;
 	MV_STATUS status = MV_OK;
-	MV_U32 dev;
+	MV_U32 __attribute__((unused))  dev;
 	MV_UNIT_WIN_INFO addrWinMap[MAX_TARGETS + 1];
 
 	halData.ctrlModel = mvCtrlModelGet();

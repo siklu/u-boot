@@ -1371,7 +1371,7 @@ ulong dma_read_write_cmd (MV_SATA_ADAPTER *pSataAdapter,
 
 	if ( blkcnt > 128){
 		printf("error in %s: blk count %llx exceeded max limit\n",
-		       __func__, blkcnt);
+		       __func__, (long long unsigned int)blkcnt);
 	}
 
 	//	mvSataDisableChannelDma(pSataAdapter, channelIndex);

@@ -172,17 +172,24 @@ static void genimg_print_time(time_t timestamp);
 /*****************************************************************************/
 int image_check_hcrc(const image_header_t *hdr)
 {
-	ulong hcrc;
+	ulong hcrc; // calculated CRC
 	ulong len = image_get_header_size();
 	image_header_t header;
+	int rc;
 
 	/* Copy header so we can blank CRC field for re-calculation */
 	memmove(&header, (char *)hdr, image_get_header_size());
 	image_set_hcrc(&header, 0);
 
 	hcrc = crc32(0, (unsigned char *)&header, len);
+	rc = (hcrc == image_get_hcrc(hdr));
+	if (!rc)
+	{
+		printf("\n Wrong CRC %x - %x\n", hcrc, image_get_hcrc(hdr)); // edikk remove
+	}
 
-	return (hcrc == image_get_hcrc(hdr));
+
+	return (rc);
 }
 
 int image_check_dcrc(const image_header_t *hdr)

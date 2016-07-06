@@ -58,6 +58,14 @@ PLATFORM_RELFLAGS =
 PLATFORM_CPPFLAGS =
 PLATFORM_LDFLAGS =
 
+#####################   SIKLU Additions  ####################
+SVNVERSION_STR=$(shell svnversion)
+SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
+SIKLU_FLAGS = $(SIKLU_SVNVERSION)
+
+
+
+
 #########################################################################
 
 HOSTCFLAGS	= -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer \
@@ -316,7 +324,7 @@ export	CONFIG_SYS_TEXT_BASE PLATFORM_CPPFLAGS PLATFORM_RELFLAGS CPPFLAGS CFLAGS 
 # Allow boards to use custom optimize flags on a per dir/file basis
 BCURDIR = $(subst $(SRCTREE)/,,$(CURDIR:$(obj)%=%))
 ALL_AFLAGS = $(AFLAGS) $(AFLAGS_$(BCURDIR)/$(@F)) $(AFLAGS_$(BCURDIR))
-ALL_CFLAGS = $(CFLAGS) $(CFLAGS_$(BCURDIR)/$(@F)) $(CFLAGS_$(BCURDIR))
+ALL_CFLAGS = $(CFLAGS) $(CFLAGS_$(BCURDIR)/$(@F)) $(CFLAGS_$(BCURDIR))  $(SIKLU_FLAGS)
 EXTRA_CPPFLAGS = $(CPPFLAGS_$(BCURDIR)/$(@F)) $(CPPFLAGS_$(BCURDIR))
 ALL_CFLAGS += $(EXTRA_CPPFLAGS)
 

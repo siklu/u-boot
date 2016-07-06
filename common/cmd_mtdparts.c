@@ -2043,6 +2043,50 @@ static int do_mtdparts(cmd_tbl_t *cmdtp, int flag, int argc,
 	return CMD_RET_USAGE;
 }
 
+
+//==========  MV_SIKLU_WIGIG_BOARD  ======================
+uint32_t get_nand_part_offset_by_name(const char* name)
+{
+    struct list_head *dentry, *pentry;
+    struct part_info *part;
+    struct mtd_device *dev;
+    int part_num;
+    uint32_t offset = (uint32_t)-1;
+
+    mtdparts_init();
+
+    list_for_each(dentry, &devices) {
+        dev = list_entry(dentry, struct mtd_device, link);
+        /* list partitions for given device */
+        part_num = 0;
+
+        //printf("\ndevice %s%d <%s>, # parts = %d\n",
+        //        MTD_DEV_TYPE(dev->id->type), dev->id->num,
+        //        dev->id->mtd_id, dev->num_parts);
+        //printf(" #: name\t\tsize\t\toffset\t\tmask_flags\n");
+
+        list_for_each(pentry, &dev->parts) {
+            part = list_entry(pentry, struct part_info, link);
+            if (strcmp(name,part->name ) == 0)
+            {
+                offset = part->offset;
+            }
+           // printf("%2d: %-20s0x%08llx\t0x%08llx\t%d\n",
+           //         part_num, part->name, part->size,
+           //         part->offset, part->mask_flags);
+            part_num++;
+        }
+    }
+    return offset;
+
+}
+
+
+
+
+
+
+
 /***************************************************/
 U_BOOT_CMD(
 	chpart,	2,	0,	do_chpart,
