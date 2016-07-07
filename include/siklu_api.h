@@ -47,7 +47,7 @@ extern int mvSikluHwResetCntrl(SKL_MODULE_RESET_CNTRL_E, int isEna);
 extern const char* siklu_mutable_env_get(const char *varname);
 extern uint32_t get_nand_part_offset_by_name(const char* name);
 extern int siklu_mutable_env_set(const char *varname, const char *varvalue, int save_if_diff_required);
-
+extern const char* siklu_mutable_env_get(const char *varname);
 
 extern int siklu_is_restore2fact_default(void);
 extern void siklu_wait_user4prevent_card_reboot(void);

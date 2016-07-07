@@ -142,6 +142,13 @@ static int do_env_print(cmd_tbl_t *cmdtp, int flag, int argc,
 			return 1;
 		printf("\nEnvironment size: %d/%ld bytes\n",
 			rcode, (ulong)ENV_SIZE);
+#ifdef MV_SIKLU_WIGIG_BOARD
+		{
+			extern int siklu_mutable_env_show(void);
+			siklu_mutable_env_show();
+		}
+#endif
+
 		return 0;
 	}
 
@@ -220,6 +227,19 @@ static int _do_env_set(int flag, int argc, char * const argv[])
 	debug("Final value for argc=%d\n", argc);
 	name = argv[1];
 	value = argv[2];
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+
+    // printf("%s()  called for %s\n",__func__, name); //
+    if (strstr(name, "SK_"))
+    {
+extern int siklu_mutable_env_set(const char *varname, const char *varvalue,  int save_if_diff_required);
+        // printf("%s() siklu process called for %s\n",__func__, name); //
+        return siklu_mutable_env_set(name, value, 1);
+    }
+#endif //
+
+
 
 	if (strchr(name, '=')) {
 		printf("## Error: illegal character '='"

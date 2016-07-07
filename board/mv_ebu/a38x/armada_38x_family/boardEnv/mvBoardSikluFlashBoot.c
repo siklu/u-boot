@@ -41,6 +41,7 @@ static inline int _run_command(const char *cmd, int flag) {
 #define KERNEL_ADDR_HEX     0x3000000   // address where booter founds the kernel (same above)
 
 #define RAMD_ADDR           0x10000000 // 0x5000000 // address to copy RAMD from uimage
+#define RAMD_MAX_SIZE		0x2000000  // 32 MB max?
 
 #define DTB_ADDR_STR		 "4000000"
 #define DTB_ADDR_HEX		0x4000000
@@ -169,8 +170,8 @@ static int run_linux_code(int is_system_in_bist) {
 
 			be careful - limit filesystem size to 32M!
 	 */
-	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x2000000 rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
-					nand_ecc, mtd_str, RAMD_ADDR);
+	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
+					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
 
 	// mem=128M ip=dhcp
 
@@ -197,7 +198,7 @@ static int run_linux_code(int is_system_in_bist) {
 		return -1;
 	}
 
-	/* edikk add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return! */
+	/* add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return! */
 	i=0;
 	i += sprintf(buf + i, "bootz 0x%x - 0x%x", KERNEL_ADDR_HEX, DTB_ADDR_HEX);
 	rc = _run_command(buf, 0);

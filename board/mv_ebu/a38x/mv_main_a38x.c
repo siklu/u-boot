@@ -931,6 +931,9 @@ void kick_next(void)
 }
 
 #ifdef BOARD_LATE_INIT
+
+
+
 int board_late_init(void)
 {
 	char *env;
@@ -938,7 +941,16 @@ int board_late_init(void)
 	if (env && ((strcmp(env, "yes") == 0) || (strcmp(env, "Yes") == 0)))
 		kick_next();
 
+#ifdef MV_SIKLU_WIGIG_BOARD
+	{
+		extern int siklu_mutable_env_cntrl(int stage);
+		siklu_mutable_env_cntrl(3);
+	}
+#else
+
 	mvBoardDebugLed(0);
+#endif
+
 	return 0;
 }
 
