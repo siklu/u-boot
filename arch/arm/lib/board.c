@@ -313,7 +313,7 @@ init_fnc_t *init_sequence[] = {
 	NULL,
 };
 /*
- * init procedure in FLASH  edikk
+ * init procedure in FLASH  siklu_remarkM01
  */
 void board_init_f(ulong bootflag)
 {
@@ -342,7 +342,7 @@ void board_init_f(ulong bootflag)
 	gd->fdt_blob = (void*)getenv_ulong("fdtcontroladdr", 16,
 					   (uintptr_t)gd->fdt_blob);
 
-		// call all functions from init_sequence[] array edikk
+		// call all functions from init_sequence[] array siklu_remarkM01
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr)
 		if ((*init_fnc_ptr)() != 0)
 			hang();
@@ -554,7 +554,7 @@ static void display_fdt_model(const void *blob)
  * running from RAM and have a "normal" C environment, i. e. global
  * data can be written, BSS has been cleared, the stack size in not
  * that critical any more, etc.
- *   * init procedure in RAM  edikk
+ *   * init procedure in RAM  siklu_remarkM02
  ************************************************************************
  */
 
@@ -670,7 +670,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 		set_default_env(NULL);
 
 #if defined(CONFIG_CMD_PCI) || defined(CONFIG_PCI)
-	arm_pci_init();  // edikk
+	arm_pci_init();  // siklu_remarkM03
 #endif
 
 	stdio_init();   /* get the devices list going. */
@@ -719,7 +719,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 #if defined(CONFIG_CMD_NET)
 	puts("Net:   ");
-	eth_initialize(gd->bd);  // edikk init network
+	eth_initialize(gd->bd);  // siklu_remarkM04. Initialize network
 #if defined(CONFIG_RESET_PHY_R)
 	debug("Reset Ethernet PHY\n");
 	reset_phy();
@@ -755,7 +755,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;; )
-		main_loop(); // edikk
+		main_loop(); // siklu_remarkM05
 
 	/* NOTREACHED - no way out of command loop except booting */
 }

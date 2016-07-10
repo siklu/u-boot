@@ -165,17 +165,13 @@ static int run_linux_code(int is_system_in_bist) {
 		nand_ecc = "nfcConfig=4bitecc";
 	}
 
-	// edikk !!!!----------------------------  build a command line ---------------------------------------------------------------------
+	// siklu_remarkM09   build a command line -
 	/* set boot arguments
-
 			be careful - limit filesystem size to 32M!
 	 */
 	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
 					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-
 	// mem=128M ip=dhcp
-
-
 
 	if (is_system_in_bist) { // add string to command line says about BIST mode
 		const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
@@ -186,7 +182,7 @@ static int run_linux_code(int is_system_in_bist) {
 		i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
 	}
 
-	/* edikk temporary disabled
+	/* siklu_remarkM10 temporary disabled relay uboot version to linux
 	i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION,
 			U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 	*/

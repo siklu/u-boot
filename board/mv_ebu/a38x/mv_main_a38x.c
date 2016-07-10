@@ -326,7 +326,7 @@ void misc_init_r_env(void)
 	env = getenv("mtdids");
 	if (!env) {
 #if defined(MV_NAND) && defined(MV_INCLUDE_SPI)
-		setenv("mtdids", MTDIDS_DEFAULT );  // edikk SPI: add   ";spi1=spi_flash" doesnt work. why?
+		setenv("mtdids", MTDIDS_DEFAULT );  // SPI: add   ";spi1=spi_flash" doesnt work. why?
 #elif defined(MV_NAND)
 		setenv("mtdids", "nand0=armada-nand");
 #elif defined(MV_INCLUDE_SPI)

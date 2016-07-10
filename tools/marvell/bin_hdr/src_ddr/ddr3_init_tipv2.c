@@ -347,7 +347,7 @@ return MV_OK;
  * Notes:
  * Returns:  None.
  */
-MV_U32 ddr3Init(void) // edikk !
+MV_U32 ddr3Init(void) // siklu_remarkM15 !
 {
 	MV_U32 uiReg = 0;
 	MV_U32 socNum;
@@ -602,7 +602,7 @@ MV_STATUS ddr3LoadTopologyMap(void)
 	CHECK_STATUS(ddr3GetTopologyMap(&toplogyMap));
 	debugp("%s()  Called, line %d\n", __func__, __LINE__);
 
-#if defined(MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI)  // edikk should be disabled for Siklu, enable for EVB!
+#if defined(MV_DDR_TOPOLOGY_UPDATE_FROM_TWSI)  // siklu_remarkM15 should be disabled for Siklu, enable for EVB!
 	/*Update topology data*/
 	if(MV_OK != ddr3UpdateTopologyMap(toplogyMap)) {
 		DEBUG_INIT_FULL_S("Failed update of DDR3 Topology map\n");

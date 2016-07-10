@@ -18,7 +18,7 @@ static int is_event_rest2fact_dflt = 0; // by default no
 
 
 /*
- * TODO port and compleete restore to factory default process. edikk
+ * TODO port and complete restore to factory default process.
  */
 int siklu_is_restore2fact_default(void)
 {

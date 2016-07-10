@@ -120,14 +120,14 @@ static int mvSikluExtndrGpioConf(void) {
 	return rc;
 }
 /*
- * Configure SoC MPP pins
+ * Configure SoC MPP pins siklu_remarkM11
  */
 static int mvSikluCpuGpioConf(void) {
 	int rc = 0;
 
 	// configure MPP6 GPHY port2 reset, active low output
 	mvSikluCpuGpioSetDirection(6, 1);
-	mvSikluCpuGpioSetVal(6, 1);// edikk change to reset
+	mvSikluCpuGpioSetVal(6, 1);// change to reset
 
 	// configure MPP12 Power Led Yellow output
 	mvSikluCpuGpioSetDirection(12, 1);
@@ -150,10 +150,10 @@ static int mvSikluCpuGpioConf(void) {
 
 	// configure MPP44 WIGIG0 CHIP reset active low output
 	mvSikluCpuGpioSetDirection(44, 1);
-	mvSikluCpuGpioSetVal(44, 1); // edikk change to reset
+	mvSikluCpuGpioSetVal(44, 1); // change to reset!
 	// configure MPP47 WIGIG1 CHIP reset active low output
 	mvSikluCpuGpioSetDirection(47, 1);
-	mvSikluCpuGpioSetVal(47, 1); // edikk change to reset
+	mvSikluCpuGpioSetVal(47, 1); // change to reset!
 	// configure MPP48 RF LED Green output
 	mvSikluCpuGpioSetDirection(48, 1);
 	// configure MPP49 RF LED Yellow  	output
@@ -161,16 +161,16 @@ static int mvSikluCpuGpioConf(void) {
 
 	// configure MPP50 PHY Port3 Reset output
 	mvSikluCpuGpioSetDirection(50, 1);
-	mvSikluCpuGpioSetVal(50, 1); // edikk change to reset
+	mvSikluCpuGpioSetVal(50, 1); // change to reset!
 	// configure MPP51 WIGIG2 CHIP reset active low output
 	mvSikluCpuGpioSetDirection(51, 1);
-	mvSikluCpuGpioSetVal(51, 1); // edikk change to reset
+	mvSikluCpuGpioSetVal(51, 1); // change to reset!
 	// configure MPP52 RST Factory default input
 	mvSikluCpuGpioSetDirection(52, 0);
 
 	// configure MPP53  PHY P1 Reset output
 	mvSikluCpuGpioSetDirection(53, 1);
-	mvSikluCpuGpioSetVal(53, 1); // edikk change to reset
+	mvSikluCpuGpioSetVal(53, 1); // change to reset!
 	// configure MPP54  SFP P3 Exists  input
 	mvSikluCpuGpioSetDirection(54, 0);
 	// configure MPP55 	SFP P3 Fault input
@@ -333,9 +333,9 @@ int arch_early_init_r(void) {
 	// configure CPU GPIO
 	mvSikluCpuGpioConf();
 
-	// edikk - follow part remove after debug. we do not need PCIe enabled by default
-	mvSikluHwResetCntrl(SKL_WIGIG0_RF_RESET, 0); // edikk enable WIGIG radio ???
-	mvSikluHwResetCntrl(SKL_WIGIG1_RF_RESET, 0); // edikk enable WIGIG radio ???
+	// siklu_remarkM11 - follow part remove after debug. we do not need PCIe enabled by default
+	mvSikluHwResetCntrl(SKL_WIGIG0_RF_RESET, 0); // enable WIGIG radio ???
+	mvSikluHwResetCntrl(SKL_WIGIG1_RF_RESET, 0); // enable WIGIG radio ???
 	mvSikluHwResetCntrl(SKL_WIFI_RESET, 0);
 	mvSikluHwResetCntrl(SKL_BLE_RESET, 1);
 

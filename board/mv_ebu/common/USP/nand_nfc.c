@@ -1688,7 +1688,7 @@ fail_free_mtd:
 	return ret;
 }
 #else /* defined UBOOT_CODE */
-int board_nand_nfc_init(struct nand_chip *nand)  // edikk init NAND here
+int board_nand_nfc_init(struct nand_chip *nand)  // siklu_remarkM12 init NAND here
 {
 	struct orion_nfc_info *info;
 	int ret = 0;

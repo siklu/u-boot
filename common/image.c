@@ -185,7 +185,7 @@ int image_check_hcrc(const image_header_t *hdr)
 	rc = (hcrc == image_get_hcrc(hdr));
 	if (!rc)
 	{
-		printf("\n Wrong CRC %x - %x\n", (uint)hcrc, (uint)image_get_hcrc(hdr)); // edikk remove
+		printf("\n Wrong CRC %x - %x\n", (uint)hcrc, (uint)image_get_hcrc(hdr));
 	}
 
 

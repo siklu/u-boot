@@ -185,7 +185,7 @@ int submit_int_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 extern void udc_disconnect(void);
 
 #else
-// #error USB Lowlevel not defined    edikk - Siklu board doesnt have USB
+// #error USB Lowlevel not defined    Siklu board doesnt have USB siklu_remarkM14
 #endif
 
 #ifdef CONFIG_USB_STORAGE

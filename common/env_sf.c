@@ -290,8 +290,7 @@ int saveenv(void)
 	if (ret)
 		goto done;
 
-	puts("Writing to SPI flash...");// edikk write environment into SPI FLASH offs 0x1e0000, size 0x10000
-	// printf("  CONFIG_ENV_OFFSET 0x%x, CONFIG_ENV_SIZE 0x%x\n", CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE);
+	puts("Writing to SPI flash...");// siklu_remarkM13  write environment into SPI FLASH offs 0x1e0000, size 0x10000
 	ret = spi_flash_write(env_flash, CONFIG_ENV_OFFSET,
 		CONFIG_ENV_SIZE, &env_new);
 	if (ret)
@@ -303,7 +302,6 @@ int saveenv(void)
 		if (ret)
 			goto done;
 	}
-
 	ret = 0;
 	puts("done\n");
 

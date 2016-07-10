@@ -183,7 +183,7 @@ MV_VOID mvBoardEnvInit(MV_VOID)
 	}
 
 	/* Set GPP Out value */
-	MV_REG_WRITE(GPP_DATA_OUT_REG(0), board->gppOutValLow);  // edikk example for GPIO control
+	MV_REG_WRITE(GPP_DATA_OUT_REG(0), board->gppOutValLow);  // siklu_remarkM06 example for GPIO control
 	MV_REG_WRITE(GPP_DATA_OUT_REG(1), board->gppOutValMid);
 	MV_REG_WRITE(GPP_DATA_OUT_REG(2), board->gppOutValHigh);
 
@@ -452,7 +452,7 @@ MV_VOID mvBoardQuadPhyAddr0Set(MV_U32 ethPortNum, MV_U32 smiAddr)
 *******************************************************************************/
 MV_BOARD_SPEC_INIT *mvBoardSpecInitGet(MV_VOID)
 {
-	return board->pBoardSpecInit;  // edikk Board spec
+	return board->pBoardSpecInit;
 }
 
 /*******************************************************************************
@@ -660,7 +660,7 @@ MV_32 mvBoarGpioPinNumGet(MV_BOARD_GPP_CLASS gppClass, MV_U32 index)
 * mvBoardReset
 *
 * DESCRIPTION:
-*	Reset the board
+*	Reset the board   siklu_remarkM17
 * INPUT:
 *	None.
 *
@@ -1348,11 +1348,11 @@ MV_U32 mvBoardSwitchPortForceLinkGet(MV_U32 switchIdx)
 *       None.
 *
 *******************************************************************************/
-MV_VOID mvBoardConfigWrite(void)   // edikk write MPP configuration
+MV_VOID mvBoardConfigWrite(void)   // siklu_remarkM07 write MPP configuration
 {
 	MV_U32 mppGroup, i, reg;
 	MV_BOARD_SPEC_INIT *boardSpec;
-	//mvOsPrintf("## %s()\n", __func__);
+
 	for (mppGroup = 0; mppGroup < MV_MPP_MAX_GROUP; mppGroup++) {
 		//mvOsPrintf("\tmppGroup %d, Value 0x%08x\n", mppGroup, mvBoardMppGet(mppGroup));
 		MV_REG_WRITE(mvCtrlMppRegGet(mppGroup), mvBoardMppGet(mppGroup));
@@ -1360,7 +1360,7 @@ MV_VOID mvBoardConfigWrite(void)   // edikk write MPP configuration
 
 	boardSpec = mvBoardSpecInitGet();
 	if (boardSpec != NULL) {
-		//mvOsPrintf("## %s() Board Spec isn't empty!\n",__func__);
+
 		i = 0;
 		while (boardSpec[i].reg != TBL_TERM) {
 			reg = MV_REG_READ(boardSpec[i].reg);
@@ -1372,7 +1372,7 @@ MV_VOID mvBoardConfigWrite(void)   // edikk write MPP configuration
 		}
 	}
 	else {
-		; //mvOsPrintf("## %s() Board Spec empty!\n",__func__);
+		;
 	}
 }
 
@@ -2059,7 +2059,7 @@ MV_VOID mvBoardSet(MV_U32 boardId)
 *       32bit board ID number, '-1' if board is undefined.
 *
 *******************************************************************************/
-MV_U32 mvBoardIdGet(MV_VOID) // edikk ???
+MV_U32 mvBoardIdGet(MV_VOID)
 {
 	if (gBoardId != -1)
 		return gBoardId;

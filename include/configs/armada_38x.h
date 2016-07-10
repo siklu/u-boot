@@ -56,7 +56,7 @@
 
 # define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 # define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
-# define MTDIDS_DEFAULT		"nand0=armada-nand" //      edikk SPI  ;spi1=spi_flash
+# define MTDIDS_DEFAULT		"nand0=armada-nand" //      SPI  ;spi1=spi_flash
 # define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
     "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"
 #endif //
@@ -217,7 +217,7 @@ extern unsigned int mvUartPortGet(void);
 #define CONFIG_SYS_USE_UBI
 #ifdef CONFIG_SYS_USE_UBI
 	#define CONFIG_CMD_UBI
-	// #define CONFIG_CMD_UBIFS   edikk do not use ubifs
+	// #define CONFIG_CMD_UBIFS   do not support ubifs in uboot
 	#define CONFIG_MTD_DEVICE
 	#define CONFIG_MTD_PARTITIONS
 	#define CONFIG_CMD_MTDPARTS
@@ -327,7 +327,7 @@ extern unsigned int mvUartPortGet(void);
 		#define CONFIG_ENV_SIZE                         CONFIG_ENV_SECT_SIZE    /* environment takes one sector */
 #ifdef MV_SIKLU_WIGIG_BOARD
 		#define CONFIG_ENV_OFFSET                       (0x200000 -  (2 * CONFIG_ENV_SECT_SIZE)) /* (2MB -128k) siklu environment starts here  */
-		// edikk write environment into SPI FLASH offs 0x1e0000, size 0x10000 see file env_sf.c
+		// siklu_remarkM13 write environment into SPI FLASH offs 0x1e0000, size 0x10000 see file env_sf.c
 #else
 		#define CONFIG_ENV_OFFSET                       0x100000                /* (1MB For Image) environment starts here  */
 #endif // MV_SIKLU_WIGIG_BOARD

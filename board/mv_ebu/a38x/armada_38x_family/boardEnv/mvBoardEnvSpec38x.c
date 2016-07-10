@@ -327,7 +327,7 @@ MV_BOARD_INFO *customerBoardInfoTbl[] = {
 #define DB_88F68XX_BOARD_NOR_READ_PARAMS	0x403E07CF
 #define DB_88F68XX_BOARD_NOR_WRITE_PARAMS	0x000F0F0F
 
-MV_BOARD_MPP_INFO db88f68xxInfoBoardMppConfigValue[] = {  // edikk Siklu Board MPP defines.
+MV_BOARD_MPP_INFO db88f68xxInfoBoardMppConfigValue[] = {  // siklu_remarkM07 Siklu Board MPP defines.
 	{ {
 		  DB_88F68XX_MPP0_7,
 		  DB_88F68XX_MPP8_15,
@@ -382,7 +382,7 @@ MV_BOARD_TDM_INFO db88f68xxTdm880[] = { {0} };
 
 MV_BOARD_TDM_SPI_INFO db88f68xxTdmSpiInfo[] = { {1} };
 
-MV_BOARD_INFO db88f68xx_board_info = {  // edikk Siklu Board
+MV_BOARD_INFO db88f68xx_board_info = {  // Siklu Board info siklu_remarkM07 siklu_remarkM08
 	.boardName		= "DB-88F6820-BP",
 	.compatibleDTName	= "a385-db",
 	.numBoardNetComplexValue	= 0,
@@ -810,7 +810,7 @@ struct MV_BOARD_IO_EXPANDER dbGP88f68XXInfoBoardioExpValue[] = {
 
 MV_U8 dbGP88f68XXInfoBoardPicGpio[] = {33, 34, 35};
 
-MV_BOARD_INFO dbGP88f68XX_board_info = { // edikk Marvell EVB uses this
+MV_BOARD_INFO dbGP88f68XX_board_info = { // siklu_remarkM08 Marvell EVB uses this
 	.boardName			= "DB-88F6820-GP",
 	.compatibleDTName		= "a388-db-gp",
 	.numBoardNetComplexValue	= 0,

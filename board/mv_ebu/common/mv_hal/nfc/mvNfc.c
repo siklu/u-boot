@@ -678,7 +678,8 @@ MV_NFC_FLASH_INFO flashDeviceInfo[] = {
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
 	.flags = NFC_CLOCK_UPSCALE_200M
 	},
-	{	/* Macronix 1Gb SIKLU Card MX30LF2G18AC  edikk NAND optimize timing access!   same values conf in linux*/
+	{	/* Macronix 1Gb SIKLU Card MX30LF2G18AC  NAND optimize timing access!
+	 	 	 	 same values conf in linux    siklu_remarkM12 */
 		/* 3.3v parametrs */
 	.tADL = 100,		/* tADL, Address to write data delay */
 	.tCH = 10,		/* tCH, Enable signal hold time */
@@ -700,7 +701,7 @@ MV_NFC_FLASH_INFO flashDeviceInfo[] = {
 	.id = 0xF1C2,		/* Device ID 0xDevice,Vendor */
 	.model = "Macronix 1Gb",
 	.bb_page = 0,		/* Manufacturer Bad block marking page in block */
-	.flags = NFC_FLAGS_NONE, // NFC_CLOCK_UPSCALE_200M   /* edikk  */
+	.flags = NFC_FLAGS_NONE, // NFC_CLOCK_UPSCALE_200M
 	}
 
 

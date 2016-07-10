@@ -101,7 +101,8 @@ MV_HWS_TOPOLOGY_MAP TopologyMap[] =
 
 #else /* CONFIG_CUSTOMER_BOARD_SUPPORT */
 
-/************************************* Marvell Boards Topology *************************************/ // edikk get topology here, last entry is Siklu board
+/************************************* Marvell Boards Topology ******/
+// siklu_remarkM15 get topology here, last entry is Siklu board
 MV_HWS_TOPOLOGY_MAP TopologyMap[] =
 {
     /* 1st Marvell board - RD_NAS */
@@ -113,7 +114,7 @@ MV_HWS_TOPOLOGY_MAP TopologyMap[] =
 		BUS_MASK_32BIT  /* Buses mask */
     },
 #ifdef CONFIG_DDR3
-    /* 2nd Marvell board - DB (DDR3)  edikk Eval Board */
+    /* 2nd Marvell board - DB (DDR3)  siklu_remarkM15 Eval Board */
     {
 		0x1, /* active interfaces */
 		/*cs_mask,       mirror,       dqs_swap,      ck_swap    X PUPs          speed_bin        memory_width  mem_size  frequency  casL casWL  temperature */
