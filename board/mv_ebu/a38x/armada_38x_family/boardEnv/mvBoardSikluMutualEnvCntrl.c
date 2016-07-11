@@ -452,11 +452,13 @@ static int siklu_mutable_env_init(void)
     char buff[ENV_STRING_MAX_VAL];
     int is_valid_env = 0; // is environment valid flag by default FALSE
 
-    /// printf("%s()  called\n",__func__); //
-    if (is_mutable_env_initiated)
+    //  printf("%s()  called line %d\n",__func__, __LINE__);
+    if (is_mutable_env_initiated) {
+    	//  printf("%s()  called line %d\n",__func__, __LINE__);
         return rc;
+    }
 
-    // printf("%s()  called, process required\n",__func__); //
+    // printf("%s()  called, process required\n",__func__);
     memset(mut_env_pair, 0, sizeof(mut_env_pair));
     //  preset mtdpartitions to default map
     rc = run_command("mtdparts default", 0);
@@ -468,7 +470,7 @@ static int siklu_mutable_env_init(void)
         rc = -1;
         return -1;
     }
-    //printf("Find partition by offset 0x%x\n", env_start);
+
     is_valid_env = siklu_find_valid_env(buff, mut_env_in_nand_flash_start);
 
     if (!is_valid_env)
@@ -482,8 +484,13 @@ static int siklu_mutable_env_init(void)
     rc = siklu_parse_mutial_env_string2tokens(buff);
     if (rc != 0)
     {
+    	printf("%s() Parse tokens fail\n",__func__);
         primary_format_mutual_env(mut_env_in_nand_flash_start);
         return 0;
+    }
+    else
+    {
+    	printf("%s() Buffer: \"%s\"\n",__func__, buff); // edikk remove after debug
     }
 
     is_mutable_env_initiated = 1; // call it only once

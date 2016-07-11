@@ -111,7 +111,7 @@ MV_STATUS mvSysEthPhyInit(void)   // edikk
 		halData.boardSpecInit = MV_FALSE;
 		halData.isSgmii[port] = mvBoardIsPortInSgmii(port);
 		halData.QuadPhyPort0[port] = mvBoardQuadPhyAddr0Get(port);
-		mvOsPrintf("%s() port %d: phyAddr %x,  isSgmii %d\n", __func__, port, halData.phyAddr[port], halData.isSgmii[port]); // edikk
+		// mvOsPrintf("%s() port %d: phyAddr %x,  isSgmii %d\n", __func__, port, halData.phyAddr[port], halData.isSgmii[port]); // edikk
 	}
 	halData.ethPhySmiReg = ETH_SMI_REG(MV_ETH_SMI_PORT);
 	halData.ctrlModel = mvCtrlModelGet();
