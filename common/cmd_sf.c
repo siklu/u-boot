@@ -27,6 +27,13 @@
 
 static struct spi_flash *flash;
 
+#ifdef MV_SIKLU_WIGIG_BOARD // used in siklu code
+struct spi_flash *get_spi_flash_data(void)
+{
+	return flash;
+}
+#endif // CONFIG_SIKLU_BOARD
+
 
 /*
  * This function computes the length argument for the erase command.
@@ -85,7 +92,7 @@ static ulong bytes_per_second(unsigned int len, ulong start_ms)
 		return 1024 * len / max(get_timer(start_ms), 1);
 }
 
-static int do_spi_flash_probe(int argc, char * const argv[])
+int do_spi_flash_probe(int argc, char * const argv[])
 {
 	unsigned int bus = CONFIG_SF_DEFAULT_BUS;
 	unsigned int cs = CONFIG_SF_DEFAULT_CS;

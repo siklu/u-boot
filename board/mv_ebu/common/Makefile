@@ -64,11 +64,11 @@ BOARD_OBJS-$(CONFIG_ARMADA_38X) += $(BOARD_ENV_DIR)/mvBoardEnvLib38x.o
 BOARD_OBJS += $(sort $(BOARD_OBJS-y))
 
 # Siklu add files here
-#BOARD_OBJS-$(MV_SIKLU_WIGIG_BOARD) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o
 BOARD_OBJS-$(CONFIG_ARMADA_38X) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o  \
   $(BOARD_ENV_DIR)/mvBoardSikluHw.o $(BOARD_ENV_DIR)/mvBoardSikluFlashBoot.o \
-  $(BOARD_ENV_DIR)/mvBoardSikluMutualEnvCntrl.o  $(BOARD_ENV_DIR)/mvBoardSikluSystem.o
-
+  $(BOARD_ENV_DIR)/mvBoardSikluMutualEnvCntrl.o  $(BOARD_ENV_DIR)/mvBoardSikluSystem.o \
+  $(BOARD_ENV_DIR)/mvBoardSikluSysEepromCommon.o  $(BOARD_ENV_DIR)/mvBoardSikluSysEepromApi.o
+      
 
 # SEE README.arm-unaligned-accesses
 $(BOARD_ENV_DIR)/mvBoardEnvLib.o: CFLAGS += $(PLATFORM_NO_UNALIGNED)
