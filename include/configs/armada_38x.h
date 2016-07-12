@@ -314,27 +314,30 @@ extern unsigned int mvUartPortGet(void);
 
 /* Boot from SPI settings */
 	#if defined(MV_SPI_BOOT)
-		#define CONFIG_ENV_IS_IN_SPI_FLASH
+		#ifndef MV_SIKLU_WIGIG_BOARD // edikk - uboot environment on siklu boards located in 1st NAND partition
+			#define CONFIG_ENV_IS_IN_SPI_FLASH
 
-		#if defined(MV_SEC_64K)
-			#define CONFIG_ENV_SECT_SIZE            0x10000
-		#elif defined(MV_SEC_128K)
-			#define CONFIG_ENV_SECT_SIZE            0x20000
-		#elif defined(MV_SEC_256K)
-			#define CONFIG_ENV_SECT_SIZE            0x40000
-		#endif
+			#if defined(MV_SEC_64K)
+				#define CONFIG_ENV_SECT_SIZE            0x10000
+			#elif defined(MV_SEC_128K)
+				#define CONFIG_ENV_SECT_SIZE            0x20000
+			#elif defined(MV_SEC_256K)
+				#define CONFIG_ENV_SECT_SIZE            0x40000
+			#endif
 
-		#define CONFIG_ENV_SIZE                         CONFIG_ENV_SECT_SIZE    /* environment takes one sector */
-#ifdef MV_SIKLU_WIGIG_BOARD
-		#define CONFIG_ENV_OFFSET                       (0x200000 -  (2 * CONFIG_ENV_SECT_SIZE)) /* (2MB -128k) siklu environment starts here  */
-		// siklu_remarkM13 write environment into SPI FLASH offs 0x1e0000, size 0x10000 see file env_sf.c
-#else
-		#define CONFIG_ENV_OFFSET                       0x100000                /* (1MB For Image) environment starts here  */
-#endif // MV_SIKLU_WIGIG_BOARD
-		#define CONFIG_ENV_ADDR                         CONFIG_ENV_OFFSET
-		#define MONITOR_HEADER_LEN                      0x200
-		#define CONFIG_SYS_MONITOR_BASE                 0
-		#define CONFIG_SYS_MONITOR_LEN                  0x80000                 /*(512 << 10) Reserve 512 kB for Monitor */
+			#define CONFIG_ENV_SIZE                         CONFIG_ENV_SECT_SIZE    /* environment takes one sector */
+			#ifdef MV_SIKLU_WIGIG_BOARD
+					#define CONFIG_ENV_OFFSET                       (0x200000 -  (2 * CONFIG_ENV_SECT_SIZE)) /* (2MB -128k) siklu environment starts here  */
+					// siklu_remarkM13 write environment into SPI FLASH offs 0x1e0000, size 0x10000 see file env_sf.c
+			#else
+					#define CONFIG_ENV_OFFSET                       0x100000                /* (1MB For Image) environment starts here  */
+			#endif // MV_SIKLU_WIGIG_BOARD
+			#define CONFIG_ENV_ADDR                         CONFIG_ENV_OFFSET
+			#define MONITOR_HEADER_LEN                      0x200
+			#define CONFIG_SYS_MONITOR_BASE                 0
+			#define CONFIG_SYS_MONITOR_LEN                  0x80000                 /*(512 << 10) Reserve 512 kB for Monitor */
+		#endif // MV_SIKLU_WIGIG_BOARD
+
 
 		#ifndef MV_INCLUDE_NOR
 			#ifdef MV_BOOTROM
@@ -393,19 +396,24 @@ extern unsigned int mvUartPortGet(void);
 	#define CONFIG_JFFS2_NAND
 
 /* Boot from NAND settings */
-	#if defined(MV_NAND_BOOT)
+	#if defined(MV_NAND_BOOT) || defined(MV_SIKLU_WIGIG_BOARD)
 		#define CONFIG_ENV_IS_IN_NAND
 
-		#define CONFIG_ENV_SIZE                 0x80000                 /* environment takes one erase block */
+		//#define CONFIG_ENV_SIZE               0x80000                 /* environment takes one erase block */
 		#define CONFIG_ENV_OFFSET               nand_get_env_offs()     /* environment starts here  */
-		#define CONFIG_ENV_ADDR                 CONFIG_ENV_OFFSET
-		#define MONITOR_HEADER_LEN              0x200
-		#define CONFIG_SYS_MONITOR_BASE         0
-		#define CONFIG_SYS_MONITOR_LEN          0x80000           /* Reserve 512 kB for Monitor */
-		#define CONFIG_ENV_RANGE                CONFIG_ENV_SIZE * 8
 
-		#define MV_NBOOT_BASE                   0
-		#define MV_NBOOT_LEN                    (4 << 10)       /* Reserved 4KB for boot strap */
+		// should be complient to ENV_SIZE in tools/env/fw_env.c!
+		#define CONFIG_ENV_SIZE			0x10000 //(0x800) // (0x20000)    // 1 sector 128k
+		#define CONFIG_ENV_RANGE		0x20000	/*  */
+
+		#define CONFIG_ENV_ADDR                 CONFIG_ENV_OFFSET
+		//#define MONITOR_HEADER_LEN              0x200
+		#define CONFIG_SYS_MONITOR_BASE         0x20000
+		#define CONFIG_SYS_MONITOR_LEN          0x20000           /* Reserve 512 kB for Monitor */
+		//#define CONFIG_ENV_RANGE                CONFIG_ENV_SIZE * 8
+
+		//#define MV_NBOOT_BASE                   0
+		//#define MV_NBOOT_LEN                    (4 << 10)       /* Reserved 4KB for boot strap */
 	#endif /* MV_NAND_BOOT */
 #endif /* MV_NAND */
 /*
@@ -655,7 +663,7 @@ extern unsigned int mvUartPortGet(void);
 #define PCI_HOST_FORCE   1              /* configure as pci host        */
 #define PCI_HOST_AUTO    2              /* detected via arbiter enable  */
 
-#define CONFIG_UBOOT_SIZE                       0x100000
+#define CONFIG_UBOOT_SIZE           0x100000
 #define CONFIG_SPARE_AREA			0x400000
 
 /* NOR-FLASH stuff	*/

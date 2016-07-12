@@ -361,13 +361,24 @@ int spi_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 		spi_flash_erase(flash, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE);
 		printf("\t[Done]\n");
 	}
+#ifndef MV_SIKLU_WIGIG_BOARD // siklu_remarkM20
 	if (filesize > CONFIG_ENV_OFFSET)
 	{
 		printf("Error: Image size (%x) exceeds environment variables offset (%x). ",filesize,CONFIG_ENV_OFFSET);
 		return 0;
 	}
-	printf("Erasing 0x%x - 0x%x: ",0, 0 + CONFIG_ENV_OFFSET);
-	spi_flash_erase(flash, 0, CONFIG_ENV_OFFSET);
+#else
+// SYSEEPROM data located in last 64kB of sNOR
+#define SYSEEPROM_ENV_LOC_IN_SNOR (0x200000 - 0x20000)
+	if (filesize > SYSEEPROM_ENV_LOC_IN_SNOR)
+	{
+		printf("Error: Image size (%x) exceeds SYSEEPROM variables offset (%x). ",filesize,SYSEEPROM_ENV_LOC_IN_SNOR);
+		return 0;
+	}
+#endif // MV_SIKLU_WIGIG_BOARD
+
+	printf("Erasing 0x%x - 0x%x: ",0, 0 + SYSEEPROM_ENV_LOC_IN_SNOR); // replaced CONFIG_ENV_OFFSET
+	spi_flash_erase(flash, 0, SYSEEPROM_ENV_LOC_IN_SNOR); // replaced CONFIG_ENV_OFFSET
 	printf("\t\t[Done]\n");
 
 	printf("Writing image to flash:");

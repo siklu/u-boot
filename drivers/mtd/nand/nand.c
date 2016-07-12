@@ -131,8 +131,13 @@ int nand_get_env_offs(void)
 	int sum = 0;
 	size_t blocksize;
 	blocksize = nand_info[0].erasesize;
-
-	offset = CONFIG_UBOOT_SIZE + CONFIG_SPARE_AREA;
+#ifndef MV_SIKLU_WIGIG_BOARD
+	offset = CONFIG_UBOOT_SIZE + CONFIG_SPARE_AREA; // for Marvell EVB
+#else
+	// Siklu boards hold uboot in sNOR
+	// uboot environment located in 1st NAND partition!
+	offset = 0;
+#endif // MV_SIKLU_WIGIG_BOARD
 
 	/* Start searching for bad blocks from the offset */
 	i = offset/blocksize;
