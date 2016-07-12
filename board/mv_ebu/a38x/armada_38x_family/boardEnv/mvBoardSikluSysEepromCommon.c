@@ -16,7 +16,7 @@
 
 extern struct spi_flash *get_spi_flash_data(void);
 
-DECLARE_GLOBAL_DATA_PTR;
+//DECLARE_GLOBAL_DATA_PTR;
 
 typedef struct {
 
@@ -38,7 +38,7 @@ typedef struct {
 	int (*primary_format)(void);
 
 }seeprom_hndlr_S;
-// static seeprom_hndlr_S seeprom_hndlr;
+
 
 static seeprom_hndlr_S* GetHndlr(void) {
 	static seeprom_hndlr_S* seeprom_hndlr = NULL;
@@ -82,8 +82,8 @@ static seeprom_hndlr_S* GetHndlr(void) {
 }
 
 __u32 get_syseeprom_area_snor_offs(void) {
-	// changed due to fact that all new sNOR have size 2M
-	// see also siklu_evb7000_sff.dt
+	// sNOR size = 2M, last 64kB SYSEEPROM area
+
 	const __u32 syseeprom_area_snor_offset = (2 * 1024 - 64) * 1024;
 	return syseeprom_area_snor_offset;
 }
@@ -221,10 +221,7 @@ static int seeprom_check_data_validity(void) {
 		rc = -1;
 		return rc;
 	}
-
-	rc = 0;
-
-	return rc;
+	return 0;
 }
 
 int siklu_get_mac_from_seeprom(__u8* mac_addr)
@@ -236,9 +233,9 @@ int siklu_get_mac_from_seeprom(__u8* mac_addr)
 	if (rc >= 0)
 	hndlr = GetHndlr();
 	if (hndlr)
-	return hndlr->get_mac(mac_addr);
+		return hndlr->get_mac(mac_addr);
 	else
-	return -1;
+		return -1;
 }
 
 /*

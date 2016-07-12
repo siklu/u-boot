@@ -21,9 +21,7 @@
 
 #include "siklu_eeprom_data.h"
 
-DECLARE_GLOBAL_DATA_PTR;
-
-// const int SERIAL_SYS_EEPROM_HEADER_OFFSET = 0;
+//DECLARE_GLOBAL_DATA_PTR;
 
 static seeprom_S siklu_mrv_system_seeprom;
 
