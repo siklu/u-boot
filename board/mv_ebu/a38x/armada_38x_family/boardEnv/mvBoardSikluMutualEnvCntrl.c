@@ -203,8 +203,6 @@ int primary_format_mutual_env(uint32_t env_part_offs)
         }
         nand_write_addr += MUTUAL_ENV_STRING_STEP;
     }
-
-    // setenv("SK_primary_image", "0");
     return rc;
 }
 
@@ -481,6 +479,7 @@ static int siklu_mutable_env_init(void)
     }
 
     // parse environment on tokens
+    // printf("%s()   Parse environment string: \"%s\"\n", __func__,buff );
     rc = siklu_parse_mutial_env_string2tokens(buff);
     if (rc != 0)
     {
@@ -490,7 +489,7 @@ static int siklu_mutable_env_init(void)
     }
     else
     {
-    	printf("%s() Buffer: \"%s\"\n",__func__, buff); // edikk remove after debug
+    	;//printf("%s() Buffer: \"%s\"\n",__func__, buff);
     }
 
     is_mutable_env_initiated = 1; // call it only once
