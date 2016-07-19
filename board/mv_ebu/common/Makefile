@@ -78,7 +78,7 @@ HAL_IF_OBJS =	$(HAL_IF_DIR)/mvSysSpi.o	\
 		$(HAL_IF_DIR)/mvSysXor.o	\
 		$(HAL_IF_DIR)/mvSysEthPhy.o
 
-
+  
 HAL_OBJS =	$(HAL_SPI_DIR)/mvSpi.o		\
 		$(HAL_SPI_DIR)/mvSpiCmnd.o	\
 		$(HAL_NFC_DIR)/mvNfc.o		\
@@ -214,7 +214,11 @@ SOC_OBJS+=	$(SOC_ENV_DIR)/mvCtrlEnvAddrDec.o 	\
 		$(SOC_SYS_DIR)/mvAhbToMbus.o 		\
 		$(SOC_SYS_DIR)/mvCpuIf.o		\
 		$(SOC_CPU_DIR)/mvCpu.o 			\
-		$(SOC_DEVICE_DIR)/mvDevice.o
+		$(SOC_DEVICE_DIR)/mvDevice.o 
+		
+		
+BOARD_OBJS-$(CONFIG_ARMADA_38X) += 	$(SOC_DEVICE_DIR)/mvSikluSfpModuleControl.o	
+		
 SOC_OBJS-$(CONFIG_MV_ETH_PP2) += $(SOC_ENV_DIR)/mvCtrlEthCompLib.o
 SOC_OBJS-$(CONFIG_NET_COMPLEX) += $(SOC_ENV_DIR)/mvCtrlNetCompLib.o
 SOC_OBJS += $(sort $(SOC_OBJS-y))

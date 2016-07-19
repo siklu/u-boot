@@ -40,7 +40,7 @@ int mvSikluCpuGpioSetVal(int gppNum, int val) {
 /*
  *
  */
-int mvSikluCpuGpioSetDirection(int gppNum, int isOutput) {
+int mvSikluCpuGpioSetDirection(int gppNum, int isOutput) { // edikk
 	int rc = 0;
 	int group = 0;
 
@@ -159,9 +159,9 @@ static int mvSikluCpuGpioConf(void) {
 	// configure MPP49 RF LED Yellow  	output
 	mvSikluCpuGpioSetDirection(49, 1);
 
-	// configure MPP50 PHY Port3 Reset output
+	// configure MPP50 PHY Port3 LED output
 	mvSikluCpuGpioSetDirection(50, 1);
-	mvSikluCpuGpioSetVal(50, 1); // change to reset!
+	mvSikluCpuGpioSetVal(50, 1); // Write '1' turns led off
 	// configure MPP51 WIGIG2 CHIP reset active low output
 	mvSikluCpuGpioSetDirection(51, 1);
 	mvSikluCpuGpioSetVal(51, 1); // change to reset!
