@@ -61,7 +61,7 @@ static int siklu_display_sfp_spd_data(void) {
 	sfp_exists = !sfp_exists; // be careful - EXIST bit inverted
 
 	if (!sfp_exists) {
-		printf("SFP Device isn't present\n");
+		printf("  SFP Device isn't present\n");
 		return rc; // return CMD_RET_SUCCESS here
 	}
 
@@ -177,3 +177,5 @@ static int do_siklu_sfp3_control(cmd_tbl_t *cmdtp, int flag, int argc,
 U_BOOT_CMD(ssfp, 7, 1, do_siklu_sfp3_control,
 		"Control SFP3 Siklu Ethernet port", //
 		"[stat/led/ena/spd] Control SFP3 Siklu Ethernet port (run command without param for help)");
+
+
