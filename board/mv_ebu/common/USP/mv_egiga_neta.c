@@ -97,7 +97,6 @@ int mv_eth_initialize(bd_t *bis)
 	for (port = 0; port < mvCtrlEthMaxPortGet(); port++) {
 		if (MV_FALSE ==  mvBoardIsGbEPortConnected(port))
 			continue;
-
 		if (MV_FALSE == mvCtrlPwrClckGet(ETH_GIG_UNIT_ID, port))
 			continue;
 		MV_BIT_SET(portMask, port);

@@ -40,7 +40,7 @@ int mvSikluCpuGpioSetVal(int gppNum, int val) {
 /*
  *
  */
-int mvSikluCpuGpioSetDirection(int gppNum, int isOutput) { // edikk
+int mvSikluCpuGpioSetDirection(int gppNum, int isOutput) {
 	int rc = 0;
 	int group = 0;
 

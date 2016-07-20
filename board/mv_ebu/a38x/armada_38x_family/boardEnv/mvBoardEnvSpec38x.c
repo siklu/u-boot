@@ -354,11 +354,11 @@ MV_BOARD_TWSI_INFO db88f68xxInfoBoardTwsiDev[] = {
 	{ BOARD_TWSI_MODULE_DETECT,	4,	0x26,	   ADDR7_BIT, MV_FALSE},
 	{ BOARD_TWSI_MODULE_DETECT,	5,	0x27,	   ADDR7_BIT, MV_FALSE},
 };
-MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {
+MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {  // siklu_remarkM21
 	/* {{MV_BOARD_MAC_SPEED boardMacSpeed, MV_32 boardEthSmiAddr , MV_32 boardEthSmiAddr0;}} */
 	{ BOARD_MAC_SPEED_AUTO, 0x0, 0x0},
 	{ BOARD_MAC_SPEED_AUTO, 0x1, 0x1},
-	{ BOARD_MAC_SPEED_AUTO, 0x0, 0x0},
+	{ BOARD_MAC_SPEED_2000M, -1, -1},   // siklu_remarkM21 edikk 2007
 };
 
 MV_BOARD_USB_INFO db88f68xxInfoBoardUsbInfo[] = {

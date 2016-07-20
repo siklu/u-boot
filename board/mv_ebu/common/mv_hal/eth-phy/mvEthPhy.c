@@ -111,7 +111,7 @@ MV_STATUS mvEthPhyHalInit(MV_ETHPHY_HAL_DATA *halData)
 *
 * INPUT:
 *       ethPortNum - The port number on which to initialize the PHY.
-*	eeeEnable  - Whether to enable EEE or not.
+*	    eeeEnable  - Whether to enable EEE or not.
 *
 * OUTPUT:
 *       None.
@@ -120,15 +120,14 @@ MV_STATUS mvEthPhyHalInit(MV_ETHPHY_HAL_DATA *halData)
 *       MV_OK on success, MV_ERROR otherwise.
 *
 *******************************************************************************/
-MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // edikk
+MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // siklu_remarkM21
 {
 	MV_U32     phyAddr = 0;
 	MV_U16     deviceId;
 	MV_U16     id1, id2;
 
 
-
-#ifdef MV_SIKLU_WIGIG_BOARD  // edikk release PHY reset !
+#ifdef MV_SIKLU_WIGIG_BOARD  // release PHY reset !
 	extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 	extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 #define GPP6 6
@@ -145,9 +144,6 @@ MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // edikk
 	// edikk un-reset 2nd PHY TBD
 
 #endif
-
-
-
 
 	if (ethPortNum != ((MV_U32) -1))
 		phyAddr = ethphyHalData.phyAddr[ethPortNum];

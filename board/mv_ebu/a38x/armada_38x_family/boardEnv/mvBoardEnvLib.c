@@ -343,14 +343,31 @@ MV_VOID mvBoardModuleConfigSet(MV_U32 newCfg)
 *       32bit describing Phy address, -1 if the port number is wrong.
 *
 *******************************************************************************/
-MV_32 mvBoardPhyAddrGet(MV_U32 ethPortNum)
+MV_32 mvBoardPhyAddrGet(MV_U32 ethPortNum) // siklu_remarkM21
 {
+	MV_32 phy_addr = 0;
 	if (ethPortNum >= board->numBoardMacInfo) {
 		DB(mvOsPrintf("%s: Error: invalid ethPortNum (%d)\n", __func__, ethPortNum));
 		return MV_ERROR;
 	}
+#ifdef MV_SIKLU_WIGIG_BOARD // siklu board requires follow setup
 
-	return board->pBoardMacInfo[ethPortNum].boardEthSmiAddr; // edikk put here MAC address
+	switch (ethPortNum)
+	{
+	case 0:
+	case 1:
+		phy_addr = ethPortNum;
+		break;
+	default:
+		phy_addr = (MV_32) -1;
+		break;
+	}
+
+#else
+	phy_addr = board->pBoardMacInfo[ethPortNum].boardEthSmiAddr;
+#endif // 	MV_SIKLU_WIGIG_BOARD
+
+	return phy_addr;
 }
 
 /*******************************************************************************

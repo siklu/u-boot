@@ -137,7 +137,7 @@ enum nfc_driver_type {
 	} while (0)
 
 /*******************************************************************************
-* ft_board_setup
+* ft_board_setup          siklu_remarkM22
 *
 * DESCRIPTION:
 *
@@ -689,8 +689,10 @@ static int mv_fdt_update_ethnum(void *fdt)
 
 		/* Set ethernet port status to 'disabled' */
 		/* Enable valid ports and configure their parametrs, disable non valid ones */
-		if (mvBoardIsEthConnected(port) != MV_TRUE)
+
+		if (mvBoardIsEthConnected(port) != MV_TRUE) {
 			sprintf(propval, "disabled");
+		}
 		else {
 
 			/* Configure PHY address */
