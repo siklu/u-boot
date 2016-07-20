@@ -137,7 +137,7 @@ enum nfc_driver_type {
 	} while (0)
 
 /*******************************************************************************
-* ft_board_setup          siklu_remarkM22
+* ft_board_setup          siklu_remarkM22  siklu_remarkM23
 *
 * DESCRIPTION:
 *
@@ -222,15 +222,21 @@ void ft_board_setup(void *blob, bd_t *bd)
 		goto bs_fail;
 #endif
 
+#ifndef MV_SIKLU_WIGIG_BOARD // edikk unknown bug - do not fixup properties of NAND, solve it later! siklu_remarkM23
 	/* Get number of active flash devices and update DT */
 	err = mv_fdt_update_flash(blob);
 	if (err < 0)
 		goto bs_fail;
 
+
 	/* Update NAND controller ECC settings in DT */
 	err = mv_fdt_nand_mode_fixup(blob);
 	if (err < 0)
 		goto bs_fail;
+#else
+	mv_fdt_dprintf("%s() Temporary do not update properties of NAND and sNOR! (bug)\n", __func__);
+#endif // MV_SIKLU_WIGIG_BOARD
+
 
 	/* Update pinctrl driver settings in DT */
 	err = mv_fdt_update_pinctrl(blob);
@@ -826,7 +832,11 @@ static int mv_fdt_update_flash(void *fdt)
 	} /* SPI units/buses */
 
 	/* handle NAND flashes - there is only one NAND unit, but different CS are possible */
+#ifdef MV_SIKLU_WIGIG_BOARD
+	// edikk solve problem here - mvBoardGetDevicesNumber() returns wrong '0'!  siklu_remarkM23
+#else
 	flashNum = mvBoardGetDevicesNumber(BOARD_DEV_NAND_FLASH);
+
 	interfaceIsActive = MV_FALSE;
 	for (device = 0; device < flashNum; device++) {
 		if (mvBoardGetDevState(device, BOARD_DEV_NAND_FLASH) == MV_TRUE) {
@@ -846,6 +856,8 @@ static int mv_fdt_update_flash(void *fdt)
 		mv_fdt_dprintf("Failed to set property '%s' of node '%s' in device tree\n", prop, node);
 		return -1;
 	}
+
+#endif // MV_SIKLU_WIGIG_BOARD
 
 	/* handle NOR flashes - there is only one NOR unit, but different CS are possible */
 	flashNum = mvBoardGetDevicesNumber(BOARD_DEV_NOR_FLASH);
