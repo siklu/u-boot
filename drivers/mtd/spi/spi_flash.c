@@ -367,8 +367,11 @@ static const struct {
 	{ 0, 0x1c, spi_flash_probe_eon, },
 #endif
 #ifdef CONFIG_SPI_FLASH_MACRONIX
-	{ 0, 0xc2, spi_flash_probe_macronix, },
+	{ 0, 0xc2, spi_flash_probe_macronix, },   // used by Siklu  MV_SIKLU_WIGIG_BOARD and EVB
 #endif
+#ifdef CONFIG_SPI_FLASH_GIGADEVICE
+    { 0, 0xc8, spi_flash_probe_gigadevice, },   // used by Siklu  MV_SIKLU_WIGIG_BOARD
+#endif // 	CONFIG_SPI_FLASH_GIGADEVICE
 #ifdef CONFIG_SPI_FLASH_SPANSION
 	{ 0, 0x01, spi_flash_probe_spansion, },
 #endif

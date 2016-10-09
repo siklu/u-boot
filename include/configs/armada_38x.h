@@ -293,7 +293,8 @@ extern unsigned int mvUartPortGet(void);
 	#define CONFIG_CMD_SF
 	#define CONFIG_SPI_FLASH
 	#define CONFIG_SPI_FLASH_STMICRO
-	#define CONFIG_SPI_FLASH_MACRONIX
+	#define CONFIG_SPI_FLASH_MACRONIX       // used by Siklu MV_SIKLU_WIGIG_BOARD and EVB
+    #define CONFIG_SPI_FLASH_GIGADEVICE     // used by Siklu MV_SIKLU_WIGIG_BOARD
 	#define CONFIG_SPI_FLASH_WINBOND
 	#define CONFIG_ENV_SPI_MAX_HZ           50000000
 	#define CONFIG_ENV_SPI_CS               0
