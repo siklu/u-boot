@@ -18,6 +18,7 @@
 #define NVRAM_SERIAL_NUM_FIELD_MAX_SIZE 20
 #define NVRAM_PRODUCT_NAME_FIELD_SIZE   20 // field size limited to 30 bytes
 #define AUX_A2D_CALIB_FLOAT_STRING_LEN  15
+#define NVRAM_ASSEMBLY_TYPE_FIELD_SIZE  20 // field size limited to 30 bytes
 
 #include "siklu_eeprom_data.h"
 
@@ -187,8 +188,16 @@ int seeprom_primary_format_v1(void) {
 			siklu_mrv_system_seeprom.seeprom_board_info.data.product_name.product,
 			"EH700");
 
+	// Set assembly type
+    siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.t =
+            PROTECTED_FLASH_TYPE_ASSEMBLY_TYPE;
+    siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.l =
+    NVRAM_ASSEMBLY_TYPE_FIELD_SIZE;
+    strcpy(
+            siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.type,   "FABB031A");
+
 	// after complete  init all TLV set header info
-	siklu_mrv_system_seeprom.seeprom_board_info.header.num_tlv.val = 5;
+	siklu_mrv_system_seeprom.seeprom_board_info.header.num_tlv.val = 6;
 	siklu_mrv_system_seeprom.seeprom_board_info.header.data_size.val =
 			sizeof(seeprom_data_S);
 
@@ -342,6 +351,57 @@ int seeprom_set_product_name_v1(char* product_name) {
 	rc = seeprom_write2nvram_new_data_v1();
 	return rc;
 }
+
+/*
+ *
+ *
+ */
+int seeprom_set_assembly_type_v1(char* assembly) { // edikk
+    int rc = 0;
+
+    seeprom_read_fields_from_eeprom_v1();
+
+    if (strlen(assembly) > NVRAM_ASSEMBLY_TYPE_FIELD_SIZE ) {
+        printf("Assembly type string too long: %d\n", NVRAM_ASSEMBLY_TYPE_FIELD_SIZE);
+        return 0;
+    }
+    siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.t =
+            PROTECTED_FLASH_TYPE_ASSEMBLY_TYPE;
+    siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.l =
+            NVRAM_ASSEMBLY_TYPE_FIELD_SIZE;
+    memset(
+            siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.type,
+            0, NVRAM_ASSEMBLY_TYPE_FIELD_SIZE);
+    strcpy(
+            siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.type,
+            assembly);
+
+    rc = seeprom_write2nvram_new_data_v1();
+
+
+    return rc;
+}
+/*
+
+*/
+int seeprom_get_assembly_type_v1(char* assembly) {
+    int rc = 0;
+    rc = seeprom_read_fields_from_eeprom_v1();
+    if (rc == 0) {
+        memcpy(assembly,
+                siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.type,
+                NVRAM_ASSEMBLY_TYPE_FIELD_SIZE );
+    } else {
+        printf("%s() SEPROM data is wrong, write default values\n", __func__);
+        seeprom_primary_format_v1();
+        seeprom_read_fields_from_eeprom_v1();
+        memcpy(assembly,
+                siklu_mrv_system_seeprom.seeprom_board_info.data.assembly.type,
+                NVRAM_ASSEMBLY_TYPE_FIELD_SIZE);
+    }
+    return rc;
+}
+
 
 /*
  * input string exactly 4 characters:

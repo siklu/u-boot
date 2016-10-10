@@ -38,7 +38,12 @@ typedef struct //
 	char port_type[NVRAM_NETW_PORT_TYPE_FIELD_SIZE];
 } netw_port_tlv_S;
 
-
+typedef struct //
+{
+    __u8 t;
+    __u8 l;
+    char type[NVRAM_ASSEMBLY_TYPE_FIELD_SIZE];
+} assembly_type_tlv_S;
 
 typedef struct {
 	product_tlv_S product_name;
@@ -46,6 +51,7 @@ typedef struct {
 	serial_tlv_S serial_bb; // base board
 	serial_tlv_S serial_sys; // serial system
 	netw_port_tlv_S netw_port;
+	assembly_type_tlv_S assembly; // this field is only for Marvell platform
 } seeprom_data_S;
 
 typedef struct {

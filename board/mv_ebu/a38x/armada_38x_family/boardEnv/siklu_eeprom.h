@@ -8,7 +8,7 @@
 #ifndef SIKLU_EEPROM_H_
 #define SIKLU_EEPROM_H_
 
-#define SYS_EEPROM_MAJOR_VER        0x1
+#define SYS_EEPROM_MAJOR_VER        0x2
 #define SYS_EEPROM_START_MINOR_VER1 0x11 // all ver1 headers have minor ver >= this value.
 //                                          the define should never be changed
 #define SYS_EEPROM_MINOR_VER1       0x11 // current version >= SYS_EEPROM_START_MINOR_VER1
@@ -23,6 +23,7 @@ typedef enum // see also bsp/lib/common/flash_api.c
 	PROTECTED_FLASH_TYPE_SYSTEM_SERIAL_NUMBER = 0x10, // system serial number. New !!!
 	PROTECTED_FLASH_TYPE_PRODUCT_NAME = 0x11, // product name - string null terminated
 	PROTECTED_FLASH_TYPE_NETWORK_PORT_TYPE = 0x12, //  - string null terminated
+	PROTECTED_FLASH_TYPE_ASSEMBLY_TYPE = 0x13, // assembly type - string null terminated
 	PROTECTED_FLASH_TYPE_CRC = 0x4F, // new
 	PROTECTED_FLASH_TYPE_EOF = 0xFF
 // 0xFF which is unburned flash
@@ -89,6 +90,9 @@ int seeprom_set_system_serial_v1(char* val);
 
 int seeprom_set_product_name_v1(char* product_name);
 int seeprom_get_product_name_v1(char* product_name);
+
+int seeprom_set_assembly_type_v1(char* assembly);
+int seeprom_get_assembly_type_v1(char* assembly);
 
 const char* seeprom_get_netw_port_map_v1(void);
 int seeprom_set_netw_port_map_v1(const char*);

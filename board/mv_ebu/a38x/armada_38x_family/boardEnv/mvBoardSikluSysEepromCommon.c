@@ -35,6 +35,9 @@ typedef struct {
 	const char* (*get_netw_port_map)(void);
 	int (*set_netw_port_map)(const char*);
 
+    int (*set_assembly_type)(char* type);
+    int (*get_assembly_type)(char* type);
+
 	int (*primary_format)(void);
 
 }seeprom_hndlr_S;
@@ -69,6 +72,10 @@ static seeprom_hndlr_S* GetHndlr(void) {
 
 		seeprom_hndlr->get_netw_port_map = seeprom_get_netw_port_map_v1;
 		seeprom_hndlr->set_netw_port_map = seeprom_set_netw_port_map_v1;
+
+		seeprom_hndlr->get_assembly_type = seeprom_get_assembly_type_v1;
+		seeprom_hndlr->set_assembly_type = seeprom_set_assembly_type_v1;
+
 		seeprom_hndlr->primary_format = seeprom_primary_format_v1;
 
 		break;
@@ -354,7 +361,7 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 	if (strcmp(argv[1], "f") == 0) // parse SEEPROM data
 			{
 		__u8 mac[NVRAM_MAC_SIZE];
-		char data[20];
+		char data[30];
 		hndlr->get_mac(mac);
 		printf("MAC               %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0],
 				mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -370,6 +377,11 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 
 		const char* p = hndlr->get_netw_port_map();
 		printf("Network port type %c%c%c%c\n", p[0], p[1], p[2], p[3]);
+
+		hndlr->get_assembly_type(data);
+        printf("Assembly type     %s\n", data);
+
+
 	} //
 	else if (strcmp(argv[1], "w") == 0) // write default parameters
 			{
@@ -377,26 +389,25 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 		mdelay(10);
 		hndlr->primary_format();
 		printf("\nReboot required before continue!\n");
-		//seeprom_primary_format();
-	} //
 
-	else if (strcmp(argv[1], "b") == 0) // set baseband serial
+	} else if (strcmp(argv[1], "b") == 0) // set baseband serial
 			{
 		hndlr->set_baseband_serial(argv[2]);
-		// seeprom_set_baseband_serial(argv[2]);
 	} else if (strcmp(argv[1], "m") == 0) // set MAC
 			{
 		hndlr->set_mac((__u8 *) argv[2]);
-		// seeprom_set_mac(argv[2]);
 	} else if (strcmp(argv[1], "n") == 0) // set network's port types
 			{
 		hndlr->set_netw_port_map(argv[2]);
-		// seeprom_set_port_map(argv[2]);
 	} else if (strcmp(argv[1], "p") == 0) // set product name
 			{
 		hndlr->set_product_name(argv[2]);
-		// seeprom_set_product_name(argv[2]);
-	} else {
+	}
+	else if (strcmp(argv[1], "a") == 0) // set assembly board type string
+            {
+        hndlr->set_assembly_type(argv[2]);
+    }
+	else {
 		printf("Unknown parameter\n");
 		return cmd_usage(cmdtp);
 	}
@@ -406,5 +417,6 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 
 U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom, "Read/Maintenance System Serial EEPROM raw data",
 		"r - read raw data, f - display fields, w - primary format, e - erase, \n  \
-        b - set baseband serial, m - set MAC, n - set Ethernet port map, p - set Product Name");
+        b - set baseband serial, m - set MAC, n - set Ethernet port map, p - set Product Name,\
+		a - set assembly board type");
 
