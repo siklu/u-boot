@@ -8,10 +8,10 @@
 #ifndef SIKLU_EEPROM_H_
 #define SIKLU_EEPROM_H_
 
-#define SYS_EEPROM_MAJOR_VER        0x2
+#define SYS_EEPROM_MAJOR_VER        0x0010
 #define SYS_EEPROM_START_MINOR_VER1 0x11 // all ver1 headers have minor ver >= this value.
 //                                          the define should never be changed
-#define SYS_EEPROM_MINOR_VER1       0x11 // current version >= SYS_EEPROM_START_MINOR_VER1
+#define SYS_EEPROM_MINOR_VER1       0x12 // current version >= SYS_EEPROM_START_MINOR_VER1
 
 typedef enum // see also bsp/lib/common/flash_api.c
 {
