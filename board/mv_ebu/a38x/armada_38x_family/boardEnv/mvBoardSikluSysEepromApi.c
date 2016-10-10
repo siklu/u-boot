@@ -177,7 +177,7 @@ int seeprom_primary_format_v1(void) {
 	siklu_mrv_system_seeprom.seeprom_board_info.data.netw_port.l =
 			NVRAM_NETW_PORT_TYPE_FIELD_SIZE;
 	strcpy(siklu_mrv_system_seeprom.seeprom_board_info.data.netw_port.port_type,
-			"ccf");
+			"ccf-");
 
 	// Set Product Name
 	siklu_mrv_system_seeprom.seeprom_board_info.data.product_name.t =
