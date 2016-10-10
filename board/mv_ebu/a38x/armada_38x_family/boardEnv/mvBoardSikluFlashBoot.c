@@ -147,7 +147,7 @@ static int unpack_uimage(uint uimage_ram_addr) {
 
 	return rc;
 }
-
+extern int seeprom_get_assembly_type_v1(char* assembly);
 /*
  * The function doesn't return!
  */
@@ -171,7 +171,11 @@ static int run_linux_code(int is_system_in_bist) {
 	 */
 	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
 					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-	// mem=128M ip=dhcp
+	{ // add board assembly type string
+	    char type[50];
+	    seeprom_get_assembly_type_v1(type);
+	    i += sprintf(buf + i, "assembly=%s ",type);
+	}
 
 	if (is_system_in_bist) { // add string to command line says about BIST mode
 		const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
