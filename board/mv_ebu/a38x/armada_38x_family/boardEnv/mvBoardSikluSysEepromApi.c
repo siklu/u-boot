@@ -356,7 +356,7 @@ int seeprom_set_product_name_v1(char* product_name) {
  *
  *
  */
-int seeprom_set_assembly_type_v1(char* assembly) { // edikk
+int seeprom_set_assembly_type_v1(char* assembly) {
     int rc = 0;
 
     seeprom_read_fields_from_eeprom_v1();

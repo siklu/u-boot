@@ -416,7 +416,7 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 }
 
 U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom, "Read/Maintenance System Serial EEPROM raw data",
-		"r - read raw data, f - display fields, w - primary format, e - erase, \n  \
-        b - set baseband serial, m - set MAC, n - set Ethernet port map, p - set Product Name,\
-		a - set assembly board type");
+		"r - read raw data, f - display fields, w - primary format, e - erase, \n\
+        b - set baseband serial, m - set MAC, n - set Ethernet port map, p - set Product Name,\n\
+        a - set assembly board type");
 
