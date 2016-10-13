@@ -128,7 +128,7 @@ static int modify_sikly_info_in_dtb_before_run_linux(uint dtb_addr_in_mem)
         printf("Could not modify siklu-board-id section in fdt: %s\n", fdt_strerror(node));
         return -1;
     }
-    // Set assembly type
+    // Set assembly type.  siklu_remarkM25 relay type via device tree
     seeprom_get_assembly_type_v1(temp);
     rc = fdt_setprop_string(working_fdt, node, "board-assembly-type", temp);
     if (rc < 0)
@@ -257,7 +257,7 @@ static int run_linux_code(int is_system_in_bist) {
 	 */
 	i += sprintf(buf + i, "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
 					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-	{ // add board assembly type string
+	{ // add board assembly type string. siklu_remarkM25 relay type via command line
 	    char type[50];
 	    seeprom_get_assembly_type_v1(type);
 	    i += sprintf(buf + i, "assembly=%s ",type);
