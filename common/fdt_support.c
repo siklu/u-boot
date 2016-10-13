@@ -453,6 +453,11 @@ void fdt_fixup_ethernet(void *fdt)
 	unsigned char mac_addr[6];
 	ulong ulongtmp;
 
+#ifdef MV_SIKLU_WIGIG_BOARD
+	return; // siklu board doesn't need update/fixup here  siklu_remarkM24
+#endif // 	MV_SIKLU_WIGIG_BOARD
+
+
 	node = fdt_path_offset(fdt, "/aliases");
 	if (node < 0)
 		return;

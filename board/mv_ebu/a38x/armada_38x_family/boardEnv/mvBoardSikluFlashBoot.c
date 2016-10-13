@@ -11,6 +11,7 @@
 #include <common.h>
 #include <command.h>
 #include <version.h>
+#include <libfdt.h>
 #include <siklu_api.h>
 
 // #define BOOT_DEBUG
@@ -31,6 +32,8 @@ static inline int _run_command(const char *cmd, int flag) {
 # define debugp(fmt, a...)
 #endif
 
+DECLARE_GLOBAL_DATA_PTR;
+
 #define BOOT_FROM_IMAGE_IN_ENV    (-1)
 #define ADDR_IN_RAM4ACTIVE_UIMAGE 0x5000000
 #define MAX_ACTIVE_UIMAGE_SIZE    22000000 // 22M
@@ -43,12 +46,12 @@ static inline int _run_command(const char *cmd, int flag) {
 #define RAMD_ADDR           0x10000000 // 0x5000000 // address to copy RAMD from uimage
 #define RAMD_MAX_SIZE		0x2000000  // 32 MB max?
 
-#define DTB_ADDR_STR		 "4000000"
-#define DTB_ADDR_HEX		0x4000000
+#define DTB_ADDR_STR		 "4000000" //  "4000000"
+#define DTB_ADDR_HEX		0x4000000  // 0x4000000
 
 
 
-
+extern int seeprom_get_assembly_type_v1(char* assembly); // siklu_remarkM24
 
 
 
@@ -106,6 +109,79 @@ static int validate_sw_image(int img2load) {
 
 	return rc;
 }
+/*
+ *   siklu_remarkM24
+ */
+static int modify_sikly_info_in_dtb_before_run_linux(uint dtb_addr_in_mem)
+{
+    int rc = 0;
+    struct fdt_header *working_fdt = (struct fdt_header *) dtb_addr_in_mem;
+    int node = fdt_path_offset(working_fdt, "/siklu-board-id");
+    char temp[50];
+    uchar enetaddr[6];
+    int i, r;
+    const char *p;
+    extern int seeprom_get_mac_v1(__u8* mac_addr);
+
+    if (node < 0)
+    {
+        printf("Could not modify siklu-board-id section in fdt: %s\n", fdt_strerror(node));
+        return -1;
+    }
+    // Set assembly type
+    seeprom_get_assembly_type_v1(temp);
+    rc = fdt_setprop_string(working_fdt, node, "board-assembly-type", temp);
+    if (rc < 0)
+    {
+        printf("WARNING: could not set %s %s.\n", "board-assembly-type", fdt_strerror(rc));
+        return -1;
+    }
+    // Set host-mac-addr
+    seeprom_get_mac_v1(enetaddr);
+    r = fdt_setprop_inplace(working_fdt, node, "host-mac-addr",   enetaddr, 6);
+    if (r!=0) {
+        printf("%s() call fdt_setprop_inplace() error. line %d\n", __func__, __LINE__);
+        return -1;
+    }
+
+    // setup MAC addresses
+    for (i = 0; i < 3; i++)   // MV_SIKLU_WIGIG_BOARD we have 3 ethernet ports
+    {
+        sprintf(temp, "eth%x", i);
+        p = fdt_get_alias(working_fdt, temp);
+        if (p)
+        {
+            char temp2[50];
+            node = fdt_path_offset(working_fdt, p);
+            if (node <= 0) {
+                debugp("%s() line %d, node %d\n", __func__, __LINE__, node);
+                continue;
+            }
+
+            sprintf(temp2, (i ? "eth%daddr" : "ethaddr"), i);
+
+            rc = eth_getenv_enetaddr(temp2, enetaddr);
+            debugp("%s() line %d, enetaddr %x:%x:%x:%x:%x:%x, rc %d\n" ,
+                    __func__, __LINE__,  enetaddr[0], enetaddr[1],enetaddr[2],
+                    enetaddr[3], enetaddr[4],enetaddr[5], rc);
+            if (rc){
+
+                r = fdt_setprop_inplace(working_fdt, node, "mac-address",   enetaddr, 6);
+                if (r!=0) {
+                    printf("%s() call fdt_setprop_inplace() error. line %d\n", __func__, __LINE__);
+                    return -1;
+                }
+                debugp("%s() line %d, rc %d, r %d\n",  __func__, __LINE__,rc, r);
+            }
+            else {
+                printf("%s() call eth_getenv_enetaddr() error. line %d\n", __func__, __LINE__);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
 
 /*
  *
@@ -138,12 +214,22 @@ static int unpack_uimage(uint uimage_ram_addr) {
 	memcpy((char*) ramd_hex_addr, (char*) data, len + 100);
 
 	// ############################# extract DEvice tree DTB file
-	sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr);
+	sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr); // same as DTB_ADDR_HEX;   edikk
 	rc = _run_command(buf, 0);
 	if (rc != 0) {
 		printf(" DTB: Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
+
+	// Modify fields in "siklu-board-id"   section  siklu_remarkM24
+	rc = modify_sikly_info_in_dtb_before_run_linux(DTB_ADDR_HEX);
+
+    if (0) // edikk for debug only: display dtb after fixup process, remove after
+    {
+        sprintf(buf, "fdt addr %x",DTB_ADDR_HEX);
+        _run_command(buf, 0);
+        _run_command("fdt print", 0);
+    }
 
 	return rc;
 }

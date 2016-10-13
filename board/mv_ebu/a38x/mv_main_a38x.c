@@ -755,12 +755,32 @@ void misc_init_r_env(void)
 	xk = (min * sec) % 254;
 	xl = (hour * sec) % 254;
 #endif  /* defined(MV_INCLUDE_RTC) */
-
+#ifndef MV_SIKLU_WIGIG_BOARD  
 	sprintf(ethaddr_0, "00:50:43:%02x:%02x:%02x", xk, xi, xj);
 	sprintf(ethaddr_1, "00:50:43:%02x:%02x:%02x", xl, xi, xj);
 	sprintf(ethaddr_2, "00:50:43:%02x:%02x:%02x", xl, xk, xj);
+#else
 	sprintf(ethaddr_3, "00:50:43:%02x:%02x:%02x", xi, xk, xl);
 	sprintf(pon_addr, "00:50:43:%02x:%02x:%02x", xj, xk, xl);
+
+	{  // siklu_remarkM24 set here environment variables
+	    __u8 mac[6];
+	    char mac_str[20];
+	    extern int seeprom_get_mac_v1(__u8* mac_addr);
+	    // memset(mac_str,0,sizeof(mac_str));
+	    seeprom_get_mac_v1(mac);
+	    mac[5] +=1;  // set eth0 MAC
+	    mvMacHexToStr(mac, mac_str);
+	    setenv("ethaddr", mac_str);
+        mac[5] +=1;  // set eth1 MAC
+        mvMacHexToStr(mac, mac_str);
+        setenv("eth1addr", mac_str);
+        mac[5] +=1;  // set eth2 MAC
+        mvMacHexToStr(mac, mac_str);
+        setenv("eth2addr", mac_str);
+
+	}
+#endif
 
 	/* MAC addresses */
 	env = getenv("ethaddr");
