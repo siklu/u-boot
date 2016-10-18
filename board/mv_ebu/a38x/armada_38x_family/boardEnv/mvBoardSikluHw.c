@@ -11,6 +11,7 @@
 #include "mvOs.h"
 #include <siklu_api.h>
 #include <i2c.h>
+#include <spi_flash.h>
 
 #define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
 #define MV_GPP_OUT	0		/* GPP output */
@@ -18,6 +19,9 @@
 extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
 extern MV_U32 mvGppValueGet(MV_U32 group, MV_U32 mask);
+
+DECLARE_GLOBAL_DATA_PTR;
+
 /*
  *
  */
@@ -371,6 +375,129 @@ static int do_siklu_pca9557_config(cmd_tbl_t *cmdtp, int flag, int argc,
 	return rc;
 }
 
+
+typedef enum
+{
+    BIST_MODE_DISABLED = 0, //
+    BIST_MODE_ON = 1, //
+    BIST_MODE_AND_MONITORING = 2, //
+    BIST_MODE_LAST = BIST_MODE_AND_MONITORING, //
+} BIST_MODE_E;
+
+/*
+ *
+ */
+static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
+
+    if (argc == 1) // show current mode
+    {
+        char *bist_state;
+        bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
+
+        if (bist_state == NULL)
+        {
+            printf("No BIST mode\n");
+        }
+        else
+        {
+            BIST_MODE_E state = (BIST_MODE_E) simple_strtol(bist_state, NULL, 10);
+            switch (state)
+            {
+            case BIST_MODE_DISABLED:
+                printf("No BIST mode\n");
+                break;
+            case BIST_MODE_ON:
+                printf("System in BIST mode\n");
+                break;
+            case BIST_MODE_AND_MONITORING:
+                printf("System in BIST mode with Monitoring\n");
+                break;
+            default:
+                printf("Wrong BIST mode! Disable BIST for future runs\n");
+                setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+                saveenv();
+                break;
+            }
+        }
+    }
+
+    else if (argc == 2)
+    {
+        // set new BIST mode
+        BIST_MODE_E bist_mode = simple_strtoul(argv[1], NULL, 10);
+
+        switch (bist_mode)
+        {
+        case BIST_MODE_DISABLED:
+            printf("Disable BIST mode\n");
+            setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            break;
+        case BIST_MODE_ON:
+            printf("Set System in BIST mode\n");
+            setenv(SIKLU_BIST_ENVIRONMENT_NAME, "1");
+            break;
+        case BIST_MODE_AND_MONITORING:
+            printf("System in BIST mode with Monitoring\n");
+            setenv(SIKLU_BIST_ENVIRONMENT_NAME, "2");
+            break;
+        default:
+            printf("Wrong BIST mode! Disable BIST for future runs\n");
+            setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            break;
+        }
+        saveenv();
+    }
+    else
+    {
+        // wrong arguments
+        printf("Wrong arguments\n");
+        printf("Usage:\n%s\n", cmdtp->usage);
+        return CMD_RET_FAILURE;
+    }
+
+    return rc;
+}
+
+
+static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    struct spi_flash *flash = NULL;
+    char buffer[32];
+   // octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
+    // do not change format below! each new line should include "key" and "value" delimited by ":" !!!
+    //printf("Product name        : %s\n", siklu_get_board_product_name());
+    //printf("Board HW name       : %s\n", siklu_get_board_hw_name());
+    //printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
+    //printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
+    //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
+    printf("DDR clock           : %u MHz\n", gd->ddr_clk);
+    //printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
+    //printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
+    //printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
+    //printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
+    //printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
+
+    extern struct spi_flash *get_spi_flash_data(void);
+
+    flash = get_spi_flash_data();
+    if (flash)
+        printf("SF                  : %s\n", flash->name);
+
+    return rc;
+}
+
+
+
+
+
+
+
+
+
+
 U_BOOT_CMD(spca9557, 7, 1, do_siklu_pca9557_access,
 		"Read/Write PCA9557 IIC Extender", //
 		"[reg] [val*] Read/Write PCA9557 IIC Extender");
@@ -379,3 +506,5 @@ U_BOOT_CMD(spca9557c, 7, 1, do_siklu_pca9557_config,
 		"Config PCA9557 IIC Extender to default values", //
 		"Config PCA9557 IIC Extender to default values");
 
+U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
+U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " Display Board HW info");
