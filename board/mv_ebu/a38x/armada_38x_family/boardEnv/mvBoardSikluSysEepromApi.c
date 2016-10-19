@@ -34,16 +34,36 @@ typedef struct
 const static char *supported_board_assembly[] =
 { "FABB031A", //
         "FABB033A",
-        NULL
+        NULL // last line
 };
 
-static asm2netw_port_map_S asm2netw_port_map[] = // should be complient to supported_board_assembly
+static asm2netw_port_map_S asm2netw_port_map[] = // should be compliant to supported_board_assembly
 {
         { "FABB031A" , "ccf-"},
         { "FABB033A" , "ccc-"},
 };
 
 static seeprom_S siklu_mrv_system_seeprom;
+
+static int upstring (char *s)
+{
+    if (!s || !*s)
+        return 0;
+    while (*s) {
+        if (islower (*s))
+            *s = toupper(*s);
+        s++;
+    }
+    return 0;
+}                               /* downstring */
+
+
+
+
+
+
+
+
 
 static int seeprom_write2nvram_new_data_v1(void)
 {
@@ -374,6 +394,10 @@ int seeprom_set_assembly_type_v1(char* assembly)
         printf("Assembly type string too long: %d\n", NVRAM_ASSEMBLY_TYPE_FIELD_SIZE);
         return -1;
     }
+
+    // convert to upper case
+    upstring(assembly);
+
 
     for (i=0; supported_board_assembly[i] != NULL;i++)
     {
