@@ -580,5 +580,5 @@ U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " 
 U_BOOT_CMD(srtccf, 5, 1, do_siklu_rtc_correction_factor, "Show/Set Internal CPU RTC correction factor",
         " [Mode 0/1]* [Decimal Value]* Without params - show");
 
-U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers", "[val*] Show/Set Reg val");
+U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers", "[reg] [val*] Show/Set Reg val");
 

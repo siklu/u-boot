@@ -1431,7 +1431,7 @@ U_BOOT_CMD(
 
 int whoAmI_cmd( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[] )
 {
-	printf("cpu #: %d", whoAmI());
+	printf("cpu #: %d\n", whoAmI());
 	return 1;
 }
 
