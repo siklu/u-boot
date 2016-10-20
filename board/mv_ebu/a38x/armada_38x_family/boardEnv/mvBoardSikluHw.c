@@ -538,6 +538,9 @@ static int do_siklu_rtc_correction_factor(cmd_tbl_t *cmdtp, int flag, int argc, 
     return rc;
 }
 
+/*
+ *
+ */
 static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
@@ -568,6 +571,29 @@ static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char *
     return rc;
 }
 
+
+static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS; // return false for prevent command be repeatable
+    int val;
+
+    mvSikluCpuGpioSetDirection(52, 0);
+    mvSikluCpuGpioGetVal(52, &val);
+    if (val)
+        printf("\tPB released\n");
+    else
+        printf("\tPB pressed\n");
+
+    return rc;
+}
+
+
+
+//############################################################################################
+//############################################################################################
+//############################################################################################
+//############################################################################################
+
 U_BOOT_CMD(spca9557, 7, 1, do_siklu_pca9557_access, "Read/Write PCA9557 IIC Extender", //
         "[reg] [val*] Read/Write PCA9557 IIC Extender");
 
@@ -581,4 +607,8 @@ U_BOOT_CMD(srtccf, 5, 1, do_siklu_rtc_correction_factor, "Show/Set Internal CPU 
         " [Mode 0/1]* [Decimal Value]* Without params - show");
 
 U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers", "[reg] [val*] Show/Set Reg val");
+
+
+U_BOOT_CMD(spbs, 5, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Button Status", "Show Siklu board Push-Button Status");
+
 
