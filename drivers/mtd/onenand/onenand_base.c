@@ -811,7 +811,8 @@ static int onenand_recover_lsb(struct mtd_info *mtd, loff_t addr, int status)
 		return status;
 
 	/* check if we failed due to uncorrectable error */
-	if (status != -EBADMSG && status != ONENAND_BBT_READ_ECC_ERROR)
+
+	if (!mtd_is_eccerr(status) && status != ONENAND_BBT_READ_ECC_ERROR)
 		return status;
 
 	/* check if address lies in MLC region */
@@ -973,7 +974,9 @@ static int onenand_read_ops_nolock(struct mtd_info *mtd, loff_t from,
 	if (mtd->ecc_stats.failed - stats.failed)
 		return -EBADMSG;
 
-	return mtd->ecc_stats.corrected - stats.corrected ? -EUCLEAN : 0;
+	// return mtd->ecc_stats.corrected - stats.corrected ? -EUCLEAN : 0;
+    /* return max bitflips per ecc step; ONENANDs correct 1 bit only */
+	return mtd->ecc_stats.corrected != stats.corrected ? 1 : 0;
 }
 
 /**
