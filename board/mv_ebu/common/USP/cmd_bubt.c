@@ -24,6 +24,7 @@ disclaimer.
 #include <command.h>
 #include <net.h>
 #include <environment.h>
+#include <linux/ctype.h>
 
 #if defined(MV_INCLUDE_USB)
 # include <usb.h>
@@ -317,6 +318,55 @@ U_BOOT_CMD(
 
 #if defined(MV_SPI_BOOT)
 
+static char bubt_work_mode = 'i'; // by default interactive
+
+int do_configure_spi_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE;
+    if (argc==1) {
+        // show current mode and help information
+        printf(" bubt command works in: ");
+        switch(bubt_work_mode){
+        case 'i':
+            printf("interactive mode\n");
+            break;
+        case 'y':
+            printf("Answer YES on all question\n");
+            break;
+        case 'n':
+            printf("Answer NO on all question\n");
+            break;
+        default :
+            printf("unknown mode. ERROR\n");
+            break;
+        }
+     }
+    else if (argc==2){
+        char mode = tolower(argv[1][0]);
+        switch (mode)
+        {
+        case 'h':
+            printf("bubtc y - Answer YES on all question\n");
+            printf("bubtc n - Answer NO  on all question\n");
+            printf("bubtc i - Default interactive mode\n");
+            rc = 0;
+            break;
+        case 'i':
+        case 'y':
+        case 'n':
+            bubt_work_mode = mode;
+            rc = 0;
+            break;
+        default:
+            printf("Unknown mode\n");
+            break;
+        }
+    }
+
+    return rc;
+}
+
+
 /* Boot from SPI flash */
 /* Write u-boot image into the SPI flash */
 int spi_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -345,17 +395,32 @@ int spi_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 		return 0;
 
 	printf("\t\t[Done]\n");
-	printf("Override Env parameters to default? [y/N]");
-	readline(" ");
+
+	switch(bubt_work_mode)
+	{
+	case 'i':
+        printf("Override Env parameters to default? [y/N]");
+        readline(" ");
+	    break;
+    case 'y':
+        printf("Override Env parameters!\n");
+        break;
+    case 'n':
+        printf("NO Override Env parameters!\n");
+        break;
+    default:
+        break;
+	}
 
 #ifdef CONFIG_SPI_FLASH_PROTECTION
 	printf("Unprotecting flash:");
 	spi_flash_protect(flash, 0);
 	printf("\t\t[Done]\n");
 #endif
-	if( strcmp(console_buffer,"Y") == 0 ||
+	if ((bubt_work_mode == 'y')  ||  ( (bubt_work_mode == 'i') && ( strcmp(console_buffer,"Y") == 0 ||
 	    strcmp(console_buffer,"yes") == 0 ||
-	    strcmp(console_buffer,"y") == 0 ) {
+	    strcmp(console_buffer,"y") == 0 )))
+	{
 
 		printf("Erasing 0x%x - 0x%x:",CONFIG_ENV_OFFSET, CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE);
 		spi_flash_erase(flash, CONFIG_ENV_OFFSET, CONFIG_ENV_SIZE);
@@ -406,6 +471,11 @@ U_BOOT_CMD(
 		"\tdestination is nand, spi or nor.\n"
 		"\tsource can be tftp or usb, default is tftp.\n"
 );
+
+
+U_BOOT_CMD(bubtc, 5, 1, do_configure_spi_burn_uboot_cmd, "Show/Set bubt work mode",
+        " [i/y/n]*  Enter \"bubtc h\" for help");
+
 #endif
 
 
