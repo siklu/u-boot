@@ -10,6 +10,8 @@
 #include <linux/types.h>
 #include <div64.h>
 #include <linux/mtd/mtd-abi.h>
+#include <asm/errno.h>
+
 
 #define MTD_CHAR_MAJOR 90
 #define MTD_BLOCK_MAJOR 31
@@ -135,12 +137,24 @@ struct mtd_info {
 	u_int32_t oobsize;   /* Amount of OOB data per block (e.g. 16) */
 	u_int32_t oobavail;  /* Available OOB bytes per block */
 
+    /*   // siklu_remarkM26
+     * read ops return -EUCLEAN if max number of bitflips corrected on any
+     * one region comprising an ecc step equals or exceeds this value.
+     * Settable by driver, else defaults to ecc_strength.  User can override
+     * in sysfs.  N.B. The meaning of the -EUCLEAN return code has changed;
+     * see Documentation/ABI/testing/sysfs-class-mtd for more detail.
+     */
+    unsigned int bitflip_threshold;  // siklu_remarkM26
+
 	/* Kernel-only stuff starts here. */
 	const char *name;
 	int index;
 
 	/* ecc layout structure pointer - read only ! */
 	struct nand_ecclayout *ecclayout;
+
+    /* max number of correctible bit errors per ecc step */
+    unsigned int ecc_strength; // siklu_remarkM26
 
 	/* Data for variable erase regions. If numeraseregions is zero,
 	 * it means that the whole device has erasesize as given above.
@@ -311,4 +325,19 @@ static inline void mtd_erase_callback(struct erase_info *instr)
 	} while(0)
 #endif /* CONFIG_MTD_DEBUG */
 
+// siklu_remarkM26 start
+#define pr_info(args...)    MTDDEBUG(MTD_DEBUG_LEVEL0, args)
+#define pr_warn(args...)    MTDDEBUG(MTD_DEBUG_LEVEL0, args)
+#define pr_err(args...)     MTDDEBUG(MTD_DEBUG_LEVEL0, args)
+
+static inline int mtd_is_bitflip(int err) {
+    return err == -EUCLEAN;
+}
+static inline int mtd_is_eccerr(int err) {
+    return err == -EBADMSG;
+}
+static inline int mtd_is_bitflip_or_eccerr(int err) {
+    return mtd_is_bitflip(err) || mtd_is_eccerr(err);
+}
+// siklu_remarkM26 end
 #endif /* __MTD_MTD_H__ */
