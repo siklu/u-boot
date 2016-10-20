@@ -479,10 +479,13 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     int rc = CMD_RET_SUCCESS;
     struct spi_flash *flash = NULL;
     char buffer[32];
+    int mpp15, mpp16, mpp17, mpp18;
+    extern int seeprom_get_assembly_type_v1(char* assembly);
     // octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
     // do not change format below! each new line should include "key" and "value" delimited by ":" !!!
     //printf("Product name        : %s\n", siklu_get_board_product_name());
-    //printf("Board HW name       : %s\n", siklu_get_board_hw_name());
+    seeprom_get_assembly_type_v1(buffer);
+    printf("Board HW name       : %s\n", buffer);
     //printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
     //printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
     //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
@@ -498,6 +501,19 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     flash = get_spi_flash_data();
     if (flash)
         printf("SF                  : %s\n", flash->name);
+
+
+    // Display HW ID  MPP input pins 15-18  siklu_remarkM06
+    mvSikluCpuGpioSetDirection(15, 0);
+    mvSikluCpuGpioSetDirection(16, 0);
+    mvSikluCpuGpioSetDirection(17, 0);
+    mvSikluCpuGpioSetDirection(18, 0);
+
+    mvSikluCpuGpioGetVal(15, &mpp15);
+    mvSikluCpuGpioGetVal(16, &mpp16);
+    mvSikluCpuGpioGetVal(17, &mpp17);
+    mvSikluCpuGpioGetVal(18, &mpp18);
+    printf("HW ID               : %x\n", (mpp18<<3) | (mpp17<<2) | (mpp16<<1) | (mpp15<<0));
 
     return rc;
 }
