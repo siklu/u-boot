@@ -66,6 +66,7 @@ static int part_read(struct mtd_info *mtd, loff_t from, size_t len,
 			mtd->ecc_stats.failed += part->master->ecc_stats.failed - stats.failed;
 	}
 	return res;
+	//return res >= mtd->bitflip_threshold ? -EUCLEAN : 0;
 }
 
 static int part_read_oob(struct mtd_info *mtd, loff_t from,
@@ -80,12 +81,21 @@ static int part_read_oob(struct mtd_info *mtd, loff_t from,
 		return -EINVAL;
 	res = part->master->read_oob(part->master, from + part->offset, ops);
 
+#if 0   // siklu_remarkM26
 	if (unlikely(res)) {
 		if (res == -EUCLEAN)
 			mtd->ecc_stats.corrected++;
 		if (res == -EBADMSG)
 			mtd->ecc_stats.failed++;
 	}
+#else
+    if (unlikely(res)) {
+        if (mtd_is_bitflip(res))
+           mtd->ecc_stats.corrected++;
+        if (mtd_is_eccerr(res))
+            mtd->ecc_stats.failed++;
+    }
+#endif
 	return res;
 }
 
