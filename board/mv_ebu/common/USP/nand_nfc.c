@@ -1462,6 +1462,7 @@ static void orion_nfc_init_nand(struct nand_chip *nand, struct orion_nfc_info *i
 	nand->bbt_md 		= &mvbbt_mirror_descr;
 	nand->badblock_pattern	= BB_INFO;
 	nand->chip_delay 	= 25;
+	nand->ecc.strength = 1;
 }
 
 #ifndef UBOOT_CODE
