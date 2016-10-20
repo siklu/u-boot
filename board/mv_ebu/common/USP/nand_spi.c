@@ -95,6 +95,7 @@ int board_nand_spi_init(struct nand_chip *nand)
 	nand->ecc.size      = 512;
 	nand->ecc.bytes     = 4;
 	nand->ecc.layout    = &nand_spi_ecc;
+	nand->ecc.strength = 1;
 
 	nand->bbt_td           = 0;
 	nand->bbt_md           = 0;
