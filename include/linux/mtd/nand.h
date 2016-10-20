@@ -331,6 +331,7 @@ struct nand_hw_control {
  * @size:	data bytes per ecc step
  * @bytes:	ecc bytes per step
  * @total:	total number of ecc bytes per page
+ * @strength:  max number of correctible bits per ECC step  // siklu_remarkM26
  * @prepad:	padding information for syndrome based ecc generators
  * @postpad:	padding information for syndrome based ecc generators
  * @layout:	ECC layout control struct pointer
@@ -355,6 +356,7 @@ struct nand_ecc_ctrl {
 	int size;
 	int bytes;
 	int total;
+    int strength;  // siklu_remarkM26
 	int prepad;
 	int postpad;
 	struct nand_ecclayout	*layout;
@@ -454,6 +456,8 @@ struct nand_buffers {
  * @pagemask:		[INTERN] page number mask = number of (pages / chip) - 1
  * @pagebuf:		[INTERN] holds the pagenumber which is currently in
  *			data_buf.
+ * @pagebuf_bitflips:   [INTERN] holds the bitflip count for the page which is
+ *          currently in data_buf.       siklu_remarkM26
  * @subpagesize:	[INTERN] holds the subpagesize
  * @onfi_version:	[INTERN] holds the chip ONFI version (BCD encoded),
  *			non 0 if ONFI supported.
@@ -513,6 +517,7 @@ struct nand_chip {
 	uint64_t chipsize;
 	int pagemask;
 	int pagebuf;
+	unsigned int pagebuf_bitflips; // siklu_remarkM26
 	int subpagesize;
 	uint8_t cellinfo;
 	int badblockpos;
