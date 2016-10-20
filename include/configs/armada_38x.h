@@ -218,6 +218,7 @@ extern unsigned int mvUartPortGet(void);
 #ifdef CONFIG_SYS_USE_UBI
 	#define CONFIG_CMD_UBI
 	// #define CONFIG_CMD_UBIFS   do not support ubifs in uboot
+    #define CONFIG_UBI_SILENCE_MSG
 	#define CONFIG_MTD_DEVICE
 	#define CONFIG_MTD_PARTITIONS
 	#define CONFIG_CMD_MTDPARTS

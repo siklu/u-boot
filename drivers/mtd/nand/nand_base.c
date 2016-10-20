@@ -896,6 +896,7 @@ static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
+    // unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
 
 	chip->ecc.read_page_raw(mtd, chip, buf, page);
 
@@ -914,9 +915,12 @@ static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 		stat = chip->ecc.correct(mtd, p, &ecc_code[i], &ecc_calc[i]);
 		if (stat < 0)
 			mtd->ecc_stats.failed++;
-		else
+		else {
 			mtd->ecc_stats.corrected += stat;
+			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+		}
 	}
+	//return max_bitflips;
 	return 0;
 }
 
@@ -938,6 +942,7 @@ static int nand_read_subpage(struct mtd_info *mtd, struct nand_chip *chip,
 	int datafrag_len, eccfrag_len, aligned_len, aligned_pos;
 	int busw = (chip->options & NAND_BUSWIDTH_16) ? 2 : 1;
 	int index = 0;
+	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
 
 	/* Column address wihin the page aligned to ECC size (256bytes). */
 	start_step = data_offs / chip->ecc.size;
@@ -1001,9 +1006,12 @@ static int nand_read_subpage(struct mtd_info *mtd, struct nand_chip *chip,
 			&chip->buffers->ecccode[i], &chip->buffers->ecccalc[i]);
 		if (stat < 0)
 			mtd->ecc_stats.failed++;
-		else
+		else {
 			mtd->ecc_stats.corrected += stat;
+			// max_bitflips = max_t(unsigned int, max_bitflips, stat);
+		}
 	}
+	// return max_bitflips;
 	return 0;
 }
 
@@ -1026,6 +1034,7 @@ static int nand_read_page_hwecc(struct mtd_info *mtd, struct nand_chip *chip,
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
+	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
 
 	for (i = 0; eccsteps; eccsteps--, i += eccbytes, p += eccsize) {
 		chip->ecc.hwctl(mtd, NAND_ECC_READ);
@@ -1046,9 +1055,12 @@ static int nand_read_page_hwecc(struct mtd_info *mtd, struct nand_chip *chip,
 		stat = chip->ecc.correct(mtd, p, &ecc_code[i], &ecc_calc[i]);
 		if (stat < 0)
 			mtd->ecc_stats.failed++;
-		else
+		else {
 			mtd->ecc_stats.corrected += stat;
+			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+		}
 	}
+	//return max_bitflips;
 	return 0;
 }
 
@@ -1076,6 +1088,8 @@ static int nand_read_page_hwecc_oob_first(struct mtd_info *mtd,
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
+	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+
 
 	/* Read the OOB area first */
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
@@ -1095,9 +1109,12 @@ static int nand_read_page_hwecc_oob_first(struct mtd_info *mtd,
 		stat = chip->ecc.correct(mtd, p, &ecc_code[i], NULL);
 		if (stat < 0)
 			mtd->ecc_stats.failed++;
-		else
+		else {
 			mtd->ecc_stats.corrected += stat;
+			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+		}
 	}
+	//return max_bitflips;
 	return 0;
 }
 
@@ -1119,6 +1136,7 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 	int eccsteps = chip->ecc.steps;
 	uint8_t *p = buf;
 	uint8_t *oob = chip->oob_poi;
+	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
 
 	for (i = 0; eccsteps; eccsteps--, i += eccbytes, p += eccsize) {
 		int stat;
@@ -1137,8 +1155,10 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 
 		if (stat < 0)
 			mtd->ecc_stats.failed++;
-		else
+		else {
 			mtd->ecc_stats.corrected += stat;
+			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+		}
 
 		oob += eccbytes;
 
@@ -1153,6 +1173,7 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 	if (i)
 		chip->read_buf(mtd, oob, i);
 
+	// return max_bitflips;
 	return 0;
 }
 
@@ -1226,6 +1247,7 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 	uint32_t oobreadlen = ops->ooblen;
 	uint32_t max_oobsize = ops->mode == MTD_OOB_AUTO ?
 		mtd->oobavail : mtd->oobsize;
+    unsigned int max_bitflips = 0; //  siklu_remarkM26
 
 	uint8_t *bufpoi, *oob, *buf;
 
@@ -1271,11 +1293,15 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 			if (ret < 0)
 				break;
 
+			max_bitflips = max_t(unsigned int, max_bitflips, ret); // siklu_remarkM26
+
 			/* Transfer not aligned data */
 			if (!aligned) {
 				if (!NAND_HAS_SUBPAGE_READ(chip) && !oob &&
-				    !(mtd->ecc_stats.failed - stats.failed))
+				    !(mtd->ecc_stats.failed - stats.failed)) {
 					chip->pagebuf = realpage;
+					chip->pagebuf_bitflips = ret;// siklu_remarkM26
+				}
 				memcpy(buf, chip->buffers->databuf + col, bytes);
 			}
 
@@ -1308,6 +1334,8 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 		} else {
 			memcpy(buf, chip->buffers->databuf + col, bytes);
 			buf += bytes;
+			max_bitflips = max_t(unsigned int, max_bitflips,
+			                         chip->pagebuf_bitflips);
 		}
 
 		readlen -= bytes;
@@ -1339,13 +1367,21 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 	if (oob)
 		ops->oobretlen = ops->ooblen - oobreadlen;
 
-	if (ret)
+#if 0  // siklu_remarkM26
+	if (ret < 0)
 		return ret;
-
 	if (mtd->ecc_stats.failed - stats.failed)
 		return -EBADMSG;
+	return  (mtd->ecc_stats.corrected - stats.corrected) ? -EUCLEAN : max_bitflips;
+#else
+    if (ret)
+        return ret;
 
-	return  mtd->ecc_stats.corrected - stats.corrected ? -EUCLEAN : 0;
+    if (mtd->ecc_stats.failed - stats.failed)
+        return -EBADMSG;
+
+    return max_bitflips;
+#endif
 }
 
 /**
@@ -3137,8 +3173,13 @@ int nand_scan_tail(struct mtd_info *mtd)
 		if (!chip->ecc.write_oob)
 			chip->ecc.write_oob = nand_write_oob_syndrome;
 
-		if (mtd->writesize >= chip->ecc.size)
-			break;
+		if (mtd->writesize >= chip->ecc.size){
+            if (!chip->ecc.strength) {
+                printk(KERN_WARNING "Driver must set ecc.strength when using hardware ECC\n");
+                BUG();
+            }
+            break;
+        }
 		printk(KERN_WARNING "%d byte HW ECC not possible on "
 		       "%d byte page size, fallback to SW ECC\n",
 		       chip->ecc.size, mtd->writesize);
@@ -3157,6 +3198,7 @@ int nand_scan_tail(struct mtd_info *mtd)
 		if (!chip->ecc.size)
 			chip->ecc.size = 256;
 		chip->ecc.bytes = 3;
+        chip->ecc.strength = 1;
 		break;
 
 	case NAND_ECC_SOFT_BCH:
@@ -3189,7 +3231,8 @@ int nand_scan_tail(struct mtd_info *mtd)
 					       &chip->ecc.layout);
 		if (!chip->ecc.priv)
 			printk(KERN_WARNING "BCH ECC initialization failed!\n");
-
+        chip->ecc.strength =
+            chip->ecc.bytes * 8 / fls(8 * chip->ecc.size);
 		break;
 
 #if defined(CONFIG_NAND_RS_ECC_SUPPORT)
@@ -3297,6 +3340,16 @@ int nand_scan_tail(struct mtd_info *mtd)
 
 	/* propagate ecc.layout to mtd_info */
 	mtd->ecclayout = chip->ecc.layout;
+    mtd->ecc_strength = chip->ecc.strength;
+
+    /*
+     * Initialize bitflip_threshold to its default prior scan_bbt() call.
+     * scan_bbt() might invoke mtd_read(), thus bitflip_threshold must be
+     * properly set.
+     */
+    if (!mtd->bitflip_threshold)
+        mtd->bitflip_threshold = mtd->ecc_strength;
+
 
 	/* Check, if we should skip the bad block table scan */
 	if (chip->options & NAND_SKIP_BBTSCAN)
