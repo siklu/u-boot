@@ -896,7 +896,7 @@ static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
-    // unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+    unsigned int max_bitflips = 0; //  siklu_remarkM26 : version uboot 2013.10 not uses it, but 2016.01 yes
 
 	chip->ecc.read_page_raw(mtd, chip, buf, page);
 
@@ -917,11 +917,11 @@ static int nand_read_page_swecc(struct mtd_info *mtd, struct nand_chip *chip,
 			mtd->ecc_stats.failed++;
 		else {
 			mtd->ecc_stats.corrected += stat;
-			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+			max_bitflips = max_t(unsigned int, max_bitflips, stat);
 		}
 	}
-	//return max_bitflips;
-	return 0;
+	return max_bitflips;
+	// return 0;
 }
 
 /**
@@ -942,7 +942,7 @@ static int nand_read_subpage(struct mtd_info *mtd, struct nand_chip *chip,
 	int datafrag_len, eccfrag_len, aligned_len, aligned_pos;
 	int busw = (chip->options & NAND_BUSWIDTH_16) ? 2 : 1;
 	int index = 0;
-	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+	unsigned int max_bitflips = 0; //  siklu_remarkM26 : version uboot 2013.10 not uses it bit 2016.01 yes
 
 	/* Column address wihin the page aligned to ECC size (256bytes). */
 	start_step = data_offs / chip->ecc.size;
@@ -1008,11 +1008,11 @@ static int nand_read_subpage(struct mtd_info *mtd, struct nand_chip *chip,
 			mtd->ecc_stats.failed++;
 		else {
 			mtd->ecc_stats.corrected += stat;
-			// max_bitflips = max_t(unsigned int, max_bitflips, stat);
+			max_bitflips = max_t(unsigned int, max_bitflips, stat);
 		}
 	}
-	// return max_bitflips;
-	return 0;
+	return max_bitflips;
+	// return 0;
 }
 
 /**
@@ -1034,7 +1034,7 @@ static int nand_read_page_hwecc(struct mtd_info *mtd, struct nand_chip *chip,
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
-	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+	unsigned int max_bitflips = 0;//   siklu_remarkM26 : version uboot 2013.10 not uses it but 2016.01 yes
 
 	for (i = 0; eccsteps; eccsteps--, i += eccbytes, p += eccsize) {
 		chip->ecc.hwctl(mtd, NAND_ECC_READ);
@@ -1057,11 +1057,11 @@ static int nand_read_page_hwecc(struct mtd_info *mtd, struct nand_chip *chip,
 			mtd->ecc_stats.failed++;
 		else {
 			mtd->ecc_stats.corrected += stat;
-			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+			max_bitflips = max_t(unsigned int, max_bitflips, stat);
 		}
 	}
-	//return max_bitflips;
-	return 0;
+	return max_bitflips;
+	// return 0;
 }
 
 /**
@@ -1088,7 +1088,7 @@ static int nand_read_page_hwecc_oob_first(struct mtd_info *mtd,
 	uint8_t *ecc_code = chip->buffers->ecccode;
 	uint32_t *eccpos = chip->ecc.layout->eccpos;
 	uint8_t *ecc_calc = chip->buffers->ecccalc;
-	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+	unsigned int max_bitflips = 0; // siklu_remarkM26 : version uboot 2013.10 not uses it but 2016.01 yes
 
 
 	/* Read the OOB area first */
@@ -1111,11 +1111,11 @@ static int nand_read_page_hwecc_oob_first(struct mtd_info *mtd,
 			mtd->ecc_stats.failed++;
 		else {
 			mtd->ecc_stats.corrected += stat;
-			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+			max_bitflips = max_t(unsigned int, max_bitflips, stat);
 		}
 	}
-	//return max_bitflips;
-	return 0;
+	return max_bitflips;
+	// return 0;
 }
 
 /**
@@ -1136,7 +1136,7 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 	int eccsteps = chip->ecc.steps;
 	uint8_t *p = buf;
 	uint8_t *oob = chip->oob_poi;
-	// unsigned int max_bitflips = 0;  siklu_remarkM26 : version uboot 2013.10 not uses it ???
+	unsigned int max_bitflips = 0; // siklu_remarkM26 : version uboot 2013.10 not uses it but 2016.01 yes
 
 	for (i = 0; eccsteps; eccsteps--, i += eccbytes, p += eccsize) {
 		int stat;
@@ -1157,7 +1157,7 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 			mtd->ecc_stats.failed++;
 		else {
 			mtd->ecc_stats.corrected += stat;
-			//max_bitflips = max_t(unsigned int, max_bitflips, stat);
+			max_bitflips = max_t(unsigned int, max_bitflips, stat);
 		}
 
 		oob += eccbytes;
@@ -1173,8 +1173,8 @@ static int nand_read_page_syndrome(struct mtd_info *mtd, struct nand_chip *chip,
 	if (i)
 		chip->read_buf(mtd, oob, i);
 
-	// return max_bitflips;
-	return 0;
+	return max_bitflips;
+	// return 0;
 }
 
 /**
