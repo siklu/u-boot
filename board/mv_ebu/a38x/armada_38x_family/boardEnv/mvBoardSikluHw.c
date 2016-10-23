@@ -376,11 +376,6 @@ int arch_early_init_r(void)
 
 /*
  *
- *
- *
- *
- *
- *
  */
 static int do_siklu_pca9557_config(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]) //
 {
@@ -502,7 +497,6 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     if (flash)
         printf("SF                  : %s\n", flash->name);
 
-
     // Display HW ID  MPP input pins 15-18  siklu_remarkM06
     mvSikluCpuGpioSetDirection(15, 0);
     mvSikluCpuGpioSetDirection(16, 0);
@@ -513,7 +507,7 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     mvSikluCpuGpioGetVal(16, &mpp16);
     mvSikluCpuGpioGetVal(17, &mpp17);
     mvSikluCpuGpioGetVal(18, &mpp18);
-    printf("HW ID               : %x\n", (mpp18<<3) | (mpp17<<2) | (mpp16<<1) | (mpp15<<0));
+    printf("HW ID               : %x\n", (mpp18 << 3) | (mpp17 << 2) | (mpp16 << 1) | (mpp15 << 0));
 
     return rc;
 }
@@ -587,10 +581,29 @@ static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char *
     return rc;
 }
 
+/*
+ *
+ */
+static int do_siklu_poe_num_pairs_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    MV_U8 num_pairs;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+    num_pairs = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, PCA9557_INPUT_PORT_REG) & 0x01;
+    if (num_pairs)
+        printf("\t4 pairs\n");
+    else
+        printf("\t2 pairs\n");
+
+    i2c_set_bus_num(old_bus);
+    return CMD_RET_SUCCESS;
+}
 
 static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-    int rc = CMD_RET_SUCCESS; // return false for prevent command be repeatable
+    int rc = CMD_RET_SUCCESS;
     int val;
 
     mvSikluCpuGpioSetDirection(52, 0);
@@ -602,8 +615,6 @@ static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, 
 
     return rc;
 }
-
-
 
 //############################################################################################
 //############################################################################################
@@ -624,7 +635,8 @@ U_BOOT_CMD(srtccf, 5, 1, do_siklu_rtc_correction_factor, "Show/Set Internal CPU 
 
 U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers", "[reg] [val*] Show/Set Reg val");
 
+U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Button Status",
+        "Show Siklu board Push-Button Status");
 
-U_BOOT_CMD(spbs, 5, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Button Status", "Show Siklu board Push-Button Status");
-
+U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
 
