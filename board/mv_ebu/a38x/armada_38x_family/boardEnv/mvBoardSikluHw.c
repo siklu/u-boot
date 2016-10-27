@@ -380,6 +380,52 @@ static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E m
 {
     int rc = 0;
 
+    if (led == SKL_LED_WLAN)
+    { // mpp48 and mpp49
+        mvSikluCpuGpioSetDirection(48, 1); // set output
+        mvSikluCpuGpioSetDirection(49, 1); // set output
+        switch (mode)
+        {
+        case SKL_LED_MODE_OFF: // mpp12='h', mpp21='h'
+            mvSikluCpuGpioSetVal(48, 1);
+            mvSikluCpuGpioSetVal(49, 1);
+            break;
+        case SKL_LED_MODE_GREEN: // mpp49='h', mpp48='l'
+            mvSikluCpuGpioSetVal(49, 1);
+            mvSikluCpuGpioSetVal(48, 0);
+            break;
+        case SKL_LED_MODE_YELLOW: // mpp49='l', mpp48='h'
+            mvSikluCpuGpioSetVal(48, 1);
+            mvSikluCpuGpioSetVal(49, 0);
+            break;
+        default:
+            return -1;
+        }
+
+    }
+    else if (led == SKL_LED_POWER) // mpp12 and mpp21
+    {
+        mvSikluCpuGpioSetDirection(12, 1); // set output
+        mvSikluCpuGpioSetDirection(21, 1); // set output
+
+        switch (mode)
+        {
+        case SKL_LED_MODE_OFF: // mpp12='h', mpp21='h'
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 1);
+            break;
+        case SKL_LED_MODE_GREEN: // mpp12='h', mpp21='l'
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 0);
+            break;
+        case SKL_LED_MODE_YELLOW: // mpp12='l', mpp21='h'
+            mvSikluCpuGpioSetVal(12, 0);
+            mvSikluCpuGpioSetVal(21, 1);
+            break;
+        default:
+            return -1;
+        }
+    }
     return rc;
 }
 /*
