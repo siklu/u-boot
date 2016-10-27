@@ -29,6 +29,23 @@ typedef enum {
 
 } SKL_MODULE_RESET_CNTRL_E;
 
+typedef enum {
+    SKL_LED_BLE,
+    SKL_LED_WLAN,
+    SKL_LED_ETH0,
+    SKL_LED_ETH1,
+    SKL_LED_ETH2,
+    SKL_LED_POWER,
+} SKL_BOARD_LED_TYPE_E;
+
+typedef enum {
+    SKL_LED_MODE_OFF,
+    SKL_LED_MODE_GREEN,
+    SKL_LED_MODE_YELLOW,
+    SKL_LED_MODE_GREEN_BLINK,
+    SKL_LED_MODE_YELLOW_BLINK
+}  SKL_BOARD_LED_MODE_E;
+
 
 // SoC GPIO pins
 extern int mvSikluCpuGpioSetVal(int gpio, int val);
@@ -51,5 +68,10 @@ extern const char* siklu_mutable_env_get(const char *varname);
 
 extern int siklu_is_restore2fact_default(void);
 extern void siklu_wait_user4prevent_card_reboot(void);
+
+extern int siklu_88e512_phy_read(__u32 phy_addr, __u32 bank, __u32 reg_addr, __u16* reg_val);
+extern int siklu_88e512_phy_write(__u32 phy_addr, __u32 bank, __u32 reg_addr, __u16 reg_val);
+
+extern int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E state);
 
 #endif /* INCLUDE_SIKLU_API_H_ */

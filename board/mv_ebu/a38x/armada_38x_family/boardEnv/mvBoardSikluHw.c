@@ -373,6 +373,49 @@ int arch_early_init_r(void)
 
     return 0;
 }
+/*
+ * set POWER and WLAN LEDs
+ */
+static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int rc = 0;
+
+    return rc;
+}
+/*
+ * Set variable LED modes via 88e1512 PHY
+ */
+static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int rc = 0;
+
+    return rc;
+}
+/*
+ *
+ */
+int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int rc = 0;
+
+    switch (led)
+    {
+    case SKL_LED_ETH0:
+    case SKL_LED_ETH1:
+    case SKL_LED_ETH2:
+        rc = siklu_set_eth_led(led, mode);
+        break;
+    case SKL_LED_WLAN:
+    case SKL_LED_POWER:
+        rc = siklu_set_led_by_mpp(led, mode);
+        break;
+    case SKL_LED_BLE:
+    default:
+        return -1; // no handler!
+        break;
+    }
+    return rc;
+}
 
 /*
  *
@@ -535,6 +578,7 @@ static int do_siklu_rtc_correction_factor(cmd_tbl_t *cmdtp, int flag, int argc, 
         mode = simple_strtoul(argv[1], NULL, 10) & 0x1;
         val = simple_strtoul(argv[2], NULL, 10) & 0x7fff;
         MV_REG_WRITE(RTC_CLOCK_CORRECTION_REGISTER, (mode << 15) | val);
+        printf(" Done\n");
         rc = CMD_RET_SUCCESS;
     }
     else
@@ -600,7 +644,9 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t *cmdtp, int flag, int argc, cha
     i2c_set_bus_num(old_bus);
     return CMD_RET_SUCCESS;
 }
-
+/*
+ * 
+ */
 static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
@@ -612,6 +658,114 @@ static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, 
         printf("\tPB released\n");
     else
         printf("\tPB pressed\n");
+
+    return rc;
+}
+
+static int do_siklu_marvell_mpp_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int mpp, val;
+
+    mpp = simple_strtoul(argv[1], NULL, 10);
+    val = !!simple_strtoul(argv[2], NULL, 10);
+
+    switch (mpp)
+    {
+    case 12:
+    case 21:
+    case 48:
+    case 49:
+        mvSikluCpuGpioSetDirection(mpp, 1); // set output
+        mvSikluCpuGpioSetVal(mpp, val);
+        break;
+    default:
+        printf("Wrong MPP Value\n");
+        break;
+    }
+
+    return rc;
+}
+
+static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    char led[30];
+    char state[30];
+    SKL_BOARD_LED_MODE_E _mode;
+    SKL_BOARD_LED_TYPE_E _led;
+
+    if (argc == 3)
+    {
+        strcpy(led, argv[1]);
+        strcpy(state, argv[2]);
+    }
+    else
+    {
+        printf("sled [led] [state]\n");
+        printf(" led:   ble/wlan/eth0/eth1/eth2/power\n");
+        printf(" state: \n\to - off\n\tg - green\n\ty - yellow\n\tgb - green blink\n\tyb - yellow blink\n");
+        return rc;
+    }
+
+    if (strcmp(led, "ble") == 0)
+    {
+        _led = SKL_LED_BLE;
+
+    } //
+    else if (strcmp(led, "wlan") == 0)
+    {
+        _led = SKL_LED_WLAN;
+    } //
+    else if (strcmp(led, "eth0") == 0)
+    {
+        _led = SKL_LED_ETH0;
+    } //
+    else if (strcmp(led, "eth1") == 0)
+    {
+        _led = SKL_LED_ETH1;
+    } //
+    else if (strcmp(led, "eth2") == 0)
+    {
+        _led = SKL_LED_ETH2;
+    } //
+    else if (strcmp(led, "power") == 0)
+    {
+        _led = SKL_LED_POWER;
+    } //
+    else
+    {
+        printf("Wrong LED type\n");
+        return CMD_RET_USAGE;
+    }
+
+    if (strcmp(state, "o") == 0)
+    {
+        _mode = SKL_LED_MODE_OFF;
+    }
+    else if (strcmp(state, "g") == 0)
+    {
+        _mode = SKL_LED_MODE_GREEN;
+    }
+    else if (strcmp(state, "y") == 0)
+    {
+        _mode = SKL_LED_MODE_YELLOW;
+    }
+    else if (strcmp(state, "gb") == 0)
+    {
+        _mode = SKL_LED_MODE_GREEN_BLINK;
+    }
+    else if (strcmp(state, "yb") == 0)
+    {
+        _mode = SKL_LED_MODE_YELLOW_BLINK;
+    }
+    else
+    {
+        printf("Wrong LED mode\n");
+        return CMD_RET_USAGE;
+    }
+
+    rc = siklu_set_led(_led, _mode);
 
     return rc;
 }
@@ -639,4 +793,9 @@ U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Bu
         "Show Siklu board Push-Button Status");
 
 U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
+
+U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 12/21/48/49 Control",
+        "[mpp_num] [0/1] Set 0/1 on required MPP number");
+
+U_BOOT_CMD(sled, 3, 1, do_siklu_board_led_control, "Control Onboard LEDs", "[led] [state] Control Onboard LEDs");
 
