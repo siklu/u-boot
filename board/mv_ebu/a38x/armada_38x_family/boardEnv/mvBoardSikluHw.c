@@ -423,7 +423,8 @@ static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E m
             mvSikluCpuGpioSetVal(21, 1);
             break;
         default:
-            return -1;
+            return -1; // unsupported mode
+            break;
         }
     }
     return rc;
@@ -433,7 +434,53 @@ static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E m
  */
 static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 {
+    __u32 phy_addr;
+    __u32 bank = 3;
+    __u32 reg_addr = 16; // see Datasheet
+    __u16 reg_val = 0x101E;  // this is a default value of register 16(0x10) in bank 3
+
     int rc = 0;
+    switch (led)
+    {
+    case SKL_LED_ETH0:
+        phy_addr = 0;
+        break;
+    case SKL_LED_ETH1:
+        phy_addr = 1;
+        break;
+    case SKL_LED_ETH2:
+    default:
+        return -1; // unsupported led
+        break;
+    }
+    reg_val &= 0xFF00; // preset mask
+    switch (mode)
+    {
+    case SKL_LED_MODE_OFF:
+        reg_val |= 0x0088;
+        break;
+    case SKL_LED_MODE_GREEN:
+        reg_val |= 0x0089;
+        break;
+    case SKL_LED_MODE_YELLOW:
+        reg_val |= 0x0098;
+        break;
+    case SKL_LED_MODE_GREEN_BLINK:
+        reg_val |= 0x008B;
+        break;
+    case SKL_LED_MODE_YELLOW_BLINK:
+        reg_val |= 0x00B8;
+        break;
+    default:
+        return -1; // unsupported mode
+        break;
+
+    }
+
+    rc = siklu_88e512_phy_write(phy_addr, bank, reg_addr, reg_val);
+
+    printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
+            rc); // edikk remove
 
     return rc;
 }
@@ -565,20 +612,20 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     char buffer[32];
     int mpp15, mpp16, mpp17, mpp18;
     extern int seeprom_get_assembly_type_v1(char* assembly);
-    // octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
-    // do not change format below! each new line should include "key" and "value" delimited by ":" !!!
-    //printf("Product name        : %s\n", siklu_get_board_product_name());
+// octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
+// do not change format below! each new line should include "key" and "value" delimited by ":" !!!
+//printf("Product name        : %s\n", siklu_get_board_product_name());
     seeprom_get_assembly_type_v1(buffer);
     printf("Board HW name       : %s\n", buffer);
-    //printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
-    //printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
-    //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
+//printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
+//printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
+//printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
     printf("DDR clock           : %u MHz\n", gd->ddr_clk);
-    //printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
-    //printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
-    //printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
-    //printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
-    //printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
+//printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
+//printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
+//printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
+//printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
+//printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
 
     extern struct spi_flash *get_spi_flash_data(void);
 
@@ -586,7 +633,7 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     if (flash)
         printf("SF                  : %s\n", flash->name);
 
-    // Display HW ID  MPP input pins 15-18  siklu_remarkM06
+// Display HW ID  MPP input pins 15-18  siklu_remarkM06
     mvSikluCpuGpioSetDirection(15, 0);
     mvSikluCpuGpioSetDirection(16, 0);
     mvSikluCpuGpioSetDirection(17, 0);
@@ -812,6 +859,11 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     }
 
     rc = siklu_set_led(_led, _mode);
+    if (rc != 0)
+    {
+        printf(" Error or unsupported mode\n");
+        rc = CMD_RET_SUCCESS; // return success here
+    }
 
     return rc;
 }
