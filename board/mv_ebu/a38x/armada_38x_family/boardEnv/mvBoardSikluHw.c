@@ -479,8 +479,8 @@ static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode
 
     rc = siklu_88e512_phy_write(phy_addr, bank, reg_addr, reg_val);
 
-    printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
-            rc); // edikk remove
+   //printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
+    //        rc);
 
     return rc;
 }
