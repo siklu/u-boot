@@ -28,6 +28,10 @@ disclaimer.
 #include "ctrlEnv/mvCtrlEnvLib.h"
 #include "gpp/mvGppRegs.h"
 
+#ifndef MV_SIKLU_WIGIG_BOARD
+
+
+
 #define TSC2005_CMD	(0x80)
 #define TSC2005_REG	(0x00)
 
@@ -522,3 +526,4 @@ U_BOOT_CMD(
         "ts_test	- test touch screen\n",
         "You have to touch the screen according to the indication\n"
 );
+#endif // MV_SIKLU_WIGIG_BOARD

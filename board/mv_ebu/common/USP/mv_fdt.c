@@ -99,11 +99,11 @@ static int mv_fdt_update_pex(void *fdt);
 static int mv_fdt_update_sata(void *fdt);
 static int mv_fdt_update_usb(void *fdt, MV_UNIT_ID unitType);
 static int mv_fdt_update_ethnum(void *fdt);
-static int mv_fdt_update_flash(void *fdt);
+static int mv_fdt_update_flash(void *fdt) __attribute__((unused));
 static int mv_fdt_set_node_prop(void *fdt, const char *node, const char *prop, const char *prop_val);
 static int mv_fdt_remove_node(void *fdt, const char *path);
 static int mv_fdt_scan_and_set_alias(void *fdt, const char *name, const char *alias);
-static int mv_fdt_nand_mode_fixup(void *fdt);
+static int mv_fdt_nand_mode_fixup(void *fdt)  __attribute__((unused));
 static int mv_fdt_update_pinctrl(void *fdt);
 static int mv_fdt_debug;
 #ifdef CONFIG_MV_SDHCI
