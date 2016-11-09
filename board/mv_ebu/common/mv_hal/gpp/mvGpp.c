@@ -443,3 +443,31 @@ MV_STATUS mvGppAtomicValueSet(MV_U32 gpionumber)
                 MV_REG_WRITE(GPP_64_66_DATA_OUT_SET_REG , 1 << (gpionumber%32));
         return MV_OK;
 }
+
+
+
+
+/*
+ * Armada 38x Siklu
+ */
+MV_STATUS mvGppBlinkCounterSet(GPP_BLINK_COUNTER_E counter, GPP_BLINK_COUNTER_DURATION_E dur, MV_U32 val)
+{
+    MV_STATUS rc = MV_OK;
+    MV_U32 reg_offs;
+
+    if (counter == GPP_BLINK_COUNTER_A)
+        reg_offs = 0x181c0;
+    else
+        reg_offs = 0x181c8;
+
+
+    if (dur == GPP_BLINK_COUNTER_DURATION_OFF)
+        reg_offs += 0x4;
+
+    MV_REG_WRITE(reg_offs,val);
+
+
+    return rc;
+}
+
+

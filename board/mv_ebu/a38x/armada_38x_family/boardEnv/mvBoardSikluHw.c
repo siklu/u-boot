@@ -12,13 +12,21 @@
 #include <siklu_api.h>
 #include <i2c.h>
 #include <spi_flash.h>
+#include "../../../common/mv_hal/gpp/mvGpp.h"
 
 #define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
 #define MV_GPP_OUT	0		/* GPP output */
 
-extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-extern MV_U32 mvGppValueGet(MV_U32 group, MV_U32 mask);
+#define GPP12   (1<<12)
+#define GPP21   (1<<21)
+#define POWER_LED_YELLOW_GPP (GPP12)
+#define POWER_LED_GREEN_GPP  (GPP21)
+
+//extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
+//extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
+//extern MV_U32 mvGppValueGet(MV_U32 group, MV_U32 mask);
+//extern MV_STATUS mvGppBlinkEn(MV_U32 group, MV_U32 mask, MV_U32 value);
+static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode);
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -369,6 +377,8 @@ int arch_early_init_r(void)
     mvSikluHwResetCntrl(SKL_GPHY_1_RESET, 0);
     mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);
 
+    siklu_set_led_cpu_mpp(SKL_LED_POWER, SKL_LED_MODE_GREEN_BLINK);
+
     udelay(10000);
 
     return 0;
@@ -376,7 +386,7 @@ int arch_early_init_r(void)
 /*
  * set POWER and WLAN LEDs
  */
-static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 {
     int rc = 0;
 
@@ -414,9 +424,17 @@ static int siklu_set_led_by_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E m
             mvSikluCpuGpioSetVal(12, 1);
             mvSikluCpuGpioSetVal(21, 1);
             break;
+        case SKL_LED_MODE_GREEN_BLINK:
+            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_ON,  0x9000000);
+            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_OFF, 0x9000000);
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 0);
+            mvGppBlinkEn(0,POWER_LED_GREEN_GPP,POWER_LED_GREEN_GPP);
+            break;
         case SKL_LED_MODE_GREEN: // mpp12='h', mpp21='l'
             mvSikluCpuGpioSetVal(12, 1);
             mvSikluCpuGpioSetVal(21, 0);
+            mvGppBlinkEn(0,POWER_LED_GREEN_GPP,0);
             break;
         case SKL_LED_MODE_YELLOW: // mpp12='l', mpp21='h'
             mvSikluCpuGpioSetVal(12, 0);
@@ -500,7 +518,7 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
         break;
     case SKL_LED_WLAN:
     case SKL_LED_POWER:
-        rc = siklu_set_led_by_mpp(led, mode);
+        rc = siklu_set_led_cpu_mpp(led, mode);
         break;
     case SKL_LED_BLE:
     default:

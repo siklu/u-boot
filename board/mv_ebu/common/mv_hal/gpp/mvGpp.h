@@ -99,6 +99,20 @@ extern "C" {
 #define	MV_GPP_IN_INVERT	0xFFFFFFFF	/* Inverted value is got */
 #define MV_GPP_IN_ORIGIN	0	/* original value is got */
 
+
+	typedef enum
+	{
+	    GPP_BLINK_COUNTER_A,
+	    GPP_BLINK_COUNTER_B,
+	} GPP_BLINK_COUNTER_E;
+
+	typedef enum
+	{
+	    GPP_BLINK_COUNTER_DURATION_ON,
+	    GPP_BLINK_COUNTER_DURATION_OFF,
+	}GPP_BLINK_COUNTER_DURATION_E;
+
+
 	/* mvGppInit - Initialize GPP HAL */
 	MV_STATUS mvGppInit(MV_GPP_HAL_DATA *halData);
 
@@ -124,6 +138,7 @@ extern "C" {
 
 	MV_STATUS mvGppAtomicValueSet(MV_U32 gpionumber);
 	MV_STATUS mvGppAtomicValueClear(MV_U32 gpionumber);
+	MV_STATUS mvGppBlinkCounterSet(GPP_BLINK_COUNTER_E counter, GPP_BLINK_COUNTER_DURATION_E dur, MV_U32 val);
 #ifdef __cplusplus
 }
 #endif

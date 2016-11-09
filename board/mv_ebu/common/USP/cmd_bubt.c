@@ -307,7 +307,7 @@ int nand_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 }
 
 U_BOOT_CMD(
-		bubt,      4,     1,      nand_burn_uboot_cmd,
+		bubt,      4,    0,      nand_burn_uboot_cmd,
 		"bubt	- Burn an image on the Boot Nand Flash.\n",
 		"[file-name] [destination [source]] \n"
 		"\tBurn a binary image on the Boot Flash, default file-name is u-boot.bin .\n"
