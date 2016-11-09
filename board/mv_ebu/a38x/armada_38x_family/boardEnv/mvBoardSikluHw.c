@@ -425,6 +425,7 @@ static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E 
             mvSikluCpuGpioSetVal(21, 1);
             break;
         case SKL_LED_MODE_GREEN_BLINK:
+            // siklu_remarkM27
             mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_ON,  0x9000000);
             mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_OFF, 0x9000000);
             mvSikluCpuGpioSetVal(12, 1);
