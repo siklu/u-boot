@@ -22,10 +22,7 @@
 #define POWER_LED_YELLOW_GPP (GPP12)
 #define POWER_LED_GREEN_GPP  (GPP21)
 
-//extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-//extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-//extern MV_U32 mvGppValueGet(MV_U32 group, MV_U32 mask);
-//extern MV_STATUS mvGppBlinkEn(MV_U32 group, MV_U32 mask, MV_U32 value);
+
 static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode);
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -378,6 +375,8 @@ int arch_early_init_r(void)
     mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);
 
     siklu_set_led_cpu_mpp(SKL_LED_POWER, SKL_LED_MODE_GREEN_BLINK);
+    siklu_set_led_cpu_mpp(SKL_LED_WLAN, SKL_LED_MODE_OFF);
+    siklu_control_sfp_led(0);
 
     udelay(10000);
 
