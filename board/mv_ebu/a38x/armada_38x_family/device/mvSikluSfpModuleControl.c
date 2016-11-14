@@ -29,7 +29,7 @@ static int siklu_display_sfp_status(void) {
 	return rc;
 }
 
-static int siklu_control_sfp_led(int is_on) {
+int siklu_control_sfp_led(int is_on) {
 	int rc = CMD_RET_SUCCESS;
 	// printf(" %s() Called %d\n",__func__, is_on);
 

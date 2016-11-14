@@ -350,7 +350,7 @@ int mvSikluHwResetCntrl(SKL_MODULE_RESET_CNTRL_E dev, int isEna)
 
     return rc;
 }
-
+extern int siklu_control_sfp_led(int is_on);
 int arch_early_init_r(void)
 {
 

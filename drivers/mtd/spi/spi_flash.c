@@ -407,8 +407,8 @@ struct spi_flash *spi_flash_probe(unsigned int bus, unsigned int cs,
 	int ret, i, shift;
 	u8 idcode[IDCODE_LEN], *idp;
 
-
-	// printf("%s()  bus %d, cs %d, max_hz %d, spi_mode %d\n",__func__, bus, cs, max_hz, spi_mode );
+	// siklu_remarkM28
+	// printf("%s()  bus %d, cs %d, max_hz %d, spi_mode %d\n",__func__, bus, cs, max_hz, spi_mode ); 
 
 	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
 	if (!spi) {
