@@ -136,7 +136,7 @@
 /* defines for DB-6820  */
 /**********************************/
 
-	#define MV88F682X  // edikk defined here
+	#define MV88F682X  // SIKLU board defined here
 	#define MV88F68XX
 
 #elif defined(CONFIG_ARMADA_39X)
