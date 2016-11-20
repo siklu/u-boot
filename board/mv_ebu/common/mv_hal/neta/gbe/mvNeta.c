@@ -907,7 +907,7 @@ MV_STATUS mvNetaFlowCtrlGet(int port, MV_ETH_PORT_FC *pFlowCntrl)
 	return MV_OK;
 }
 
-MV_STATUS mvNetaPortEnable(int port)
+MV_STATUS mvNetaPortEnable(int port) // siklu_remarkM21 read port is up status here
 {
 	if (!MV_PON_PORT(port)) {
 		MV_U32 regVal;
@@ -919,8 +919,16 @@ MV_STATUS mvNetaPortEnable(int port)
 		MV_REG_WRITE(NETA_GMAC_CTRL_0_REG(port), regVal);
 
 		/* If Link is UP, Start RX and TX traffic */
-		if (MV_REG_READ(NETA_GMAC_STATUS_REG(port)) & NETA_GMAC_LINK_UP_MASK)
+		if (MV_REG_READ(NETA_GMAC_STATUS_REG(port)) & NETA_GMAC_LINK_UP_MASK) {
+		    //printf("%s()  Port is UP!!  line %d\n", __func__, __LINE__); siklu_remarkM21: port is UP
 			return mvNetaPortUp(port);
+		}
+		else {
+		    ;//printf("%s()   line %d\n", __func__, __LINE__);
+		}
+	}
+	else {
+	    ;//printf("%s()   line %d\n", __func__, __LINE__);
 	}
 	return MV_NOT_READY;
 }

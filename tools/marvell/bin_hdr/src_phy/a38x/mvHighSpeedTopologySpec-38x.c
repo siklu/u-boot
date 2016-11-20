@@ -250,10 +250,17 @@ loadTopologyFuncPtr loadTopologyFuncArr[] =
 SERDES_MAP DbConfigDefault[MAX_SERDES_LANES] =  // siklu_remarkM16 siklu serdes topology configuration here!
 {
 #ifdef 	MV_SIKLU_WIGIG_BOARD
+
+#define ETH2_COPPER_1G_MODE
+
 	{ PEX0, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ SGMII0,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
 	{ SGMII1,   __1_25Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
-	{ SGMII2,   __3_125Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE },
+#ifdef ETH2_COPPER_1G_MODE
+	{ SGMII2,   __1_25Gbps,        SERDES_DEFAULT_MODE,     MV_FALSE,   MV_FALSE }, // siklu_remarkM21 config SERDES eth2 = copper 1G
+#else
+	{ SGMII2,   __3_125Gbps,  	   SERDES_DEFAULT_MODE,		MV_FALSE,	MV_FALSE }, // siklu_remarkM21 configSERDES eth2 = fiber 2.5G
+#endif
 	{ PEX1, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 	{ PEX2, 	 __5Gbps,   	   PEX_ROOT_COMPLEX_x1,		MV_FALSE,	MV_FALSE },
 #else // !MV_SIKLU_WIGIG_BOARD

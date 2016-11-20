@@ -14,8 +14,8 @@
 
 
 typedef enum {
-	SKL_WIGIG0_RF_RESET,  // edikk: mean RF output?
-	SKL_WIGIG1_RF_RESET,  // edikk: mean RF output?
+	SKL_WIGIG0_RF_RESET,  //  mean RF output?
+	SKL_WIGIG1_RF_RESET,  //  mean RF output?
 	SKL_WIFI_RESET,
 	SKL_BLE_RESET,
 

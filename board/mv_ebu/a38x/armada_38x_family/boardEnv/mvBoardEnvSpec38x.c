@@ -356,9 +356,11 @@ MV_BOARD_TWSI_INFO db88f68xxInfoBoardTwsiDev[] = {
 };
 MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {  // siklu_remarkM21
 	/* {{MV_BOARD_MAC_SPEED boardMacSpeed, MV_32 boardEthSmiAddr , MV_32 boardEthSmiAddr0;}} */
-	{ BOARD_MAC_SPEED_AUTO, 0x0, 0x0},
-	{ BOARD_MAC_SPEED_AUTO, 0x1, 0x1},
-	{ BOARD_MAC_SPEED_2000M, -1, -1},   // siklu_remarkM21 edikk 2007
+	{ BOARD_MAC_SPEED_AUTO, 0, 0},
+	{ BOARD_MAC_SPEED_AUTO, 1, 1},
+    { BOARD_MAC_SPEED_AUTO, -1, -1 },  // edikk return line below!!! right values!!! 20.11
+	// { BOARD_MAC_SPEED_AUTO, 1, 1 },  // edikk return line below!!! right values!!!
+    //	{ BOARD_MAC_SPEED_2000M, -1, -1},   // siklu_remarkM21 edikk 2007   good line for ccf-
 };
 
 MV_BOARD_USB_INFO db88f68xxInfoBoardUsbInfo[] = {

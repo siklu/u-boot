@@ -40,12 +40,12 @@ int siklu_control_sfp_led(int is_on) {
 	return rc;
 }
 
-static int siklu_control_sfp_tx_ena(int is_ena) {
+static int siklu_control_sfp_tx_ena(int is_ena) { // siklu_remarkM21
 	int rc = CMD_RET_SUCCESS;
 	// printf(" %s() Called %d\n",__func__, is_ena);
 
 	// set I2C Extender PCA9557   bit IO1
-	mvSikluExtndrGpioSetVal(1, is_ena); // edikk TBD?
+	mvSikluExtndrGpioSetVal(1, is_ena); // edikk TBD? do it only if exists
 	return rc;
 }
 

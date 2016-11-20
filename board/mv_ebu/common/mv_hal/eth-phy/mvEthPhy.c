@@ -126,27 +126,9 @@ MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // siklu_remarkM21
 	MV_U16     deviceId;
 	MV_U16     id1, id2;
 
-
-#ifdef MV_SIKLU_WIGIG_BOARD  // release PHY reset !
-	extern MV_STATUS mvGppValueSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-	extern MV_STATUS mvGppTypeSet(MV_U32 group, MV_U32 mask, MV_U32 value);
-#define GPP6 6
-#define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
-#define MV_GPP_OUT	0		/* GPP output */
-	// release PHY reset
-	//*       Set GPP8 value of '0' and GPP15 value of '1'.
-	//*       mvGppActiveSet(0, (GPP8 | GPP15), ((0 & GPP8) | (GPP15)) );
-
-
-	mvGppTypeSet(0, GPP6, (MV_GPP_OUT & GPP6));  // enable 1st PHY
-	mvGppValueSet(0, GPP6, (GPP6));
-
-	// edikk un-reset 2nd PHY TBD
-
-#endif
-
 	if (ethPortNum != ((MV_U32) -1))
 		phyAddr = ethphyHalData.phyAddr[ethPortNum];
+
 
 	/* Set page as 0 */
 	if (mvEthPhyRegWrite(phyAddr, 22, 0) != MV_OK) {
@@ -210,7 +192,7 @@ MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // siklu_remarkM21
 	case MV_PHY_88E1310:
 		mvEthE1310PhyBasicInit(ethPortNum);
 		break;
-	case MV_PHY_88E1512:
+	case MV_PHY_88E1512:  // Siklu PHY
 		mvEthE1512PhyBasicInit(ethPortNum);
 		break;
 	case MV_PHY_88E104X:
@@ -1143,9 +1125,10 @@ MV_VOID	mvEthE1112PhyPowerUp(MV_U32 ethPortNum)
 * RETURN:   None
 *
 *******************************************************************************/
-static MV_VOID	mvEthPhyPower(MV_U32 ethPortNum, MV_BOOL enable)
+static MV_VOID	mvEthPhyPower(MV_U32 ethPortNum, MV_BOOL enable) // siklu_remarkM21
 {
 	MV_U16 reg;
+
 	if (enable == MV_FALSE) {
 	/* Power down command */
 		mvEthPhyRegWrite(ethphyHalData.phyAddr[ethPortNum], 22, 2); 		/* select page 2 */
@@ -2090,7 +2073,7 @@ MV_VOID mvEth1340PhyBasicInit(void)
 * RETURN:   None
 *
 *******************************************************************************/
-MV_VOID mvEthE1512PhyBasicInit(MV_U32 ethPortNum)
+MV_VOID mvEthE1512PhyBasicInit(MV_U32 ethPortNum) // siklu_remarkM21
 {
 	MV_U16 reg;
 /*
@@ -2136,6 +2119,13 @@ MV_U32 mvEthPhyAddGet(MV_U32 ethPortNum)
 {
        /* TODO Port num validation */
        return ethphyHalData.phyAddr[ethPortNum];
+}
+
+MV_U32 mvEthPhyAddSet(MV_U32 ethPortNum, MV_U32 phyAddr)
+{
+       /* TODO Port num validation */
+       ethphyHalData.phyAddr[ethPortNum] = phyAddr;
+       return 0;
 }
 
 

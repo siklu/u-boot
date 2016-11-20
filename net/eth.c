@@ -294,6 +294,14 @@ int eth_initialize(bd_t *bis)
 	eth_devices = NULL;
 	eth_current = NULL;
 
+#ifdef  MV_SIKLU_WIGIG_BOARD
+    {
+        extern int siklu_config_eth1(void);
+        siklu_config_eth1();// siklu_remarkM21
+    }
+#endif
+
+
 	bootstage_mark(BOOTSTAGE_ID_NET_ETH_START);
 #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
 	miiphy_init();
@@ -351,6 +359,12 @@ int eth_initialize(bd_t *bis)
 		eth_current_changed();
 		putc('\n');
 	}
+#ifdef 	MV_SIKLU_WIGIG_BOARD
+    {
+        extern int siklu_config_eth2(void);
+        siklu_config_eth2();// siklu_remarkM21
+    }
+#endif
 
 	return num_devices;
 }

@@ -43,9 +43,9 @@
 struct spi_flash *flash;
 
 unsigned long spi_flash_init(void)
-{    // siklu_remarkM28
-	flash = spi_flash_probe(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS, CONFIG_ENV_SPI_MAX_HZ, SPI_MODE_3);
-	if (!flash) {
+{    // siklu_remarkM28  Siklu code doesn't call this func!!!
+	flash = spi_flash_probe(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS, CONFIG_ENV_SPI_MAX_HZ, SPI_MODE_3); // original line!
+ 	if (!flash) {
 		printf("Failed to initialize SPI flash at %u:%u\n", CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS);
 		return 1;
 	}

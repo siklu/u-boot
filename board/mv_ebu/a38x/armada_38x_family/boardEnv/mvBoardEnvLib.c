@@ -82,6 +82,8 @@
 
 #include "gpp/mvGppRegs.h"
 
+#include "siklu_board_system.h"
+
 /* defines  */
 #undef MV_DEBUG
 #ifdef MV_DEBUG
@@ -350,23 +352,7 @@ MV_32 mvBoardPhyAddrGet(MV_U32 ethPortNum) // siklu_remarkM21
 		DB(mvOsPrintf("%s: Error: invalid ethPortNum (%d)\n", __func__, ethPortNum));
 		return MV_ERROR;
 	}
-#ifdef MV_SIKLU_WIGIG_BOARD // siklu board requires follow setup
-
-	switch (ethPortNum)
-	{
-	case 0:
-	case 1:
-		phy_addr = ethPortNum;
-		break;
-	default:
-		phy_addr = (MV_32) -1;
-		break;
-	}
-
-#else
 	phy_addr = board->pBoardMacInfo[ethPortNum].boardEthSmiAddr;
-#endif // 	MV_SIKLU_WIGIG_BOARD
-
 	return phy_addr;
 }
 
@@ -387,13 +373,12 @@ MV_32 mvBoardPhyAddrGet(MV_U32 ethPortNum) // siklu_remarkM21
 *       None.
 *
 *******************************************************************************/
-MV_VOID mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr)
+MV_VOID mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr) // siklu_remarkM21
 {
 	if (ethPortNum >= board->numBoardMacInfo) {
 		DB(mvOsPrintf("%s: Error: invalid ethPortNum (%d)\n", __func__, ethPortNum));
 		return;
 	}
-
 	board->pBoardMacInfo[ethPortNum].boardEthSmiAddr = smiAddr;
 }
 /*******************************************************************************
@@ -488,12 +473,27 @@ MV_BOARD_SPEC_INIT *mvBoardSpecInitGet(MV_VOID)
 *       MV_BOARD_MAC_SPEED, -1 if the port number is wrong.
 *
 *******************************************************************************/
-MV_BOARD_MAC_SPEED mvBoardMacSpeedGet(MV_U32 ethPortNum)
+MV_BOARD_MAC_SPEED mvBoardMacSpeedGet(MV_U32 ethPortNum) // siklu_remarkM21
 {
 	if (ethPortNum >= board->numBoardMacInfo) {
 		mvOsPrintf("%s: Error: wrong eth port (%d)\n", __func__, ethPortNum);
 		return BOARD_MAC_SPEED_100M;
 	}
+
+    // siklu_remarkM21
+    SIKLU_NETWORK_PORT_TYPE_E type = siklu_get_network_port_type(ethPortNum);
+    switch (type)
+    {
+    case SIKLU_NETWORK_PORT_TYPE_COPPER:
+        return BOARD_MAC_SPEED_AUTO;
+        break;
+    case SIKLU_NETWORK_PORT_TYPE_FIBER:
+        return BOARD_MAC_SPEED_2000M;
+        break;
+    default:
+        return BOARD_MAC_UNCONNECTED;
+        break;
+    }
 
 	return board->pBoardMacInfo[ethPortNum].boardMacSpeed;
 }
@@ -514,7 +514,7 @@ MV_BOARD_MAC_SPEED mvBoardMacSpeedGet(MV_U32 ethPortNum)
 *       None.
 *
 *******************************************************************************/
-MV_VOID mvBoardMacSpeedSet(MV_U32 ethPortNum, MV_BOARD_MAC_SPEED ethSpeed)
+MV_VOID mvBoardMacSpeedSet(MV_U32 ethPortNum, MV_BOARD_MAC_SPEED ethSpeed) // siklu_remarkM21
 {
 	if (ethPortNum >= board->numBoardMacInfo) {
 		mvOsPrintf("%s: Error: wrong eth port (%d)\n", __func__, ethPortNum);
@@ -2076,7 +2076,7 @@ MV_VOID mvBoardSet(MV_U32 boardId)
 *       32bit board ID number, '-1' if board is undefined.
 *
 *******************************************************************************/
-MV_U32 mvBoardIdGet(MV_VOID)
+MV_U32 mvBoardIdGet(MV_VOID) // siklu_remarkM21
 {
 	if (gBoardId != -1)
 		return gBoardId;
@@ -2087,7 +2087,9 @@ MV_U32 mvBoardIdGet(MV_VOID)
 	#elif CONFIG_CUSTOMER_BOARD_1
 		gBoardId = CUSTOMER_BOARD_ID1;
 	#endif
+
 #else /* !CONFIG_CUSTOMER_BOARD_SUPPORT */
+
 	/* Temporarily set generic board struct pointer, to set/get EEPROM i2c address, and read board ID */
 	board = marvellBoardInfoTbl[mvBoardIdIndexGet(MV_DEFAULT_BOARD_ID)];
 

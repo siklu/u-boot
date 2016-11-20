@@ -13,6 +13,11 @@
 #include <i2c.h>
 #include <spi_flash.h>
 #include "../../../common/mv_hal/gpp/mvGpp.h"
+#include "siklu_board_system.h"
+
+extern MV_U32 mvEthPhyAddSet(MV_U32 ethPortNum, MV_U32 phyAddr);
+extern MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, int eeeEnable);
+extern MV_VOID mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr);
 
 #define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
 #define MV_GPP_OUT	0		/* GPP output */
@@ -21,7 +26,6 @@
 #define GPP21   (1<<21)
 #define POWER_LED_YELLOW_GPP (GPP12)
 #define POWER_LED_GREEN_GPP  (GPP21)
-
 
 static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode);
 
@@ -372,7 +376,7 @@ int arch_early_init_r(void)
 
     mvSikluHwResetCntrl(SKL_GPHY_0_RESET, 0);
     mvSikluHwResetCntrl(SKL_GPHY_1_RESET, 0);
-    mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);
+    mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);  // edikk only if exists!
 
     siklu_set_led_cpu_mpp(SKL_LED_POWER, SKL_LED_MODE_GREEN_BLINK);
     siklu_set_led_cpu_mpp(SKL_LED_WLAN, SKL_LED_MODE_OFF);
@@ -382,6 +386,73 @@ int arch_early_init_r(void)
 
     return 0;
 }
+/*
+ *
+ */
+static int siklu_configure_eth2_copper_1g_mode(void)
+{
+
+    // un-reset PHY2
+    mvSikluCpuGpioSetDirection(50, 1); // set output
+    mvSikluCpuGpioSetVal(50, 0);    // Set PHY to reset
+    udelay(100);
+    mvSikluCpuGpioSetVal(50, 1);    // release reset
+
+    // MPP10 controls connect MDC/MDIO bus to ETH2 port
+    mvSikluCpuGpioSetDirection(10, 1); // set output
+    mvSikluCpuGpioSetVal(10, 0);    // Value '0' - connect 3rd PHY to eth#2
+
+    mvBoardPhyAddrSet(2, 1);
+    mvEthPhyAddSet(2, 1);    // Set PHY address = 1
+
+    udelay(1000);
+
+    mvEthPhyInit(2, 1);  // siklu_remarkM21
+
+    // after setup return MPP10 to eth1
+    mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 3rd PHY to eth#1
+
+    return 0;
+}
+
+/*
+ * If eth2 is copper port => MPP10 switches MDC/MDIO bus between
+ * eth1 and eth0, therefore connect MDC/MDIO bus here to eth1
+ */
+int siklu_config_eth1(void)
+{
+    int rc = 0;
+    SIKLU_NETWORK_PORT_TYPE_E eth2_type = siklu_get_network_port_type(2);
+    if (eth2_type == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        // MPP10 controls connect MDC/MDIO bus to ETH2 port
+        mvSikluCpuGpioSetDirection(10, 1); // set output
+        mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 3rd PHY to eth#1
+    }
+
+}
+
+int siklu_config_eth2(void)
+{
+    int rc = 0;
+    SIKLU_NETWORK_PORT_TYPE_E eth2_type = siklu_get_network_port_type(2);
+    if (eth2_type == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        printf("\n Configure eth2 port copper,1G Mode\n");
+        siklu_configure_eth2_copper_1g_mode();
+    }
+    else if (eth2_type == SIKLU_NETWORK_PORT_TYPE_FIBER)
+    {
+        printf("\n Configure eth2 port fiber Mode\n");
+    }
+    else
+    {
+        printf("\n ETH2 is omitted\n");
+    }
+
+    return rc;
+}
+
 /*
  * set POWER and WLAN LEDs
  */
@@ -425,16 +496,16 @@ static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E 
             break;
         case SKL_LED_MODE_GREEN_BLINK:
             // siklu_remarkM27
-            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_ON,  0x9000000);
+            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_ON, 0x9000000);
             mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_OFF, 0x9000000);
             mvSikluCpuGpioSetVal(12, 1);
             mvSikluCpuGpioSetVal(21, 0);
-            mvGppBlinkEn(0,POWER_LED_GREEN_GPP,POWER_LED_GREEN_GPP);
+            mvGppBlinkEn(0, POWER_LED_GREEN_GPP, POWER_LED_GREEN_GPP);
             break;
         case SKL_LED_MODE_GREEN: // mpp12='h', mpp21='l'
             mvSikluCpuGpioSetVal(12, 1);
             mvSikluCpuGpioSetVal(21, 0);
-            mvGppBlinkEn(0,POWER_LED_GREEN_GPP,0);
+            mvGppBlinkEn(0, POWER_LED_GREEN_GPP, 0);
             break;
         case SKL_LED_MODE_YELLOW: // mpp12='l', mpp21='h'
             mvSikluCpuGpioSetVal(12, 0);
@@ -497,7 +568,7 @@ static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode
 
     rc = siklu_88e512_phy_write(phy_addr, bank, reg_addr, reg_val);
 
-   //printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
+    //printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
     //        rc);
 
     return rc;
@@ -524,6 +595,39 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
     default:
         return -1; // no handler!
         break;
+    }
+    return rc;
+}
+
+/*
+ * never called
+ */
+int siklu_set_mdcio_switch(int eth_port)
+{
+    int rc = 0;
+#define MDC_MDIO_MPP_SELECTOR 10
+
+    SIKLU_NETWORK_PORT_TYPE_E third_port_type = siklu_get_network_port_type(2);
+    if (third_port_type != SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        ; // do nothing
+    }
+    else
+    {
+
+        mvSikluCpuGpioSetDirection(MDC_MDIO_MPP_SELECTOR, 1); // set MPP10 output
+
+        switch (eth_port)
+        {
+        case 1:
+            mvSikluCpuGpioSetVal(MDC_MDIO_MPP_SELECTOR, 1);
+            break;
+        case 2:
+            mvSikluCpuGpioSetVal(MDC_MDIO_MPP_SELECTOR, 0);
+            break;
+        default: // do nothing
+            break;
+        }
     }
     return rc;
 }
@@ -783,10 +887,14 @@ static int do_siklu_marvell_mpp_control(cmd_tbl_t *cmdtp, int flag, int argc, ch
 
     switch (mpp)
     {
-    case 12:
-    case 21:
-    case 48:
-    case 49:
+    case 6: //  if eth1=copper PHY reset control, if eth1=fiber SFP LED Control
+    case 10: // Select between MDC2 and MDC3 (only when PHY3 assembled)
+    case 12: // LED
+    case 21: // LED
+    case 48: // LED
+    case 49: // LED
+    case 50: // if eth2=copper, PHY controls reset, if eth2=fiber, controls SFP LED
+    case 53: // PHY eth0 port reset control
         mvSikluCpuGpioSetDirection(mpp, 1); // set output
         mvSikluCpuGpioSetVal(mpp, val);
         break;
@@ -798,6 +906,9 @@ static int do_siklu_marvell_mpp_control(cmd_tbl_t *cmdtp, int flag, int argc, ch
     return rc;
 }
 
+/*
+ *
+ */
 static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
@@ -910,7 +1021,7 @@ U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Bu
 
 U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
 
-U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 12/21/48/49 Control",
+U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 6/10/12/21/48/49/50/53 Control",
         "[mpp_num] [0/1] Set 0/1 on required MPP number");
 
 U_BOOT_CMD(sled, 3, 1, do_siklu_board_led_control, "Control Onboard LEDs", "[led] [state] Control Onboard LEDs");

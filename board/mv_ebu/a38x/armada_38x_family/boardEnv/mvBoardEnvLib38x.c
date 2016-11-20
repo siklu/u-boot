@@ -278,6 +278,9 @@ MV_VOID mvBoardFlashDeviceUpdate(MV_VOID)
 *******************************************************************************/
 MV_VOID mvBoardPcieModulesInfoUpdate(MV_VOID)
 {
+
+#ifndef MV_SIKLU_WIGIG_BOARD // do not run on siklu!
+
 	MV_U32 sgmiiPhyAddr;
 	/* 'SatR' PCIe modules configuration ('dbserdes1', 'dbserdes2' , 'sgmiimode') */
 	sgmiiPhyAddr = mvBoardSatRRead(MV_SATR_SGMII_MODE) ? 0x10 : -1;
@@ -302,6 +305,7 @@ MV_VOID mvBoardPcieModulesInfoUpdate(MV_VOID)
 
 	if (mvBoardSatRRead(MV_SATR_DB_SERDES2_CFG) == 0x3) /* SGMII port 1 */
 		mvBoardPhyAddrSet(1, sgmiiPhyAddr);
+#endif // MV_SIKLU_WIGIG_BOARD
 }
 /*******************************************************************************
 * mvBoardInfoUpdate - Update Board information structures according to auto-detection.
@@ -322,6 +326,8 @@ MV_VOID mvBoardPcieModulesInfoUpdate(MV_VOID)
 MV_VOID mvBoardInfoUpdate(MV_VOID)
 {
 	MV_U32 reg;
+
+    // printf("%s() called, ID %d 0x%x\n", __func__, mvBoardIdGet(), mvBoardIdGet());
 
 	switch (mvBoardIdGet()) {
 	case DB_BP_6821_ID:
@@ -352,10 +358,12 @@ MV_VOID mvBoardInfoUpdate(MV_VOID)
 		if (mvBoardSatRRead(MV_SATR_RD_SERDES4_CFG) == 1) /* 0 = USB3.  1 = SGMII. */
 			mvBoardPhyAddrSet(1, -1);
 		break;
-	case DB_68XX_ID:
+	case DB_68XX_ID: // SIKLU board fall here
+
+#ifndef MV_SIKLU_WIGIG_BOARD // do not run on siklu!
 		if ((mvBoardIsModuleConnected(MV_MODULE_MII)))	/* MII Module uses different PHY address */
 			mvBoardPhyAddrSet(0, 8);	/*set SMI address 8 for port 0*/
-
+#endif
 		/* Update MPP group types and values according to board configuration */
 		mvBoardMppIdUpdate();
 		/* board on test mode  */
@@ -375,6 +383,7 @@ MV_VOID mvBoardInfoUpdate(MV_VOID)
 		break;
 	default:
 		mvOsPrintf("%s: Error: Auto detection update sequence is not supported by current board.\n" , __func__);
+		break;
 	}
 }
 

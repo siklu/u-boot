@@ -201,9 +201,7 @@ static pktInfo *mvCreatePacket(MV_VOID)
 	return pkt;
 }
 
-
-
-static int mvEgigaInit(struct eth_device *dev, bd_t *p)
+static int mvEgigaInit(struct eth_device *dev, bd_t *p) // siklu_remarkM21
 {
 	egigaPriv *priv = dev->priv;
 	pktInfo *pkt;

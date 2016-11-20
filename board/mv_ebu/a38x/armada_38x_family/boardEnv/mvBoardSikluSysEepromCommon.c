@@ -13,6 +13,7 @@
 
 #include <spi_flash.h>
 #include "siklu_eeprom.h"
+#include "siklu_board_system.h"
 
 extern struct spi_flash *get_spi_flash_data(void);
 
@@ -211,12 +212,13 @@ char* protect_string(char* str, int size)
  */
 static int seeprom_check_data_validity(void)
 {
-    static int rc = -1;
+    static int is_valid = 0; // false
+    int rc;
     seeprom_header_S header;
     __u8 *pseeprom = (__u8 *) &header;
 
-    if ((rc >= 0)) // read only once
-        return rc;
+    if ((is_valid)) // read only once
+        return is_valid;
 
     memset(pseeprom, 0x00, sizeof(header));
 
@@ -225,39 +227,37 @@ static int seeprom_check_data_validity(void)
     if (rc != 0)
     {
         printf(" Read Serial EEPROM FAIL\n");
-        rc = -1;
-        return rc;
+        is_valid = 0;
+        return is_valid;
     }
 
     if (header.control_key.val != SYS_EEPROM_CONTROL_KEY_VAL)
     {
         printf(" Control Key is Wrong. Expected 0x%x, Read 0x%x\n",
         SYS_EEPROM_CONTROL_KEY_VAL, header.control_key.val);
-        rc = -1;
-        return rc;
+        is_valid = 0;
+        return is_valid;
     }
 
     if (header.major.va1 != SYS_EEPROM_MAJOR_VER)
     {
         printf(" Wrong major version. Expected 0x%x, Read 0x%x\n", header.major.va1, SYS_EEPROM_MAJOR_VER);
-        rc = -1;
-        return rc;
+        is_valid = 0;
+        return is_valid;
     }
-    return 0;
+    return 1; // true
 }
 
 int siklu_get_mac_from_seeprom(__u8* mac_addr)
 {
     seeprom_hndlr_S* hndlr = NULL;
-    int rc;
 
-    rc = seeprom_check_data_validity();
-    if (rc >= 0)
-    hndlr = GetHndlr();
+    if (seeprom_check_data_validity())
+        hndlr = GetHndlr();
     if (hndlr)
-    return hndlr->get_mac(mac_addr);
+        return hndlr->get_mac(mac_addr);
     else
-    return -1;
+        return -1;
 }
 
 /*
@@ -272,7 +272,7 @@ int siklu_get_seeprom_net_number_eth_ports(void)
 
     seeprom_hndlr_S* hndlr = NULL;
 
-    if (rc >= seeprom_check_data_validity())
+    if (seeprom_check_data_validity())
         hndlr = GetHndlr();
 
     if (hndlr)
@@ -289,22 +289,40 @@ int siklu_get_seeprom_net_number_eth_ports(void)
     return rc;
 }
 /*
+ *
+ */
+SIKLU_NETWORK_PORT_TYPE_E siklu_get_network_port_type(int port_num)
+{
+    SIKLU_NETWORK_PORT_TYPE_E type = SIKLU_NETWORK_PORT_TYPE_NONE;
+    seeprom_hndlr_S* hndlr = NULL;
+    const char* p;
+    if (seeprom_check_data_validity())
+        hndlr = GetHndlr();
+    if ((!hndlr) || (port_num >= NVRAM_NETW_PORT_TYPE_FIELD_SIZE))
+        return type;
+
+    p = hndlr->get_netw_port_map();
+    if (p[port_num] == 'c')
+        type = SIKLU_NETWORK_PORT_TYPE_COPPER;
+    else if (p[port_num] == 'f')
+        type = SIKLU_NETWORK_PORT_TYPE_FIBER;
+    return type;
+
+}
+
+/*
  *  called on power up before first SYS EEPROM access
  */
 void siklu_prepare_syseeprom(void)
 {
-    int rc = seeprom_check_data_validity();
 
-    if (rc >= 0)
-    { // ok we have data
+    if (seeprom_check_data_validity())
         return;
-    }
+
     // no SYSEEPROM data recognized, make default format
     seeprom_hndlr_S* hndlr = GetHndlr(); // prepare area
     if (hndlr)
-    {
         hndlr->primary_format();
-    }
 }
 
 /******************************************************************
@@ -366,7 +384,7 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc
 
     seeprom_hndlr_S* hndlr = NULL;
 
-    if (rc >= seeprom_check_data_validity())
+    if (seeprom_check_data_validity())
         hndlr = GetHndlr();
 
     if (hndlr == NULL)
@@ -432,7 +450,8 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc
         {
             hndlr->set_assembly_type(argv[2]);
         }
-        else {
+        else
+        {
             printf("Unknown parameter\n");
             return cmd_usage(cmdtp);
         }
