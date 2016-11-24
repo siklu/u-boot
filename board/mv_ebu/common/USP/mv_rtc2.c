@@ -73,13 +73,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static int rtc_ready = -1;
 
+
+static int check_and_restore_wrong_time(struct rtc_time *tm)
+{
+    int rc = 0;
+
+    rtc_get(tm);
+
+    if ((tm->tm_sec <0)||(tm->tm_sec > 59) ||
+            (tm->tm_min < 0)||(tm->tm_min > 0) ||
+            (tm->tm_hour < 0)||(tm->tm_hour > 23) ||
+            (tm->tm_year < 2000) || (tm->tm_year > 2030))
+    {
+        printf("Wrong date/time, restore default\n");
+
+        rtc_reset();
+        udelay(1000);
+
+        tm->tm_year = 2016;
+        tm->tm_mon = 1;
+        tm->tm_mday = 1;
+        tm->tm_hour = 1;
+        tm->tm_min =1;
+        tm->tm_sec = 1;
+        rtc_set(tm);
+        udelay(1000);
+        rtc_set(tm);
+    }
+    return rc;
+}
+
+
+
 /*******************************************************/
 void rtc_init(void)
 {
-	/* Update RTC-MBUS bridge timing parameters */
-	MV_REG_WRITE(MV_RTC2_SOC_OFFSET, 0xFD4D4CFA);
-	rtc_ready = 1;
+    if (rtc_ready != 1) {
+        struct rtc_time tm;
+
+        rtc_ready = 1;
+
+        /* Update RTC-MBUS bridge timing parameters */
+        MV_REG_WRITE(MV_RTC2_SOC_OFFSET, 0xFD4D4CFA);
+
+        check_and_restore_wrong_time(&tm); // siklu addition
+    }
 }
+
 
 /*******************************************************/
 int rtc_get(struct rtc_time *tm)
@@ -98,6 +138,7 @@ int rtc_get(struct rtc_time *tm)
 	/* End of WA */
 
 	to_tm(time_check, tm);
+
 
 	return 0;
 }
