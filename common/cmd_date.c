@@ -52,23 +52,29 @@ int mk_date (const char *, struct rtc_time *);
 
 static int _rtc_get(struct rtc_time *tm)
 {
+#ifdef CONFIG_RTC_PCF8523
 	if (use_siklu_external_pcf8523)
 		return siklu_rtc_get(tm);
 	else
+#endif
 		return rtc_get(tm);
 }
 static int _rtc_set(struct rtc_time *tm)
 {
+#ifdef CONFIG_RTC_PCF8523
 	if (use_siklu_external_pcf8523)
 		return siklu_rtc_set(tm);
 	else
+#endif
 		return rtc_set(tm);
 }
 static void _rtc_reset(void)
 {
+#ifdef CONFIG_RTC_PCF8523
 	if (use_siklu_external_pcf8523)
 		siklu_rtc_reset();
 	else
+#endif
 		rtc_reset();
 }
 

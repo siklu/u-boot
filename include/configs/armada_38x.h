@@ -728,7 +728,7 @@ extern unsigned int mvUartPortGet(void);
 
 #define CONFIG_STACKSIZE        (1 << 20)       /* regular stack - up to 4M (in case of exception)*/
 
-#define CONFIG_RTC_PCF8523 1 /* Siklu */
-#define CONFIG_SYS_RTC_PCF8523_BUS_NUM      0
+//#define CONFIG_RTC_PCF8523 1 /* Siklu. The chip removed. We use internal Marvell SoC RTC  */
+//#define CONFIG_SYS_RTC_PCF8523_BUS_NUM      0
 
 #endif /* __CONFIG_H */

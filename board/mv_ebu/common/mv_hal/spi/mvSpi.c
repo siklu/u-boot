@@ -384,7 +384,7 @@ MV_STATUS mvSpiIfConfigSet(MV_U8 spiId, MV_SPI_IF_PARAMS *ifParams)
 	if (ifParams->clockPhase == SPI_CLK_BEGIN_CYC)
 		ctrlReg |= MV_SPI_CPHA_MASK;
 
-#endif   MV_SIKLU_WIGIG_BOARD
+#endif //  MV_SIKLU_WIGIG_BOARD
 
 	if (ifParams->txMsbFirst)
 		ctrlReg |= MV_SPI_TXLSBF_MASK;
