@@ -375,11 +375,16 @@ MV_STATUS mvSpiIfConfigSet(MV_U8 spiId, MV_SPI_IF_PARAMS *ifParams)
 	/* Set Clock Polarity */
 	ctrlReg &= ~(MV_SPI_CPOL_MASK | MV_SPI_CPHA_MASK |
 			MV_SPI_TXLSBF_MASK | MV_SPI_RXLSBF_MASK);
+
+
+#ifndef MV_SIKLU_WIGIG_BOARD	/* siklu_remarkM28   Siklu SPI bus works in mode 0  */
+
 	if (ifParams->clockPolLow)
 		ctrlReg |= MV_SPI_CPOL_MASK;
-
 	if (ifParams->clockPhase == SPI_CLK_BEGIN_CYC)
 		ctrlReg |= MV_SPI_CPHA_MASK;
+
+#endif   MV_SIKLU_WIGIG_BOARD
 
 	if (ifParams->txMsbFirst)
 		ctrlReg |= MV_SPI_TXLSBF_MASK;
