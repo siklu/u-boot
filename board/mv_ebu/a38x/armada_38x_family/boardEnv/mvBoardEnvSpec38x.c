@@ -354,13 +354,18 @@ MV_BOARD_TWSI_INFO db88f68xxInfoBoardTwsiDev[] = {
 	{ BOARD_TWSI_MODULE_DETECT,	4,	0x26,	   ADDR7_BIT, MV_FALSE},
 	{ BOARD_TWSI_MODULE_DETECT,	5,	0x27,	   ADDR7_BIT, MV_FALSE},
 };
-MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {  // siklu_remarkM21
+
+// #define ETH2_COPPER_1G_MODE
+
+MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {  // siklu_remarkM21  siklu_remarkM30
 	/* {{MV_BOARD_MAC_SPEED boardMacSpeed, MV_32 boardEthSmiAddr , MV_32 boardEthSmiAddr0;}} */
 	{ BOARD_MAC_SPEED_AUTO, 0, 0},
 	{ BOARD_MAC_SPEED_AUTO, 1, 1},
-    { BOARD_MAC_SPEED_AUTO, -1, -1 },  // edikk return line below!!! right values!!! 20.11
-	// { BOARD_MAC_SPEED_AUTO, 1, 1 },  // edikk return line below!!! right values!!!
-    //	{ BOARD_MAC_SPEED_2000M, -1, -1},   // siklu_remarkM21 edikk 2007   good line for ccf-
+#ifdef 	ETH2_COPPER_1G_MODE
+    { BOARD_MAC_SPEED_AUTO, -1, -1 },  // PHY configuration for eth2 = 1G RJ45 copper 'ccc-'
+#else
+    { BOARD_MAC_SPEED_2000M, -1, -1},  // PHY configuration for eth2 = 2.5G fiber 'ccf-'
+#endif
 };
 
 MV_BOARD_USB_INFO db88f68xxInfoBoardUsbInfo[] = {
