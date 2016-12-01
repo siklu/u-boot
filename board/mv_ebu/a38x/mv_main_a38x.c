@@ -763,6 +763,8 @@ void misc_init_r_env(void)
 	sprintf(ethaddr_3, "00:50:43:%02x:%02x:%02x", xi, xk, xl);
 	sprintf(pon_addr, "00:50:43:%02x:%02x:%02x", xj, xk, xl);
 
+	extern int se_init(void);
+	se_init();
 	{  // siklu_remarkM24 set here environment variables
 	    __u8 mac[6];
 	    char mac_str[20];

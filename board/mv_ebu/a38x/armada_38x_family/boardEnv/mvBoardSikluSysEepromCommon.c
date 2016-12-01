@@ -12,92 +12,35 @@
 #include <malloc.h>
 
 #include <spi_flash.h>
-#include "siklu_eeprom.h"
 #include "siklu_board_system.h"
 
-extern struct spi_flash *get_spi_flash_data(void);
+#ifndef CONFIG_ENV_SPI_MODE
+# define CONFIG_ENV_SPI_MODE	SPI_MODE_3
+#endif
 
-//DECLARE_GLOBAL_DATA_PTR;
+#undef CONFIG_ENV_OFFSET
+#undef CONFIG_ENV_SIZE
 
-typedef struct
-{
+#define CONFIG_ENV_SECT_SIZE	0x10000
+#define CONFIG_ENV_OFFSET	(0x200000 - CONFIG_ENV_SECT_SIZE)
+#define CONFIG_ENV_SIZE		CONFIG_ENV_SECT_SIZE
 
-    int (*get_mac)(__u8* mac_addr);
-    int (*set_mac)(__u8* mac_addr);
+#define SCRATCH_ADDR		0x1000000
 
-    int (*set_baseband_serial)(char* val);
-    int (*get_baseband_serial)(char* val);
+#define STRINGIFY(x)		#x
+#define SLINE(num)		STRINGIFY(num)
 
-    int (*get_system_serial)(char* val);
-    int (*set_system_serial)(char* val);
+extern char *getenv_se(const char *name);
+extern int setenv_se(const char *varname, const char *varvalue);
+extern int saveenv_se(void);
+extern int env_print_se(char *name, int flag);
+extern void env_relocate_spec_se(void);
 
-    int (*set_product_name)(char* product_name);
-    int (*get_product_name)(char* product_name);
+/* NOTE: these symbols are intentionally globalized */
+extern struct spi_flash *env_flash;
+extern int do_mem_md(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 
-    const char* (*get_netw_port_map)(void);
-    int (*set_netw_port_map)(const char*);
-
-    int (*set_assembly_type)(char* type);
-    int (*get_assembly_type)(char* type);
-
-    int (*primary_format)(void);
-
-}seeprom_hndlr_S;
-
-static seeprom_hndlr_S* GetHndlr(void)
-{
-    static seeprom_hndlr_S* seeprom_hndlr = NULL;
-    SYS_EEPROM_AREA_STATUS_E status;
-
-    if (seeprom_hndlr)
-        return seeprom_hndlr;
-
-    seeprom_hndlr = malloc(sizeof(seeprom_hndlr_S));
-    if (!seeprom_hndlr)
-        return NULL;
-
-    status = SYS_EEPROM_AREA_FORMAT_V1;
-    switch (status)
-    {
-    case SYS_EEPROM_AREA_FORMAT_V1:
-
-        seeprom_hndlr->get_mac = seeprom_get_mac_v1;
-        seeprom_hndlr->set_mac = seeprom_set_mac_v1;
-
-        seeprom_hndlr->set_baseband_serial = seeprom_set_baseband_serial_v1;
-        seeprom_hndlr->get_baseband_serial = seeprom_get_baseband_serial_v1;
-
-        seeprom_hndlr->get_system_serial = seeprom_get_system_serial_v1;
-        seeprom_hndlr->set_system_serial = seeprom_set_system_serial_v1;
-
-        seeprom_hndlr->get_product_name = seeprom_get_product_name_v1;
-        seeprom_hndlr->set_product_name = seeprom_set_product_name_v1;
-
-        seeprom_hndlr->get_netw_port_map = seeprom_get_netw_port_map_v1;
-        seeprom_hndlr->set_netw_port_map = seeprom_set_netw_port_map_v1;
-
-        seeprom_hndlr->get_assembly_type = seeprom_get_assembly_type_v1;
-        seeprom_hndlr->set_assembly_type = seeprom_set_assembly_type_v1;
-
-        seeprom_hndlr->primary_format = seeprom_primary_format_v1;
-
-        break;
-    default:
-        printf("%s() Unknown SYSEEPROM AREA format %d\n", __func__, status);
-        free(seeprom_hndlr);
-        seeprom_hndlr = NULL;
-
-    }
-    return seeprom_hndlr;
-}
-
-__u32 get_syseeprom_area_snor_offs(void)
-{
-    // sNOR size = 2M, last 64kB SYSEEPROM area
-
-    const __u32 syseeprom_area_snor_offset = (2 * 1024 - 64) * 1024;
-    return syseeprom_area_snor_offset;
-}
+DECLARE_GLOBAL_DATA_PTR;
 
 int is_port_type_valid(char port)
 {
@@ -115,358 +58,120 @@ int is_port_type_valid(char port)
     return 0;
 }
 
-/**
- * set_mac_address - stores a MAC address into the EEPROM
- *
- * This function takes a pointer to MAC address string
- * (i.e."XX:XX:XX:XX:XX:XX", where "XX" is a two-digit hex number) and
- * stores it in one of the MAC address fields of the EEPROM local copy.
- */
-void convert_mac_address(__u8* mac, const char *string)
+static int se_show_raw(char *size)
 {
-    char *p = (char *) string;
-    unsigned int i;
-    if (!string)
-    {
-        printf("Usage: mac <n> XX:XX:XX:XX:XX:XX\n");
-        return;
-    }
-    for (i = 0; *p && (i < 6); i++)
-    {
-        mac[i] = simple_strtoul(p, &p, 16);
-        if (*p == ':')
-        p++;
-    }
+	char *const argv[] = {
+		"md.b",
+		SLINE(SCRATCH_ADDR),
+		(size) ? size : "0x100"
+	};
+	int	rc;
+	
+	if (!env_flash) {
+		env_flash = spi_flash_probe(CONFIG_ENV_SPI_BUS,
+				CONFIG_ENV_SPI_CS,
+				CONFIG_ENV_SPI_MAX_HZ,
+				CONFIG_ENV_SPI_MODE);
+		if (!env_flash) {
+			printf("%s: spi_flash_probe() failed\n", __func__);
+			return -1;
+		}
+	}
+
+	rc = spi_flash_read(env_flash, CONFIG_ENV_OFFSET,
+				CONFIG_ENV_SIZE, (void *)SCRATCH_ADDR);
+	if (rc == 0)
+		do_mem_md(NULL, 0, 3, argv);
+	else
+		printf("%s: spi_flash_read()=%d\n", __func__, rc);
+	return rc;
 }
 
-/*
- * quick and dirty access
- */
-struct spi_flash *_get_spi_flash_data(void)
+int se_init(void)
 {
-    struct spi_flash *flash = get_spi_flash_data();
-    if (flash == NULL)
-    {       // need call probe
-        char *argv[] =
-        { NULL };
-        extern int do_spi_flash_probe(int argc, char * const argv[]);
-        do_spi_flash_probe(1, argv);
-        flash = get_spi_flash_data();
-    }
-    return flash;
+	static int	eeprom_ready;
+	int		rc = 0;
+
+	if (!eeprom_ready)
+	{
+		/* Borrow the field from the main environment to detect
+		 * EEPROM CRC validity. gd->env_valid is definitely set here.
+		 */
+		gd->env_valid = 0;
+		env_relocate_spec_se();
+		if (!gd->env_valid)  /* No EEPROM env, save the default one. */
+		{
+			rc = saveenv_se();
+			if (rc)
+				printf("%s: saveenv_se()=%d\n", __func__, rc);
+		}
+		gd->env_valid = 1;
+		eeprom_ready = 1;
+	}
+	return rc;
 }
 
-/*
- *
- * check and replace non printable characters
- */
-void repair_string_printable(char* str)
+static int get_value(const char *name)
 {
-    int i;
-    for (i = 0; str[i]; i++)
-    {
-        if (str[i] != '-') // also '-' acceptable
-            if (!isalnum(str[i]))
-            {
-                str[i] = '.';
-            }
-    }
+	int		rc = -1;
+
+	if (name) {
+		if (env_print_se((char *)name, 0) > 0)
+			rc = 0;
+	} else
+		printf("%s: name is NULL\n", __func__);
+	return rc;
 }
 
-static char repair_char_printable(char _char)
+static int set_value(const char *name, const char *value)
 {
-    char p = _char;
+	int		rc = -1;
 
-    if (p != '-') // also '-' acceptable
-    {
-        if (!isalnum(p))
-            p = '.';
-    }
-    return p;
+	if (name) {
+		rc = setenv_se(name, value);
+		if (rc == 0) {
+			rc = saveenv_se();
+			if (rc)
+				printf("%s: saveenv_se()=%d\n", __func__, rc);
+		} else
+			printf("%s: setenv_se()=%d\n", __func__, rc);
+	} else
+		printf("%s: name is NULL\n", __func__);
+	return rc;
 }
 
-int seeprom_erase_all_section(void)
+#define ECMD(cmd)	(strcmp(argv[1], cmd) == 0)
+static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-    int rc = 0;
+	int rc = CMD_RET_FAILURE;
 
-    // erase here whole SYSEEPROM sector in sNOR
-    rc = spi_flash_erase(_get_spi_flash_data(), get_syseeprom_area_snor_offs(), _get_spi_flash_data()->sector_size);
-    return rc;
-}
+	if (argc == 1)
+		return CMD_RET_USAGE;
 
-char* protect_string(char* str, int size)
-{
-    static char temp[100]; // take size enough large
-    memset(temp, 0, sizeof(temp));
-    if (size >= sizeof(temp))
-        size = sizeof(temp) - 1;
-    memcpy(temp, str, size);
-    return temp;
-}
+	if (ECMD("r"))
+		rc = se_show_raw(argv[2]);
+	else if (ECMD("f"))
+		rc = (env_print_se(NULL, 0) > 0) ? CMD_RET_SUCCESS :
+							CMD_RET_FAILURE;
+	else if (ECMD("get"))
+		rc = get_value(argv[2]);
+	else if (ECMD("set"))
+		rc = set_value(argv[2], argv[3]);
+	else
+		printf("%s: unknown option %s\n", __func__, argv[1]);
 
-/*
- * read header
- * check control key
- * read major and minor version
- * decide status
- */
-static int seeprom_check_data_validity(void)
-{
-    static int is_valid = 0; // false
-    int rc;
-    seeprom_header_S header;
-    __u8 *pseeprom = (__u8 *) &header;
-
-    if ((is_valid)) // read only once
-        return is_valid;
-
-    memset(pseeprom, 0x00, sizeof(header));
-
-    size_t len = sizeof(header);
-    rc = spi_flash_read(_get_spi_flash_data(), get_syseeprom_area_snor_offs(), len, pseeprom);
-    if (rc != 0)
-    {
-        printf(" Read Serial EEPROM FAIL\n");
-        is_valid = 0;
-        return is_valid;
-    }
-
-    if (header.control_key.val != SYS_EEPROM_CONTROL_KEY_VAL)
-    {
-        printf(" Control Key is Wrong. Expected 0x%x, Read 0x%x\n",
-        SYS_EEPROM_CONTROL_KEY_VAL, header.control_key.val);
-        is_valid = 0;
-        return is_valid;
-    }
-
-    if (header.major.va1 != SYS_EEPROM_MAJOR_VER)
-    {
-        printf(" Wrong major version. Expected 0x%x, Read 0x%x\n", header.major.va1, SYS_EEPROM_MAJOR_VER);
-        is_valid = 0;
-        return is_valid;
-    }
-    return 1; // true
-}
-
-int siklu_get_mac_from_seeprom(__u8* mac_addr)
-{
-    seeprom_hndlr_S* hndlr = NULL;
-
-    if (seeprom_check_data_validity())
-        hndlr = GetHndlr();
-    if (hndlr)
-        return hndlr->get_mac(mac_addr);
-    else
-        return -1;
-}
-
-/*
- * should be called after init sNOR and SYSEEPROM functionality!
- *   returns number of ethernet ports according to syseeprom configuration string
- */
-int siklu_get_seeprom_net_number_eth_ports(void)
-{
-    int i;
-    int rc = 0;
-    const char* p;
-
-    seeprom_hndlr_S* hndlr = NULL;
-
-    if (seeprom_check_data_validity())
-        hndlr = GetHndlr();
-
-    if (hndlr)
-    {
-        p = hndlr->get_netw_port_map();     // seeprom_get_netw_port_map();
-        for (i = 0; i < NVRAM_NETW_PORT_TYPE_FIELD_SIZE; i++)
-        {
-            if ((p[i] == 'c') || (p[i] == 'f'))
-            {
-                rc++;
-            }
-        }
-    }
-    return rc;
-}
-/*
- *
- */
-SIKLU_NETWORK_PORT_TYPE_E siklu_get_network_port_type(int port_num)
-{
-    SIKLU_NETWORK_PORT_TYPE_E type = SIKLU_NETWORK_PORT_TYPE_NONE;
-    seeprom_hndlr_S* hndlr = NULL;
-    const char* p;
-    if (seeprom_check_data_validity())
-        hndlr = GetHndlr();
-    if ((!hndlr) || (port_num >= NVRAM_NETW_PORT_TYPE_FIELD_SIZE))
-        return type;
-
-    p = hndlr->get_netw_port_map();
-    if (p[port_num] == 'c')
-        type = SIKLU_NETWORK_PORT_TYPE_COPPER;
-    else if (p[port_num] == 'f')
-        type = SIKLU_NETWORK_PORT_TYPE_FIBER;
-    return type;
-
-}
-
-/*
- *  called on power up before first SYS EEPROM access
- */
-void siklu_prepare_syseeprom(void)
-{
-
-    if (seeprom_check_data_validity())
-        return;
-
-    // no SYSEEPROM data recognized, make default format
-    seeprom_hndlr_S* hndlr = GetHndlr(); // prepare area
-    if (hndlr)
-        hndlr->primary_format();
-}
-
-/******************************************************************
- *                      CLI
- *
- ******************************************************************/
-static int display_syseeprom_raw_data(void)
-{
-    int lines;
-    __u8 data[0x100];
-    __u8* p = data;
-    int offset = 0;
-
-    size_t len = sizeof(data);
-    spi_flash_read(_get_spi_flash_data(), get_syseeprom_area_snor_offs(), len, data);
-    for (lines = 0; lines < 8; lines++) // read 8 * 16 bytes
-    {
-        offset = lines * 16;
-        //
-        printf("[%04x]: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x  -  ", offset,
-                p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
-        printf("%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", //
-                repair_char_printable(p[0]), repair_char_printable(p[1]), repair_char_printable(p[2]), //
-                repair_char_printable(p[3]), repair_char_printable(p[4]), repair_char_printable(p[5]), //
-                repair_char_printable(p[6]), repair_char_printable(p[7]), repair_char_printable(p[8]), //
-                repair_char_printable(p[9]), repair_char_printable(p[10]), repair_char_printable(p[11]), //
-                repair_char_printable(p[12]), repair_char_printable(p[13]), repair_char_printable(p[14]), //
-                repair_char_printable(p[15]));
-        p += 0x10;
-    }
-    return 0;
-}
-
-/*
- *
- *
- *
- */
-static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]) //
-{
-    int rc = CMD_RET_FAILURE;
-
-    if (argc == 1)
-    {
-        printf("Usage:\n%s\n", cmdtp->usage);
-        return CMD_RET_FAILURE;
-    }
-
-    if (strcmp(argv[1], "r") == 0)
-    { // read raw data
-        display_syseeprom_raw_data();
-        return CMD_RET_SUCCESS;
-    } //
-    if (strcmp(argv[1], "e") == 0)
-    {
-        seeprom_erase_all_section();
-        return CMD_RET_SUCCESS;
-    }
-
-    seeprom_hndlr_S* hndlr = NULL;
-
-    if (seeprom_check_data_validity())
-        hndlr = GetHndlr();
-
-    if (hndlr == NULL)
-    {
-        printf("%s()  Error on line %d\n", __func__, __LINE__);
-        return CMD_RET_FAILURE;
-    }
-
-    if (strcmp(argv[1], "f") == 0) // parse SEEPROM data
-    {
-        __u8 mac[NVRAM_MAC_SIZE];
-        char data[30];
-        hndlr->get_mac(mac);
-        printf("MAC               %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-        hndlr->get_baseband_serial(data);
-        printf("Board Serial      %s\n", data);
-
-        hndlr->get_system_serial(data);
-        printf("System Serial     %s\n", data);
-
-        hndlr->get_product_name(data);
-        printf("Product name      %s\n", data);
-
-        const char* p = hndlr->get_netw_port_map();
-        printf("Network port type %c%c%c%c\n", p[0], p[1], p[2], p[3]);
-
-        hndlr->get_assembly_type(data);
-        printf("Assembly type     %s\n", data);
-        rc = CMD_RET_SUCCESS;
-
-    } //
-    else if (strcmp(argv[1], "w") == 0) // write default parameters
-    {
-        seeprom_erase_all_section(); // SPI NOR FLASH should be erased before write
-        mdelay(10);
-        hndlr->primary_format();
-        printf("\nReboot required before continue!\n");
-        return CMD_RET_FAILURE; // return fail for prevent automatic repeat a command
-    } //
-      // follow commands require 2 arguments
-    else if (argc == 3)
-    {
-        if (strcmp(argv[1], "b") == 0) // set baseband serial
-        {
-            hndlr->set_baseband_serial(argv[2]);
-        } //
-        else if (strcmp(argv[1], "m") == 0) // set MAC
-        {
-            hndlr->set_mac((__u8 *) argv[2]);
-        } //
-        else if (strcmp(argv[1], "n") == 0)
-        {
-            /* 19 oct 2016: set network's port types not allowed. The value defined
-             by board assembly type only!  */
-            // hndlr->set_netw_port_map(argv[2]);
-        } //
-        else if (strcmp(argv[1], "p") == 0) // set product name
-        {
-            hndlr->set_product_name(argv[2]);
-        }
-        else if (strcmp(argv[1], "a") == 0) // set assembly board type string
-        {
-            hndlr->set_assembly_type(argv[2]);
-        }
-        else
-        {
-            printf("Unknown parameter\n");
-            return cmd_usage(cmdtp);
-        }
-    }
-    else
-    {
-        printf("Unknown parameter\n");
-        return cmd_usage(cmdtp);
-    }
-    printf("\n");
-    return 0;
+	return rc;
 }
 
 U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom, "Read/Maintenance System Serial EEPROM raw data",
-        "r - read raw data, f - display fields, w - primary format, e - erase, \n\
-        b - set baseband serial, m - set MAC, p - set Product Name,\n\
-        a - set assembly board type");
-
+        "r [size] - read raw data of 'size' bytes. Default 'size' is 0x100\n\
+        f - display entire EEPROM\n\
+        w - primary format (NOT IMPLEMENTED)\n\
+        e - erase (NOT IMPLEMENTED)\n\
+        b - set baseband serial (NOT IMPLEMENTED)\n\
+        m - set MAC (NOT IMPLEMENTED)\n\
+        p - set Product Name (NOT IMPLEMENTED)\n\
+        a - set assembly board type (NOT IMPLEMENTED)\n\
+        get <name> - get value of EEPROM variable 'name'\n\
+        set <name> [<value>] - set EEPROM variable 'name' to 'value'.\n\
+                               If 'value' is skipped, 'name' is deleted.");
