@@ -429,6 +429,7 @@ int siklu_config_eth1(void)
         mvSikluCpuGpioSetDirection(10, 1); // set output
         mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 3rd PHY to eth#1
     }
+    return rc;
 
 }
 
