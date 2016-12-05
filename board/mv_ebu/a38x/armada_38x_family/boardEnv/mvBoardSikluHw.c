@@ -841,6 +841,58 @@ static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char *
     return rc;
 }
 
+
+
+static int do_siklu_pse_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int rc = CMD_RET_SUCCESS;
+	int port; // = simple_strtoul(argv[1], NULL, 10);
+	char state; // = argv[2][0];
+	MV_U8 mask;
+
+	if (argc != 3) {
+		printf("Wrong number arguments\n");
+		return CMD_RET_USAGE;
+	}
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+	port = simple_strtoul(argv[1], NULL, 10);
+	state = argv[2][0];
+
+	if (port==1)
+		mask = 1<<2;
+	else if (port==2)
+		mask = 1<<1;
+	else {
+		printf("Wrong port %d\n", port);
+		return CMD_RET_USAGE;
+	}
+
+
+	MV_U8 reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, 1);
+
+	if (state == 'd') {
+		reg_val &= ~mask;
+	}
+	else if (state == 'e')
+	{
+		reg_val |= mask;
+	}
+	else {
+		printf("Wrong state %c\n", state);
+	    i2c_set_bus_num(old_bus);
+		return CMD_RET_USAGE;
+	}
+
+	i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, 1, reg_val);
+
+    i2c_set_bus_num(old_bus);
+
+	return rc;
+}
+
 /*
  *
  */
@@ -1021,6 +1073,8 @@ U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Bu
         "Show Siklu board Push-Button Status");
 
 U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
+
+U_BOOT_CMD(spse, 3, 1, do_siklu_pse_control, "Control PSE Outputs", "[1/2] [e/d] Control PSE Outputs");
 
 U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 6/10/12/21/48/49/50/53 Control",
         "[mpp_num] [0/1] Set 0/1 on required MPP number");
