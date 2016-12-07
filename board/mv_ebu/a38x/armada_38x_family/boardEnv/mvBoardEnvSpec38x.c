@@ -356,13 +356,14 @@ MV_BOARD_TWSI_INFO db88f68xxInfoBoardTwsiDev[] = {
 };
 
 // #define ETH2_COPPER_1G_MODE
+#define ETH2_FIBER_1G_MODE
 
-MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {  // siklu_remarkM21  siklu_remarkM30
+MV_BOARD_MAC_INFO db88f68xxInfoBoardMacInfo[] = {
 	/* {{MV_BOARD_MAC_SPEED boardMacSpeed, MV_32 boardEthSmiAddr , MV_32 boardEthSmiAddr0;}} */
 	{ BOARD_MAC_SPEED_AUTO, 0, 0},
 	{ BOARD_MAC_SPEED_AUTO, 1, 1},
-#ifdef 	ETH2_COPPER_1G_MODE
-    { BOARD_MAC_SPEED_AUTO, -1, -1 },  // PHY configuration for eth2 = 1G RJ45 copper 'ccc-'
+# if (defined(ETH2_COPPER_1G_MODE)||defined(ETH2_FIBER_1G_MODE))  // siklu_remarkM30
+    { BOARD_MAC_SPEED_AUTO, -1, -1 },  // PHY configuration for eth2 = 1G RJ45 copper 'ccc-' or fiber 1G 'ccf-'
 #else
     { BOARD_MAC_SPEED_2000M, -1, -1},  // PHY configuration for eth2 = 2.5G fiber 'ccf-'
 #endif
