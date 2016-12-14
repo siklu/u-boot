@@ -157,6 +157,21 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc
 		rc = get_value(argv[2]);
 	else if (ECMD("set"))
 		rc = set_value(argv[2], argv[3]);
+	else if  (ECMD("m")) { // store mac in form as a continuous string without a colon inside
+	    char* user_mac = argv[2];
+	    char new_mac[30];
+	    if (strlen(user_mac) != 12){
+	        printf("Wrong MAC string %s, len %d\n", user_mac, strlen(user_mac));
+	        return CMD_RET_FAILURE;
+	    }
+	    sprintf(new_mac,"%c%c:%c%c:%c%c:%c%c:%c%c:%c%c", user_mac[0], user_mac[1],user_mac[2],user_mac[3],
+	            user_mac[4],user_mac[5], user_mac[6],user_mac[7],
+	            user_mac[8],user_mac[9],user_mac[10],user_mac[11]);
+
+	    // printf(" Execute command \"set SE_mac=%s\"\n", new_mac); // edikk remove
+	    rc = set_value("SE_mac", new_mac);
+
+	}
 	else
 		printf("%s: unknown option %s\n", __func__, argv[1]);
 
@@ -169,7 +184,7 @@ U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom, "Read/Maintenance Sy
         w - primary format (NOT IMPLEMENTED)\n\
         e - erase (NOT IMPLEMENTED)\n\
         b - set baseband serial (NOT IMPLEMENTED)\n\
-        m - set MAC (NOT IMPLEMENTED)\n\
+        m - set MAC in form as a continuous string without a colon inside\n\
         p - set Product Name (NOT IMPLEMENTED)\n\
         a - set assembly board type (NOT IMPLEMENTED)\n\
         get <name> - get value of EEPROM variable 'name'\n\
