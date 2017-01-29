@@ -305,11 +305,6 @@ static int run_linux_code(int is_system_in_bist)
             sprintf(buf + i,
                     "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
                     nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-    { // add board assembly type string. siklu_remarkM25 relay type via command line
-        char type[50];
-        seeprom_get_assembly_type_v1(type);
-        i += sprintf(buf + i, "assembly=%s ", type);
-    }
 
     if (is_system_in_bist)
     { // add string to command line says about BIST mode
@@ -322,10 +317,10 @@ static int run_linux_code(int is_system_in_bist)
         i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
     }
 
-    /* siklu_remarkM10 temporary disabled relay uboot version to linux
+
      i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION,
      U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
-     */
+
 
     // run the command line for preset boot environment
     rc = _run_command(buf, 0);
