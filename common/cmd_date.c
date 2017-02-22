@@ -112,7 +112,7 @@ static int do_date(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				puts("## Get date failed\n");
 			}
 		}
-		/* FALL TROUGH */
+		break;/* Siklu - do not FALL TROUGH */
 	case 1:			/* get date & time */
 		rcode = _rtc_get (&tm);
 
