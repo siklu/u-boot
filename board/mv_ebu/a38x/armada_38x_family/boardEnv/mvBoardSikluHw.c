@@ -1015,7 +1015,7 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     else
     {
         printf("sled [led] [state]\n");
-        printf(" led:   ble/wlan/eth0/eth1/eth2/power\n");
+        printf(" led:   ble/wlan/eth1/eth2/eth3/power\n");
         printf(" state: \n\to - off\n\tg - green\n\ty - yellow\n\tgb - green blink\n\tyb - yellow blink\n");
         return rc;
     }
@@ -1029,15 +1029,15 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     {
         _led = SKL_LED_WLAN;
     } //
-    else if (strcmp(led, "eth0") == 0)
+    else if (strcmp(led, "eth1") == 0)
     {
         _led = SKL_LED_ETH0;
     } //
-    else if (strcmp(led, "eth1") == 0)
+    else if (strcmp(led, "eth2") == 0)
     {
         _led = SKL_LED_ETH1;
     } //
-    else if (strcmp(led, "eth2") == 0)
+    else if (strcmp(led, "eth3") == 0)
     {
         _led = SKL_LED_ETH2;
     } //
