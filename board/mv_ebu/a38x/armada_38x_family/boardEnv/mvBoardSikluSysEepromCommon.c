@@ -168,7 +168,6 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag, int argc
 	            user_mac[4],user_mac[5], user_mac[6],user_mac[7],
 	            user_mac[8],user_mac[9],user_mac[10],user_mac[11]);
 
-	    // printf(" Execute command \"set SE_mac=%s\"\n", new_mac); // edikk remove
 	    rc = set_value("SE_mac", new_mac);
 
 	}

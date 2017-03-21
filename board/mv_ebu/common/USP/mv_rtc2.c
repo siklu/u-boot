@@ -92,8 +92,8 @@ static int check_and_restore_wrong_time(struct rtc_time *tm)
             (tm->tm_hour < 0)||(tm->tm_hour > 23) ||
             (tm->tm_year < 2000) || (tm->tm_year > 2030))
     {
-        printf("Wrong date/time  tm->tm_year %d,  tm->tm_mon %d, tm->tm_mday %d, tm->tm_hour %d, tm->tm_min %d, restore default\n",
-                tm->tm_year,  tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min );
+        //printf("Wrong date/time  tm->tm_year %d,  tm->tm_mon %d, tm->tm_mday %d, tm->tm_hour %d, tm->tm_min %d, restore default\n",
+        //        tm->tm_year,  tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min );
 
         rtc_reset();
         udelay(1000);

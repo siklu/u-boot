@@ -172,7 +172,7 @@ static int modify_sikly_info_in_dtb_before_run_linux(uint dtb_addr_in_mem)
                 }
                 else
                 {
-                    printf("Port ETH%d exists. do not remove it from Device Tree\n", i); // edikk
+                    printf("Port ETH%d exists. do not remove it from Device Tree\n", i);
                     printf("Path: %s\n", p);
                 }
             }
@@ -255,7 +255,7 @@ static int unpack_uimage(uint uimage_ram_addr)
     memcpy((char*) ramd_hex_addr, (char*) data, len + 100);
 
     // ############################# extract DEvice tree DTB file
-    sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr); // same as DTB_ADDR_HEX;   edikk
+    sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr); // same as DTB_ADDR_HEX;
     rc = _run_command(buf, 0);
     if (rc != 0)
     {
@@ -265,9 +265,9 @@ static int unpack_uimage(uint uimage_ram_addr)
 
     // Modify fields in "siklu-board-id"   section  siklu_remarkM24
     rc = modify_sikly_info_in_dtb_before_run_linux(DTB_ADDR_HEX);
-    // edikk - remove non existant network ports! siklu_remarkM21
+    // remove non existant network ports! siklu_remarkM21
 
-    if (0) // edikk for debug only: display dtb after fixup process, remove after
+    if (0) // for debug only: display dtb after fixup process, remove after
     {
         sprintf(buf, "fdt addr %x", DTB_ADDR_HEX);
         _run_command(buf, 0);
@@ -330,8 +330,8 @@ static int run_linux_code(int is_system_in_bist)
         return -1;
     }
 
-    // edikk temporary prevent jump to linux!!!
-    // return 0;
+
+    // return 0; // debug only -> open for prevent jump to linux!!!
 
     /* add here run command  bootz ${kernel_addr_r} - ${fdt_addr_r}  skip to linux here, no return! */
     i = 0;
