@@ -71,7 +71,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(CONFIG_CMD_DATE)
 
+/*
+ * ERRATA
+ */
+#define ERRATA_FE_3124064
+
 static int rtc_ready = -1;
+/* This define for WA in rtc read */
+#define SAMPLE_NR 100
 
 
 static int check_and_restore_wrong_time(struct rtc_time *tm)
@@ -109,92 +116,168 @@ static int check_and_restore_wrong_time(struct rtc_time *tm)
 /*******************************************************/
 void rtc_init(void)
 {
-    if (rtc_ready != 1) {
-        struct rtc_time tm;
+    if (rtc_ready == 1)
+        return;
 
-        rtc_ready = 1;
 
-        /* Update RTC-MBUS bridge timing parameters */
-        MV_REG_WRITE(MV_RTC2_SOC_OFFSET, 0xFD4D4CFA);
+    /* Update RTC-MBUS bridge timing parameters */
+#ifdef ERRATA_FE_3124064
+    unsigned long reg;
+    struct rtc_time tm;
 
-        check_and_restore_wrong_time(&tm); // siklu addition
-    }
+    /* Functional Errata Ref #: FE-3124064 -  WA for failing time read attempts.
+     * Description:
+     *  The device supports CPU write and read access to the RTC Time register.
+     *  However, due to this erratum, Write to RTC TIME register may fail.
+     *  Read from RTC TIME register may fail.
+     * Workaround:
+     * 1. Configure the RTC Mbus Bridge Timing Control register (offset 0x184A0) to value 0xFD4D4FFF
+     *  - Write RTC WRCLK Period to its maximum value (0x3FF)
+     *  - Write RTC WRCLK setup to 0x53 (default value )
+     *  - Write RTC WRCLK High Time to 0x53 (default value )
+     *  - Write RTC Read Output Delay to its maximum value (0x1F)
+     *  - Mbus - Read All Byte Enable to 0x1 (default value )
+     * 2. Configure the RTC Test Configuration Register (offset 0xA381C) bit3 to '1' (Reserved, Marvell internal)
+     *
+     * For any RTC Time register read operation:
+     *  - Read the requested register 100 times.
+     *  - Find the result that appears most frequently and use this result as the correct value.
+     * RTC Time register write operation:
+     *  - Issue two dummy writes of 0x0 to the RTC Status register (offset 0xA3800).
+     *  - Write the time to the RTC Time register (offset 0xA380C).
+    */
+    reg = MV_REG_READ(MV_RTC2_SOC_OFFSET + RTC_BRIDGE_TIMING_CTRL_REG_OFFS);
+    reg &= ~RTC_WRCLK_PERIOD_MASK;
+    reg |= 0x3FF << RTC_WRCLK_PERIOD_OFFS; /*Maximum value*/
+    reg &= ~RTC_READ_OUTPUT_DELAY_MASK;
+    reg |= 0x1F << RTC_READ_OUTPUT_DELAY_OFFS; /*Maximum value*/
+    MV_REG_WRITE(MV_RTC2_SOC_OFFSET + RTC_BRIDGE_TIMING_CTRL_REG_OFFS, reg);
+
+        reg = RTC_READ_REG(RTC_TEST_CONFIG_REG_OFFS);
+        reg |= BIT3;
+        RTC_WRITE_REG(reg, RTC_TEST_CONFIG_REG_OFFS);
+#else
+    MV_REG_WRITE(MV_RTC2_SOC_OFFSET, 0xFD4D4CFA);
+#endif
+    rtc_ready = 1;
+    check_and_restore_wrong_time(&tm); // siklu addition
+
 }
 
+
+#ifdef ERRATA_FE_3124064
+struct _strTime2Freq {
+    unsigned long nTime;
+    unsigned int  nFreq;
+
+};
+#endif
 
 /*******************************************************/
 int rtc_get(struct rtc_time *tm)
 {
-	unsigned long time, time_check;
+#ifdef ERRATA_FE_3124064
+    unsigned long nTimeArray[SAMPLE_NR], i, j, nTime, nMax = 0, indexMax = SAMPLE_NR - 1;
+    struct _strTime2Freq sTimeToFreq[SAMPLE_NR];
+#endif
 
-	if (rtc_ready != 1)
-		rtc_init();
+    if (rtc_ready != 1)
+        rtc_init();
+#ifdef ERRATA_FE_3124064
+    /* read RTC TIME register 100 times and save the values in array,
+       initialize the counters to zero */
+    for (i = 0; i < SAMPLE_NR; i++) {
+        sTimeToFreq[i].nFreq = 0;
+        nTimeArray[i] = RTC_READ_REG(RTC_TIME_REG_OFFS);
+    }
+    for (i = 0; i < SAMPLE_NR; i++) {
+        nTime = nTimeArray[i];
+        /* if nTime appears in sTimeToFreq array so add the counter of nTime value,
+           if didn't appear yet in counters array then allocate new member of
+           sTimeToFreq array with counter = 1 */
+        for (j = 0; j < SAMPLE_NR; j++) {
+            if (sTimeToFreq[j].nFreq == 0 || sTimeToFreq[j].nTime == nTime)
+                break;
+        }
+        if (sTimeToFreq[j].nFreq == 0)
+            sTimeToFreq[j].nTime = nTime;
+        sTimeToFreq[j].nFreq++;
+        /*find the most common result*/
+        if (nMax < sTimeToFreq[j].nFreq) {
+            indexMax = j;
+            nMax = sTimeToFreq[j].nFreq;
+        }
+    }
 
-	time = RTC_READ_REG(RTC_TIME_REG_OFFS);
-	/* WA for failing time read attempts. The HW ERRATA information should be added here */
-	/* if detected more than one second between two time reads, read once again */
-	time_check = RTC_READ_REG(RTC_TIME_REG_OFFS);
-	if ((time_check - time) > 1)
-		time_check = RTC_READ_REG(RTC_TIME_REG_OFFS);
-	/* End of WA */
-
-	to_tm(time_check, tm);
-
-
-	return 0;
+    to_tm(sTimeToFreq[indexMax].nTime, tm);
+#else
+    to_tm(RTC_READ_REG(RTC_TIME_REG_OFFS), tm);
+#endif
+    return 0;
 }
-
 /*******************************************************/
 int rtc_set(struct rtc_time *tm)
 {
-	unsigned long time;
+    unsigned long time;
 
-	if (rtc_ready != 1)
-		rtc_init();
+    if (rtc_ready != 1)
+        rtc_init();
 
-	time = mktime(tm->tm_year, tm->tm_mon,
-				  tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+    time = mktime(tm->tm_year, tm->tm_mon,
+                  tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-	/* WA for failing time set attempts. The HW ERRATA information should be added here */
-	RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
-	mdelay(100);
-	/* End of SW WA */
-	RTC_WRITE_REG(time, RTC_TIME_REG_OFFS);
+#ifdef ERRATA_FE_3124064
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+#endif
+    RTC_WRITE_REG(time, RTC_TIME_REG_OFFS);
 
-	return 0;
+    return 0;
 }
 
 /*******************************************************/
 void rtc_reset(void)
 {
-	/* Reset Test register */
-	RTC_WRITE_REG(0, RTC_TEST_CONFIG_REG_OFFS);
-	mdelay(500); /* Oscillator startup time */
+    /* Reset Test register */
+#ifdef ERRATA_FE_3124064
+    RTC_WRITE_REG(BIT3, RTC_TEST_CONFIG_REG_OFFS);
+#else
+    RTC_WRITE_REG(0, RTC_TEST_CONFIG_REG_OFFS);
+#endif
+    mdelay(500); /* Oscillator startup time */
 
-	/* Reset time register */
-	RTC_WRITE_REG(0, RTC_TIME_REG_OFFS);
-	udelay(62);
+    /* Reset time register */
+#ifdef ERRATA_FE_3124064
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+#endif
+    RTC_WRITE_REG(0, RTC_TIME_REG_OFFS);
+    udelay(62);
 
-	/* Reset Status register */
-	RTC_WRITE_REG((RTC_SZ_STATUS_ALARM1_MASK | RTC_SZ_STATUS_ALARM2_MASK), RTC_STATUS_REG_OFFS);
-	udelay(62);
+    /* Reset Status register */
+    RTC_WRITE_REG((RTC_SZ_STATUS_ALARM1_MASK | RTC_SZ_STATUS_ALARM2_MASK), RTC_STATUS_REG_OFFS);
+    udelay(62);
 
-	/* Turn off Int1 and Int2 sources & clear the Alarm count */
-	RTC_WRITE_REG(0, RTC_IRQ_1_CONFIG_REG_OFFS);
-	RTC_WRITE_REG(0, RTC_IRQ_2_CONFIG_REG_OFFS);
-	RTC_WRITE_REG(0, RTC_ALARM_1_REG_OFFS);
-	RTC_WRITE_REG(0, RTC_ALARM_2_REG_OFFS);
+    /* Turn off Int1 and Int2 sources & clear the Alarm count */
+    RTC_WRITE_REG(0, RTC_IRQ_1_CONFIG_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_IRQ_2_CONFIG_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_ALARM_1_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_ALARM_2_REG_OFFS);
 
-	/* Setup nominal register access timing */
-	RTC_WRITE_REG(RTC_NOMINAL_TIMING, RTC_CLOCK_CORR_REG_OFFS);
+    /* Setup nominal register access timing */
+    RTC_WRITE_REG(RTC_NOMINAL_TIMING, RTC_CLOCK_CORR_REG_OFFS);
 
-	/* Reset time register */
-	RTC_WRITE_REG(0, RTC_TIME_REG_OFFS);
-	udelay(10);
+    /* Reset time register */
+#ifdef ERRATA_FE_3124064
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+    RTC_WRITE_REG(0, RTC_STATUS_REG_OFFS);
+#endif
+    RTC_WRITE_REG(0, RTC_TIME_REG_OFFS);
+    udelay(10);
 
-	/* Reset Status register */
-	RTC_WRITE_REG((RTC_SZ_STATUS_ALARM1_MASK | RTC_SZ_STATUS_ALARM2_MASK), RTC_STATUS_REG_OFFS);
-	udelay(50);
+    /* Reset Status register */
+    RTC_WRITE_REG((RTC_SZ_STATUS_ALARM1_MASK | RTC_SZ_STATUS_ALARM2_MASK), RTC_STATUS_REG_OFFS);
+    udelay(50);
 }
 
-#endif	/* CONFIG_CMD_DATE */
+#endif  /* CONFIG_CMD_DATE */
