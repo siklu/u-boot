@@ -121,7 +121,7 @@ void rtc_init(void)
 
 
     /* Update RTC-MBUS bridge timing parameters */
-#ifdef ERRATA_FE_3124064
+#ifdef ERRATA_FE_3124064  // siklu_remarkM36
     unsigned long reg;
     struct rtc_time tm;
 
