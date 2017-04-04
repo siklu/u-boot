@@ -165,10 +165,10 @@ static int modify_sikly_info_in_dtb_before_run_linux(uint dtb_addr_in_mem)
                     printf("Path: %s\n", p);
                     fdt_del_node_and_alias(working_fdt, temp);
                     /*
-                        int nodeoff = -1;
-                        node = fdt_path_offset(working_fdt, p);
-                        fdt_del_node(working_fdt, nodeoff);
-                    */
+                     int nodeoff = -1;
+                     node = fdt_path_offset(working_fdt, p);
+                     fdt_del_node(working_fdt, nodeoff);
+                     */
                 }
                 else
                 {
@@ -208,7 +208,7 @@ static int modify_sikly_info_in_dtb_before_run_linux(uint dtb_addr_in_mem)
                 {
                     printf("%s() call fdt_setprop_inplace() error. line %d\n", __func__, __LINE__);
                     return -1;
-                } debugp("%s() line %d, rc %d, r %d\n", __func__, __LINE__,rc, r);
+                }debugp("%s() line %d, rc %d, r %d\n", __func__, __LINE__,rc, r);
             }
             else
             {
@@ -317,10 +317,19 @@ static int run_linux_code(int is_system_in_bist)
         i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
     }
 
+    i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 
-     i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION,
-     U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 
+    // close all 3 MAC controllers chips before jump to linux
+    rc = _run_command("smrvr 72c00 0",0);    // Disable Port0 MAC
+    if (rc != 0)
+        printf(" Execute command FAIL, line %d\n", __LINE__);
+    rc = _run_command("smrvr 32c00 0",0);    // Disable Port1 MAC
+    if (rc != 0)
+        printf(" Execute command FAIL, line %d\n", __LINE__);
+    rc = _run_command("smrvr 36c00 0",0);    // Disable Port2 MAC
+    if (rc != 0)
+        printf(" Execute command FAIL, line %d\n", __LINE__);
 
     // run the command line for preset boot environment
     rc = _run_command(buf, 0);
@@ -329,7 +338,6 @@ static int run_linux_code(int is_system_in_bist)
         printf(" Execute command \"%s\" FAIL\n", buf);
         return -1;
     }
-
 
     // return 0; // debug only -> open for prevent jump to linux!!!
 
