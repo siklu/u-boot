@@ -40,9 +40,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define BOOT_FROM_IMAGE_IN_ENV    (-1)
 #define ADDR_IN_RAM4ACTIVE_UIMAGE 0x5000000
-#define MAX_ACTIVE_UIMAGE_SIZE    22000000 // 22M
+#define MAX_ACTIVE_UIMAGE_SIZE    35000000 // 35M
 
-#define INITRAMFS_SIZE      0x1800000
 
 #define KERNEL_ADDR_STR      "3000000"   // address to copy kernel from uimage
 #define KERNEL_ADDR_HEX     0x3000000   // address where booter founds the kernel (same above)
@@ -56,7 +55,7 @@ DECLARE_GLOBAL_DATA_PTR;
 extern int seeprom_get_assembly_type_v1(char* assembly); // siklu_remarkM24
 
 static ulong ramd_addr = RAMD_ADDR;
-// static ulong ramd_size = INITRAMFS_SIZE;
+
 
 static int rescue_restore_boot_image(void);
 
