@@ -372,8 +372,7 @@ static int siklu_boot_process_control(void)
     if (!primary_image)
     {
         printf("%s() SK_primary_image isn't set! restore it\n", __func__);
-        //setenv("SK_primary_image", "0");
-        _siklu_mutable_env_set("SK_primary_image", "0");
+         _siklu_mutable_env_set("SK_primary_image", "0");
         return 1;
     }
     else
@@ -381,7 +380,6 @@ static int siklu_boot_process_control(void)
         if (!((primary_image[0] == '0') || (primary_image[0] == '1')))
         {
             printf("%s() Error \"SK_primary_image\" value %s. restore default\n", __func__, primary_image);
-            //setenv("SK_primary_image", "0");
             _siklu_mutable_env_set("SK_primary_image", "0");
             primary_image = siklu_mutable_env_get("SK_primary_image");
             rc = 1;
@@ -417,16 +415,13 @@ static int siklu_boot_process_control(void)
         printf("SK_try_count reaches 0, swap partitions\n");
         if (primary_image[0] == '0')
         {
-            // setenv("SK_primary_image", "1");
             _siklu_mutable_env_set("SK_primary_image", "1");
         }
         else if (primary_image[0] == '1')
         {
-            //setenv("SK_primary_image", "0");
             _siklu_mutable_env_set("SK_primary_image", "0");
         }
         // delete the environment
-        // setenv("SK_try_count", NULL);
         _siklu_mutable_env_set("SK_try_count", NULL);
         rc = 1;
     }

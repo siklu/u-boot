@@ -40,7 +40,10 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define BOOT_FROM_IMAGE_IN_ENV    (-1)
 #define ADDR_IN_RAM4ACTIVE_UIMAGE 0x5000000
-#define MAX_ACTIVE_UIMAGE_SIZE    35000000 // 35M
+#define MAX_ACTIVE_UIMAGE_SIZE    35000000 /* 35M    Current partition layout creates
+    vol_uimage0 located on mtd4    and      vol_uimage1 located on mtd6
+    with size 39616512 bytes, where mtd4/6 partition size is 0x2800000 = 41943040 bytes
+*/
 
 
 #define KERNEL_ADDR_STR      "3000000"   // address to copy kernel from uimage
@@ -365,7 +368,6 @@ static int execute_siklu_boot(int forced_image)
     int img2load = 0; // set by default
     const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);   //
     int is_system_in_bist;
-    // char buf[512];
 
     if (bist_state)
         is_system_in_bist = 1;
@@ -376,18 +378,18 @@ static int execute_siklu_boot(int forced_image)
         img2load = forced_image;
     else
     {
-        const char *primary_image_s = siklu_mutable_env_get("SK_primary_image"); // getenv("SK_primary_image");
+        const char *primary_image_s = siklu_mutable_env_get("SK_primary_image");
         if (primary_image_s)
         {
             img2load = !!simple_strtoul(primary_image_s, NULL, 10);
         }
     }
-    rc = validate_sw_image(img2load);
+    rc = validate_sw_image(img2load); // validate preferred bank
 
     if (rc < 0) // validating fail, attempt to load next uimage
     {
         img2load = !img2load;
-        rc = validate_sw_image(img2load);
+        rc = validate_sw_image(img2load); // validate mate image
         if (rc < 0)
         { // both images are wrong!
             printf("%s()  Both uimage files are wrong\n", __func__);
@@ -397,9 +399,20 @@ static int execute_siklu_boot(int forced_image)
                 siklu_wait_user4prevent_card_reboot();
                 return 0; //
             }
+        }
+        else {
+            // here we need change boot selector to opposite side
+            char new_part[20];
+            sprintf(new_part,"%d",img2load);
+            siklu_mutable_env_set("SK_primary_image", new_part, 1);
+            // required reset here
+            printf("\n\n\tSwap boot partition due to bad current. The system will up after reboot\n\n");
+            udelay(1000);
+            _run_command("reset", 0);
 
         }
     }
+
     printf("\nTrying %s uimage... \n", (img2load == 0) ? ("1st") : ("2nd"));
 
     rc = unpack_uimage(ADDR_IN_RAM4ACTIVE_UIMAGE);
@@ -576,8 +589,7 @@ static int do_siklu_boot(cmd_tbl_t * cmdtp, int flag, int argc, char * const arg
     (void) argc;
     (void) argv;
 
-    if (siklu_mutable_env_get("SK_primary_image") /*  getenv("SK_primary_image") */
-    == 0)
+    if (siklu_mutable_env_get("SK_primary_image") == 0)
     {
         printf("No SK_primary_image environment!... The SW should be restored\n");
         rc = rescue_restore_boot_image();
