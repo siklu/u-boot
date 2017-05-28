@@ -72,9 +72,11 @@ void setBoardEnv(void)
 	char *env;
 
 	envSetDefault("mvNetConfig", "mv_net_config=4,(00:50:43:11:11:11,0:1:2:3),mtu=1500");
+#ifndef MV_SIKLU_WIGIG_BOARD
 	envSetDefault("lcd0_enable", "0");
 	envSetDefault("lcd0_params", "640x480-16@60");
 	envSetDefault("lcd_panel", "0");
+#endif
 	/* CPU streaming */
 	envVerifyAndSet("enaCpuStream", "no", "yes", 1);
 	envVerifyAndSet("MPmode", "SMP", "AMP", 1);
