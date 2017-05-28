@@ -426,7 +426,9 @@ MV_BOOL mvBoardIsEthConnected(MV_U32 ethNum)
 *******************************************************************************/
 MV_VOID mvBoardMppModuleTypePrint(MV_VOID)
 {
-	int i;
+
+#if defined(MV_SIKLU_WIGIG_BOARD)
+    int i;
 	char *moduleStr[MV_MODULE_TYPE_MAX_MODULE] = { \
 		"MII",                                  \
 		"TDM",                                  \
@@ -445,4 +447,5 @@ MV_VOID mvBoardMppModuleTypePrint(MV_VOID)
 			mvOsOutput("       %s module.\n", moduleStr[i]);
 
 	}
+#endif // 	MV_SIKLU_WIGIG_BOARD
 }

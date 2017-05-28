@@ -212,7 +212,7 @@ static int mvEgigaInit(struct eth_device *dev, bd_t *p) // siklu_remarkM21
 	NETA_RX_DESC *pDesc;
 
 
-	printf("%s()   Called for port Eth%d\n", __func__, priv->port);
+
 	if (priv->port > 0){   // siklu_remarkM31
 		priv->devInit = MV_FALSE;
 		goto error;

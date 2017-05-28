@@ -43,6 +43,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define MAX_ACTIVE_UIMAGE_SIZE    35000000 /* 35M    Current partition layout creates
     vol_uimage0 located on mtd4    and      vol_uimage1 located on mtd6
     with size 39616512 bytes, where mtd4/6 partition size is 0x2800000 = 41943040 bytes
+    siklu_remarkM42
 */
 
 

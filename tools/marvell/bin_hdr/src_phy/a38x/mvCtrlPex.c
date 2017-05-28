@@ -268,7 +268,7 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
              * and GPIO_32_59 Data out enable register (0x18144) siklu_remarkM40
              */
 
-            putstring("Release reset on GPIO#44 and wait modem UP ....\n");
+            // putstring("Release reset on GPIO#44 and wait modem UP ....\n");
 
             reg_val = MV_REG_READ(0x18144);
             reg_val &= ~(1<<(44-32));
@@ -304,7 +304,7 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 					DEBUG_INIT_FULL_S("PCIe, Idx ");
 					DEBUG_INIT_FULL_D(pexIdx, 1);
 
-					DEBUG_INIT_S(":** Link is Gen1, check the EP capability \n");
+					// DEBUG_INIT_S(":** Link is Gen1, check the EP capability \n");
 					/* link is Gen1, check the EP capability */
 					addr = mvPexConfigRead(pexIdx, first_busno, 0, 0, 0x34) & 0xFF;
 					DEBUG_INIT_FULL_C("mvPexConfigRead: return addr=0x%x", addr, 4);
