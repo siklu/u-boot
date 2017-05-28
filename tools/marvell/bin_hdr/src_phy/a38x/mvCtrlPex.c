@@ -253,10 +253,43 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 		}
 
 		pexIdx = serdesType - PEX0;
+
+#define MV_SIKLU_WIGIG_BOARD  // need here!
+
+#if defined(MV_SIKLU_WIGIG_BOARD)
+
+		if (serdesIdx == 0) {  // PCIe port 0 uses SERDES#0
+		    volatile unsigned long long count;
+		    MV_U32 reg_val;
+            /*
+             * Special commentary: Code below release from reset WIGIG Modem connected
+             * to PCIe bus 0. The modem controlled by GPIO44 pin.
+             * For this purpose we write to GPIO_32_59 Data out register (0x18140)
+             * and GPIO_32_59 Data out enable register (0x18144) siklu_remarkM40
+             */
+
+            putstring("Release reset on GPIO#44 and wait modem UP ....\n");
+
+            reg_val = MV_REG_READ(0x18144);
+            reg_val &= ~(1<<(44-32));
+            MV_REG_WRITE(0x18144, reg_val);  // equiv to MV_REG_WRITE(0x18144, 0xfd06ff1);
+
+            reg_val = MV_REG_READ(0x18140);
+            reg_val |= (1<<(44-32));
+            MV_REG_WRITE(0x18140, reg_val);  // equiv to MV_REG_WRITE(0x18140, 0x2f9000);
+
+ 		    for (count =0;count<1000000;count++) // stupid delay, wait for modem starts
+		    {
+		        volatile int a = 0;   a++; a++;
+		    }
+		}
+#endif //  defined(MV_SIKLU_WIGIG_BOARD)
+
 		tmp = MV_REG_READ(PEX_DBG_STATUS_REG(pexIdx));
 
 		first_busno = next_busno;
-		if ((tmp & 0x7f) == 0x7E) {
+		if ((tmp & 0x7f) == 0x7E) {    // edikk   unknown register !!!!
+
 			next_busno++;
 			tempPexReg = MV_REG_READ((PEX_CFG_DIRECT_ACCESS(pexIdx, PEX_LINK_CAPABILITY_REG)));
 			tempPexReg &= (0xF);
@@ -300,7 +333,7 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 
 						DEBUG_INIT_S("PCIe, Idx ");
 						DEBUG_INIT_D(pexIdx, 1);
-						DEBUG_INIT_S(": Link upgraded to Gen2 based on client cpabilities \n");
+						DEBUG_INIT_S(": Link upgraded to Gen2 based on client capabilities \n");
 					} else {
 						DEBUG_INIT_S("PCIe, Idx ");
 						DEBUG_INIT_D(pexIdx, 1);
