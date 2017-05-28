@@ -290,6 +290,7 @@ static int run_linux_code(int is_system_in_bist)
     int i = 0;
     const char* mtd_str = getenv("user_mtdparts");
     const char* nand_ecc = getenv("nandEcc");
+    const char* skl_additional_kernel_cmd = getenv("sakc"); // siklu additional kernel commands
     if (!mtd_str)
     {
         mtd_str = MTDPARTS_DEFAULT;
@@ -322,18 +323,15 @@ static int run_linux_code(int is_system_in_bist)
 
     i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 
-#if 0 // do not execute follow commands - make problems later in linux read MIB counters
-    // close all 3 MAC controllers chips before jump to linux
-    rc = _run_command("smrvr 72c00 0",0);    // Disable Port0 MAC
-    if (rc != 0)
-        printf(" Execute command FAIL, line %d\n", __LINE__);
-    rc = _run_command("smrvr 32c00 0",0);    // Disable Port1 MAC
-    if (rc != 0)
-        printf(" Execute command FAIL, line %d\n", __LINE__);
-    rc = _run_command("smrvr 36c00 0",0);    // Disable Port2 MAC
-    if (rc != 0)
-        printf(" Execute command FAIL, line %d\n", __LINE__);
-#endif // 0
+    //
+    if (skl_additional_kernel_cmd) //   siklu_remarkM41
+    {
+        printf(" Add Siklu additional commands to kernel command line\n");
+        i += sprintf(buf + i, "%s ", skl_additional_kernel_cmd); /*/ / edikk dangerous  */
+    }
+
+    // i += sprintf(buf + i, "maxcpus=1 ");  dangerous: run linux only on 1 core
+    // i += sprintf(buf + i, "nosmp ");      dangerous: run linux only on 1 core
 
     // run the command line for preset boot environment
     rc = _run_command(buf, 0);
