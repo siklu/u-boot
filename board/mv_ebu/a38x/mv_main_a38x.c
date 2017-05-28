@@ -883,6 +883,8 @@ void misc_init_r_env(void)
 		setenv("nss_emac_map", "0x0");/* bit == 0 ==> NIC mode,
 						 bit == 1 ==> NSS mode */
 #endif
+
+#ifndef MV_SIKLU_WIGIG_BOARD
 	env = getenv("lcd0_enable");
 	if (!env)
 		setenv("lcd0_enable", "0");
@@ -894,7 +896,7 @@ void misc_init_r_env(void)
 	env = getenv("lcd_panel");
 	if (!env)
 		setenv("lcd_panel", "0");
-
+#endif
 	return;
 }
 
