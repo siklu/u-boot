@@ -505,7 +505,7 @@ void main_loop (void)
 #endif /* CONFIG_OF_CONTROL */
 
 #if	defined(MV_SIKLU_WIGIG_BOARD)
-	printf("  Stop boot process, disable WDT\n");
+	printf("  Stop boot process, disable WDT\n");  // siklu_remarkM43
 	extern int wdt_stop(void);
 	wdt_stop();
 #endif // 	MV_SIKLU_WIGIG_BOARD

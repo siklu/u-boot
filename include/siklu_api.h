@@ -32,9 +32,9 @@ typedef enum {
 typedef enum {
     SKL_LED_BLE,
     SKL_LED_WLAN,
-    SKL_LED_ETH0,
     SKL_LED_ETH1,
     SKL_LED_ETH2,
+    SKL_LED_ETH3,
     SKL_LED_POWER,
 } SKL_BOARD_LED_TYPE_E;
 

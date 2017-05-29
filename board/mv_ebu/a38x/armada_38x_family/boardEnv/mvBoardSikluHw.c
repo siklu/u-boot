@@ -270,7 +270,7 @@ int mvSikluExtndrCpuGpioGetVal(int gpio, int* val)
     i2c_set_bus_num(old_bus);
     return rc;
 }
-
+// siklu_remarkM43
 typedef enum
 {
     MV_SIKLU_BOARD_WD_START,    //
@@ -287,7 +287,7 @@ static int wdt_start(int timeout_sec)
 
     uint32_t timeout = (BOARD_CLOCK_RATE) * timeout_sec;
     MV_REG_WRITE(0x20334, timeout); // set timeout
-    printf ("Start Board WDT timeout %d\n", timeout_sec); 
+    printf("Start Board WDT timeout %d\n", timeout_sec);
 
     /* preset parameters in SOC Global Timers Control Register 0x20300 page 651
      * bit10 GlobalWDTimer25MhzEn = 1
@@ -325,7 +325,7 @@ static int wdt_start(int timeout_sec)
 
 int wdt_stop(void)
 {
-    printf ("Stop Board WDT\n"); // edikk remove
+    // printf("Stop Board WDT\n"); 
 
     uint32_t val = MV_REG_READ(0x18260); // disable reset on WDT
     val |= (1 << 10);
@@ -493,7 +493,7 @@ extern int siklu_control_sfp_led(int is_on);
 int arch_early_init_r(void)
 {
 
-    // Start WD 150sec timeout
+    // Start WD 150 sec timeout  siklu_remarkM43
     wdt_start(150);
 
     // configure IIC GPIO Extender
@@ -667,16 +667,59 @@ static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode
     __u32 reg_addr = 16; // see Datasheet
     __u16 reg_val = 0x101E;  // this is a default value of register 16(0x10) in bank 3
 
+    int port_is_fiber = 0;
+    int port_is_copper = 0;
+    int mdc_switch_required = 0;
+
+    if (siklu_get_network_port_type(2) == SIKLU_NETWORK_PORT_TYPE_FIBER)
+        port_is_fiber = 1;
+    else if (siklu_get_network_port_type(2) == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        mdc_switch_required = 1; /* if eth2 and eth3 both copper with PHY, need
+         control MDC switch via GPIO10  */
+        port_is_copper = 1;
+        mvSikluCpuGpioSetDirection(10, 1); // set output
+    }
+
     int rc = 0;
     switch (led)
     {
-    case SKL_LED_ETH0:
+    case SKL_LED_ETH1:
         phy_addr = 0;
         break;
-    case SKL_LED_ETH1:
-        phy_addr = 1;
-        break;
     case SKL_LED_ETH2:
+        phy_addr = 1;
+
+        if (mdc_switch_required)
+            mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 2nd PHY
+
+        break;
+    case SKL_LED_ETH3:
+    {
+        if (port_is_fiber)
+        { // fiber port led controlled via GPIO50
+            mvSikluCpuGpioSetDirection(50, 1); // set output
+            if (mode == SKL_LED_MODE_OFF)
+                mvSikluCpuGpioSetVal(50, 1);
+            else if (mode == SKL_LED_MODE_GREEN)
+            {
+                mvSikluCpuGpioSetVal(50, 0);
+                return 0; // do not continue, exit
+            }
+            else
+                return -1; // unsupported led
+        }
+        else if (port_is_copper) // copper led
+        {
+            phy_addr = 1; // same address for ETH2
+            mvSikluCpuGpioSetVal(10, 0);    // requires set MDC switch! Value '0' - connect 3rd PHY
+        }
+        else
+        {
+            return -1;    // port not installed, exit
+        }
+    }
+        break;
     default:
         return -1; // unsupported led
         break;
@@ -721,9 +764,9 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 
     switch (led)
     {
-    case SKL_LED_ETH0:
     case SKL_LED_ETH1:
     case SKL_LED_ETH2:
+    case SKL_LED_ETH3:
         rc = siklu_set_eth_led(led, mode);
         break;
     case SKL_LED_WLAN:
@@ -1203,15 +1246,15 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     } //
     else if (strcmp(led, "eth1") == 0)
     {
-        _led = SKL_LED_ETH0;
+        _led = SKL_LED_ETH1;
     } //
     else if (strcmp(led, "eth2") == 0)
     {
-        _led = SKL_LED_ETH1;
+        _led = SKL_LED_ETH2;
     } //
     else if (strcmp(led, "eth3") == 0)
     {
-        _led = SKL_LED_ETH2;
+        _led = SKL_LED_ETH3;
     } //
     else if (strcmp(led, "power") == 0)
     {
