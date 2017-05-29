@@ -271,6 +271,141 @@ int mvSikluExtndrCpuGpioGetVal(int gpio, int* val)
     return rc;
 }
 
+typedef enum
+{
+    MV_SIKLU_BOARD_WD_START,    //
+    MV_SIKLU_BOARD_WD_STOP,    //
+    MV_SIKLU_BOARD_WD_PING,
+} MV_SIKLU_BOARD_WD_CMD;
+
+static int wdt_start(int timeout_sec)
+{
+#define BOARD_CLOCK_RATE 25000000
+
+    if (timeout_sec >= 170) // max value for not overload register
+        timeout_sec = 170;
+
+    uint32_t timeout = (BOARD_CLOCK_RATE) * timeout_sec;
+    MV_REG_WRITE(0x20334, timeout); // set timeout
+    printf ("Start Board WDT timeout %d\n", timeout_sec); 
+
+    /* preset parameters in SOC Global Timers Control Register 0x20300 page 651
+     * bit10 GlobalWDTimer25MhzEn = 1
+     * bit9  GlobalWDTimerAuto = 0
+     * bit8  GlobalWDTimerEn  - write '1' but later below
+     */
+    uint32_t val = MV_REG_READ(0x20300);
+    val |= (1 << 10);
+    val &= ~(1 << 9);
+
+    //----------------
+    // val &= ~(0x7 << 16);  // clear Ratio field
+    // val |=  2<<16; // set ratio = 4
+    //------------------
+    MV_REG_WRITE(0x20300, val);
+
+    val = MV_REG_READ(0x20304); // clear expiration bit
+    val &= ~(1 << 31);
+    MV_REG_WRITE(0x20304, val);
+
+    val = MV_REG_READ(0x20300); // enable WD Timer
+    val |= (1 << 8);
+    MV_REG_WRITE(0x20300, val);
+
+    val = MV_REG_READ(0x20704); // enable Reset on WDT
+    val |= (1 << 8);
+    MV_REG_WRITE(0x20704, val);
+
+    val = MV_REG_READ(0x18260); // RST out mask
+    val &= ~(1 << 10);
+    MV_REG_WRITE(0x18260, val);
+
+    return 0;
+}
+
+int wdt_stop(void)
+{
+    printf ("Stop Board WDT\n"); // edikk remove
+
+    uint32_t val = MV_REG_READ(0x18260); // disable reset on WDT
+    val |= (1 << 10);
+    MV_REG_WRITE(0x18260, val);
+
+    val = MV_REG_READ(0x20704); //
+    val &= ~(1 << 8);
+    MV_REG_WRITE(0x20704, val);
+
+    val = MV_REG_READ(0x20300); // disable WD Timer
+    val &= ~(1 << 8);
+    MV_REG_WRITE(0x20300, val);
+
+    return 0;
+}
+
+/*
+ *
+ */
+int mvSikluWdtControl(MV_SIKLU_BOARD_WD_CMD cmd, int param)
+{
+    int rc = 0;
+    static int is_active = 0;
+    static int timeout_sec = 0;
+    static int first_time_run = 1;
+
+    switch (cmd)
+    {
+    case MV_SIKLU_BOARD_WD_START:
+    {
+        if (param <= 0) // timeout should be > 0
+        {
+            printf(" Start command requires timeout > 0");
+            return -1;
+        }
+        timeout_sec = param;
+
+        if (first_time_run)
+        {
+            wdt_stop();
+            first_time_run = 0;
+        }
+        if (!is_active) // init + set timeout interval
+        {
+            wdt_start(timeout_sec);
+        }
+        else // set timeout interval only
+        {
+            uint32_t timeout = BOARD_CLOCK_RATE * timeout_sec;
+            MV_REG_WRITE(0x20334, timeout); // set timeout
+        }
+        is_active = 1;
+    }
+        break;
+    case MV_SIKLU_BOARD_WD_PING:
+    {
+        if (!is_active)
+            return -1; // for pin should be started
+
+        uint32_t timeout = BOARD_CLOCK_RATE * timeout_sec;
+        MV_REG_WRITE(0x20334, timeout); // set timeout
+    }
+        break;
+    case MV_SIKLU_BOARD_WD_STOP:
+    {
+
+        if (!is_active)
+            return 0; // already stopped, do nothing
+        wdt_stop();
+        is_active = 0;
+    }
+        break;
+    default:
+        return -1;
+        break;
+
+    }
+    return rc;
+}
+
 /* ##########################################################################################################
  ########################################################################################################## */
 static int do_siklu_pca9557_access(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]) //
@@ -357,6 +492,9 @@ int mvSikluHwResetCntrl(SKL_MODULE_RESET_CNTRL_E dev, int isEna)
 extern int siklu_control_sfp_led(int is_on);
 int arch_early_init_r(void)
 {
+
+    // Start WD 150sec timeout
+    wdt_start(150);
 
     // configure IIC GPIO Extender
     mvSikluExtndrGpioConf();
@@ -999,6 +1137,40 @@ static int do_siklu_marvell_mpp_control(cmd_tbl_t *cmdtp, int flag, int argc, ch
 /*
  *
  */
+static int do_siklu_watchdog_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+
+    int ret;
+
+    if (argc != 2)  // wrong parameters
+    {
+        printf("Usage:  %s\n", cmdtp->usage);
+        return 1;
+    }
+
+    if (argv[1][0] == '0') // disable WDT
+    {
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_STOP, 0);
+    }
+    else if (argv[1][0] == '-') // ping WDT
+    {
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_PING, 0);
+    }
+    else
+    {  // enable WDT with timeout from argv[1]
+        int timeout = simple_strtoul(argv[1], NULL, 10);
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_START, timeout);
+    }
+
+    if (ret == 0)
+        return CMD_RET_SUCCESS;
+    else
+        return CMD_RET_FAILURE;
+}
+
+/*
+ *
+ */
 static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
@@ -1119,3 +1291,5 @@ U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 6/10/12/21
 
 U_BOOT_CMD(sled, 3, 1, do_siklu_board_led_control, "Control Onboard LEDs", "[led] [state] Control Onboard LEDs");
 
+U_BOOT_CMD(swdt, 3, 1, do_siklu_watchdog_control, "Watch-Dog Control",
+        "[time-out sec] - set 0 for disable, '-' for ping");

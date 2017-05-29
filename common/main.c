@@ -504,6 +504,11 @@ void main_loop (void)
 	set_working_fdt_addr((void *)gd->fdt_blob);
 #endif /* CONFIG_OF_CONTROL */
 
+#if	defined(MV_SIKLU_WIGIG_BOARD)
+	printf("  Stop boot process, disable WDT\n");
+	extern int wdt_stop(void);
+	wdt_stop();
+#endif // 	MV_SIKLU_WIGIG_BOARD
 	/*
 	 * Main Loop for Monitor Command Processing
 	 */
