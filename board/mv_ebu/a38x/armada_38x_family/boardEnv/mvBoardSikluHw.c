@@ -15,9 +15,11 @@
 #include "../../../common/mv_hal/gpp/mvGpp.h"
 #include "siklu_board_system.h"
 
+#define msleep(a)           udelay(a * 1000)
+
 extern MV_U32 mvEthPhyAddSet(MV_U32 ethPortNum, MV_U32 phyAddr);
 extern MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, int eeeEnable);
-extern MV_VOID mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr);
+extern void mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr);
 
 #define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
 #define MV_GPP_OUT	0		/* GPP output */
@@ -30,6 +32,8 @@ extern MV_VOID mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr);
 static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode);
 
 DECLARE_GLOBAL_DATA_PTR;
+
+static int is_pse_configured = 0;
 
 /*
  *
@@ -662,7 +666,7 @@ static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E 
  */
 static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 {
-    __u32 phy_addr;
+    __u32 phy_addr = 0;
     __u32 bank = 3;
     __u32 reg_addr = 16; // see Datasheet
     __u16 reg_val = 0x101E;  // this is a default value of register 16(0x10) in bank 3
@@ -796,7 +800,6 @@ int siklu_set_mdcio_switch(int eth_port)
     }
     else
     {
-
         mvSikluCpuGpioSetDirection(MDC_MDIO_MPP_SELECTOR, 1); // set MPP10 output
 
         switch (eth_port)
@@ -1022,17 +1025,112 @@ static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char *
     return rc;
 }
 
+
+#define TEST_DURATION_MSEC  3000
+#define TEST_INTERVAL_MSEC  50
+#define SAMPLES_IN_1_SEC    1000 /  TEST_INTERVAL_MSEC
+
 /*
- *
- *
+ #1 find first rising edge, count '1' until first '0' (fall edge)
+ #2 count '0' until first '1'
+ #3 number '1' should be +- equal to number of '0'
  */
-static int do_siklu_pse_output_status(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+static int calc_freq(int* samples, int num_samples, int* freq)
+{
+    typedef enum
+    {
+        CALC_FREQ_WAIT4_1ST_RAISE_EDGE, //
+        CALC_FREQ_WAIT4_1ST_FALL_EDGE, //
+        CALC_FREQ_WAIT4_2ND_RAISE_EDGE,
+    } CALC_FREQ_STATE;
+
+    int rc = 0, i;
+    CALC_FREQ_STATE state = CALC_FREQ_WAIT4_1ST_RAISE_EDGE;
+    int prev_val, cur_val;
+    int countH = 0, countL = 0;
+
+    *freq = 0;
+    prev_val = cur_val = samples[0];
+
+    for (i = 0; i < num_samples; i++)
+    {
+        switch (state)
+        {
+        case CALC_FREQ_WAIT4_1ST_RAISE_EDGE:
+            if ((prev_val == 0) && (samples[i] == 1))
+            {
+                state = CALC_FREQ_WAIT4_1ST_FALL_EDGE;
+                countH++;
+            }
+            break;
+        case CALC_FREQ_WAIT4_1ST_FALL_EDGE:
+            if ((prev_val == 1) && (samples[i] == 0))
+            {
+                state = CALC_FREQ_WAIT4_2ND_RAISE_EDGE;
+                countL++;
+            }
+            else
+                countH++;
+            break;
+        case CALC_FREQ_WAIT4_2ND_RAISE_EDGE:
+            if ((prev_val == 0) && (samples[i] == 1))
+                goto end_calc;
+            else
+                countL++;
+            break;
+        default:
+            break;
+        }
+        prev_val = samples[i];
+    }
+
+    end_calc:
+
+    // each of counters should be > '0'
+    if ((countL == 0) || (countH == 0))
+    {
+        printf(" Error in algorithm, one or two counters are '0': %d, %d\n", countL, countH);
+        return -1;
+    }
+
+    // calculate frequency
+    *freq = SAMPLES_IN_1_SEC / (countL + countH);
+
+    return rc;
+}
+
+/*
+ * The test continues 4 seconds
+ */
+static int do_siklu_pse_display_load_status(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
-    static int is_configured = 0;
-    int val[4];
+    int test_delay = 0, ret;
+    int led0_pin, led1_pin, i = 0, k = 0;
 
-    if (!is_configured)
+    // sample_S samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)]; // really we need 3000/50 = 60 samples
+    int led0_val_samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)];
+    int led1_val_samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)];
+
+    int eth_num = simple_strtoul(argv[1], NULL, 10);
+
+    if (eth_num == 2)
+    {
+        led0_pin = 13;
+        led1_pin = 14;
+    }
+    else if (eth_num == 3)
+    {
+        led0_pin = 54;
+        led1_pin = 55;
+    }
+    else
+    {
+        printf("Wrong Eth port number %d\n", eth_num);
+        return CMD_RET_USAGE;
+    }
+
+    if (!is_pse_configured)
     {
         // PSE Port #2 status, if exists
         mvSikluCpuGpioSetDirection(13, 0);
@@ -1041,16 +1139,98 @@ static int do_siklu_pse_output_status(cmd_tbl_t *cmdtp, int flag, int argc, char
         mvSikluCpuGpioSetDirection(54, 0);
         mvSikluCpuGpioSetDirection(55, 0);
 
-        is_configured = 1;
+        is_pse_configured = 1;
     }
+
+    memset(led0_val_samples, 0, sizeof(led0_val_samples));
+    memset(led1_val_samples, 0, sizeof(led1_val_samples));
+
+    // step #1 measure pin value on test interval
+    do
+    {
+
+        mvSikluCpuGpioGetVal(led0_pin, &led0_val_samples[i]);
+        mvSikluCpuGpioGetVal(led1_pin, &led1_val_samples[i]);
+
+        led0_val_samples[i] = !led0_val_samples[i];
+        led1_val_samples[i] = !led1_val_samples[i];
+
+        i++;
+        mdelay(TEST_INTERVAL_MSEC);
+        test_delay += TEST_INTERVAL_MSEC;
+    } while (test_delay <= TEST_DURATION_MSEC); // 3 sec test
+
+    // detect pin status:
+    int l0_comulative_stat = 0, l1_comulative_stat = 0;
+
+    for (k = 0; k < i; k++)
+    {
+        if (led0_val_samples[k] == 1)
+            l0_comulative_stat += 1;
+        if (led1_val_samples[k] == 1)
+            l1_comulative_stat += 1;
+    }
+
+    if (l0_comulative_stat >= (k - 5))
+        printf("LED0 always '1'\n");
+    else if (l0_comulative_stat <= 5)
+        printf("LED0 always '0'\n");
+    else
+    {
+        int freq;
+        // LED0 status is alternate
+        printf(" l0_comulative_stat %d, k %d\n", l0_comulative_stat, k);
+        ret = calc_freq(led0_val_samples, k, &freq);
+        if (ret == 0)
+        {
+            printf(" LED0 output freq: %d Hz\n", freq);
+        }
+        else
+        {
+            printf(" Measure LED0 output status error\n");
+        }
+    }
+
+    if (l1_comulative_stat >= (k - 5))
+        printf("LED1 always '1'\n");
+    else if (l1_comulative_stat <= 5)
+        printf("LED1 always '0'\n");
+    else
+    {
+        int freq;
+        // LED1 status is alternate
+        printf(" l1_comulative_stat %d, k %d\n", l1_comulative_stat, k);
+        ret = calc_freq(led1_val_samples, k, &freq);
+        if (ret == 0)
+        {
+            printf(" LED1 output freq: %d Hz\n", freq);
+        }
+        else
+        {
+            printf(" Measure LED1 output status error\n");
+        }
+    }
+
+    return rc;
+}
+
+/*
+ *  Display status of PSE69101 LED0 and LED1 output pins
+ *
+ */
+static int do_siklu_pse_display_current_status(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+
+    int val[4];
 
     mvSikluCpuGpioGetVal(13, &val[0]);
     mvSikluCpuGpioGetVal(14, &val[1]);
     mvSikluCpuGpioGetVal(54, &val[2]);
     mvSikluCpuGpioGetVal(55, &val[3]);
 
-    printf("port#2 %d-%d\n", !!val[0], !!val[1]);
-    printf("port#3 %d-%d\n", !!val[2], !!val[3]);
+    printf("port#2 %d-%d\n", !val[0], !val[1]);
+    printf("port#3 %d-%d\n", !val[2], !val[3]);
     return rc;
 }
 
@@ -1061,7 +1241,7 @@ static int do_siklu_pse_output_status(cmd_tbl_t *cmdtp, int flag, int argc, char
 static int do_siklu_pse_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
-    int port; // = simple_strtoul(argv[1], NULL, 10);
+    int eth_num;
     char state; // = argv[2][0];
     MV_U8 mask;
 
@@ -1074,16 +1254,16 @@ static int do_siklu_pse_control(cmd_tbl_t *cmdtp, int flag, int argc, char * con
     int old_bus = i2c_get_bus_num();
     i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
 
-    port = simple_strtoul(argv[1], NULL, 10);
+    eth_num = simple_strtoul(argv[1], NULL, 10);
     state = argv[2][0];
 
-    if (port == 1)
+    if (eth_num == 2)
         mask = 1 << 2;
-    else if (port == 2)
+    else if (eth_num == 3)
         mask = 1 << 1;
     else
     {
-        printf("Wrong port %d\n", port);
+        printf("Wrong Eth port %d\n", eth_num);
         return CMD_RET_USAGE;
     }
 
@@ -1130,6 +1310,41 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t *cmdtp, int flag, int argc, cha
     i2c_set_bus_num(old_bus);
     return CMD_RET_SUCCESS;
 }
+
+static int do_siklu_push_button_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int val, msec_counter = 0;
+    int is_pb_pressed = 0;
+
+    mvSikluCpuGpioSetDirection(52, 0);
+    printf("Start Push-Button Test\n");
+    printf("The test should stop after press-release PB, or Enter Ctrl-C terminal command\n");
+
+    do
+    {
+        if (ctrlc())
+        {
+            printf(" CTRL-C pressed, Exit\n");
+            return rc;
+        }
+        mvSikluCpuGpioGetVal(52, &val);
+        if ((val) && (is_pb_pressed))
+        {
+            printf(" PB released, pressed time %d msec\n", msec_counter);
+            break;
+        }
+        if (!val)
+        {
+            is_pb_pressed = 1;
+            msec_counter += 100;
+        }
+        msleep(100);
+    } while (1);
+
+    return rc;
+}
+
 /*
  * 
  */
@@ -1324,10 +1539,15 @@ U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers"
 U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Button Status",
         "Show Siklu board Push-Button Status");
 
+U_BOOT_CMD(spbt, 3, 1, do_siklu_push_button_test, "Push-Button Test", "Push-Button Test");
+
 U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
 
-U_BOOT_CMD(spsec, 3, 1, do_siklu_pse_control, "Control PSE Outputs", "[1/2] [e/d] Control PSE Outputs");
-U_BOOT_CMD(spses, 3, 1, do_siklu_pse_output_status, "Show PSE Output Status", "Show PSE Output Status");
+U_BOOT_CMD(spsec, 3, 1, do_siklu_pse_control, "Control PSE Outputs", "[2/3] [e/d] Control PSE Outputs");
+U_BOOT_CMD(spses, 3, 1, do_siklu_pse_display_current_status, "Show PSE Current Output Status",
+        "Show PSE Current Output Status");
+U_BOOT_CMD(spset, 3, 1, do_siklu_pse_display_load_status, "Show PSE Load Detection Output Status",
+        " [eth_num] Show PSE Load Detection Output Status");
 
 U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 6/10/12/21/48/49/50/53 Control",
         "[mpp_num] [0/1] Set 0/1 on required MPP number");
