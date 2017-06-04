@@ -291,7 +291,7 @@ static int run_linux_code(int is_system_in_bist)
     int i = 0;
     const char* mtd_str = getenv("user_mtdparts");
     const char* nand_ecc = getenv("nandEcc");
-    const char* skl_additional_kernel_cmd = getenv("sakc"); // siklu additional kernel commands
+    const char* skl_additional_kernel_cmd = getenv("extra_cmd"); // //   siklu_remarkM41  siklu additional kernel commands
     if (!mtd_str)
     {
         mtd_str = MTDPARTS_DEFAULT;
@@ -328,7 +328,7 @@ static int run_linux_code(int is_system_in_bist)
     if (skl_additional_kernel_cmd) //   siklu_remarkM41
     {
         printf(" Add Siklu additional commands to kernel command line\n");
-        i += sprintf(buf + i, "%s ", skl_additional_kernel_cmd); /*/ / edikk dangerous  */
+        i += sprintf(buf + i, "%s ", skl_additional_kernel_cmd);
     }
 
     // i += sprintf(buf + i, "maxcpus=1 ");  dangerous: run linux only on 1 core
