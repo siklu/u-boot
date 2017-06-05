@@ -1152,7 +1152,7 @@ static int do_siklu_pse_display_load_status(cmd_tbl_t *cmdtp, int flag, int argc
         mvSikluCpuGpioGetVal(led0_pin, &led0_val_samples[i]);
         mvSikluCpuGpioGetVal(led1_pin, &led1_val_samples[i]);
 
-        led0_val_samples[i] = !led0_val_samples[i];
+        led0_val_samples[i] = !led0_val_samples[i];  // LED0 and LED1 status pins need invert value
         led1_val_samples[i] = !led1_val_samples[i];
 
         i++;
@@ -1171,6 +1171,10 @@ static int do_siklu_pse_display_load_status(cmd_tbl_t *cmdtp, int flag, int argc
             l1_comulative_stat += 1;
     }
 
+    //printf(" i %d, k %d, l0_comulative_stat %d, l1_comulative_stat %d\n",
+    //        i, k, l0_comulative_stat, l1_comulative_stat ); 
+
+    // check each pin
     if (l0_comulative_stat >= (k - 5))
         printf("LED0 always '1'\n");
     else if (l0_comulative_stat <= 5)
@@ -1229,6 +1233,8 @@ static int do_siklu_pse_display_current_status(cmd_tbl_t *cmdtp, int flag, int a
     mvSikluCpuGpioGetVal(54, &val[2]);
     mvSikluCpuGpioGetVal(55, &val[3]);
 
+	// LED0 and LED1 status pins need invert value
+	printf("       LED0-LED1\n");
     printf("port#2 %d-%d\n", !val[0], !val[1]);
     printf("port#3 %d-%d\n", !val[2], !val[3]);
     return rc;
