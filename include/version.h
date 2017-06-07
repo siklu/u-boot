@@ -35,7 +35,8 @@
 #endif
 
 
-#define SIKLU_U_BOOT_VERSION    "MH-1.2.0"
+#define SIKLU_U_BOOT_VERSION    "MH-1.2.0" // siklu:  instead this macro use strings extracted from host/version.mk
+
 
 #define U_BOOT_VERSION_STRING U_BOOT_VERSION " (" U_BOOT_DATE " - " \
 	U_BOOT_TIME ")" CONFIG_IDENT_STRING

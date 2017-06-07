@@ -24,6 +24,7 @@
 #########################################################################
 
 include $(TOPDIR)/helper.mk
+include $(PROJECT_ROOT_DIR)/host/version_mrv.mk
 
 ifeq ($(CURDIR),$(SRCTREE))
 dir :=
@@ -61,7 +62,7 @@ PLATFORM_LDFLAGS =
 #####################   SIKLU Additions  ####################
 SVNVERSION_STR=$(shell svnversion)
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
-SIKLU_FLAGS = $(SIKLU_SVNVERSION)
+SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=$(MAJOR) -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
 
 
 

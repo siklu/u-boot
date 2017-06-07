@@ -322,7 +322,8 @@ static int run_linux_code(int is_system_in_bist)
         i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
     }
 
-    i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
+    // i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
+    i += sprintf(buf + i, "ver=%s.%d.%d.%s %srevv ", _VER_MAJOR, _VER_MINOR, _VER_BUILD, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 
     //
     if (skl_additional_kernel_cmd) //   siklu_remarkM41
