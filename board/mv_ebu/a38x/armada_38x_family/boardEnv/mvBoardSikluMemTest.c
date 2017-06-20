@@ -395,5 +395,5 @@ static int do_siklu_memory_ddr3_tests(cmd_tbl_t *cmdtp, int flag, int argc,
 }
 
 U_BOOT_CMD(smemt, 7, 1, do_siklu_memory_ddr3_tests,
-		"EH2000 memory Tests", //
+		"Private Memory Tests", //
 		"[test type] [start addr] [end addr] [is cyclic]" "\n test type: 1 running '1', 2 running '0', 3 - chess, 4 - random pattern, 5 - addrees to data\n");
