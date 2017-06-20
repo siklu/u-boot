@@ -2967,7 +2967,8 @@ static MV_STATUS mvNfcTimingSet(MV_U32 nand_clock, MV_NFC_FLASH_INFO *flInfo)
 		((trp_nfc >> 3) << NFC_TMNG0_ETRP_OFFS) |
 		(trh_nfc << NFC_TMNG0_TRH_OFFS) |
 		((trp_nfc & 0x7) << NFC_TMNG0_TRP_OFFS));
-	MV_NAND_REG_WRITE(NFC_TIMING_0_REG, reg);
+
+	MV_NAND_REG_WRITE(NFC_TIMING_0_REG, reg); // siklu_remarkM12
 
 	/* Calculate the timing configurations for register1 */
 	tr_nfc = (ns_clk(flInfo->tR, clk2ns) - tch_nfc - 3);
@@ -3032,7 +3033,7 @@ static MV_STATUS mvNfcTimingSet(MV_U32 nand_clock, MV_NFC_FLASH_INFO *flInfo)
 #ifndef MTD_NAND_NFC_NEGLECT_RNB
 	reg |= (0x1 << NFC_TMNG1_WAIT_MODE_OFFS);
 #endif
-	MV_NAND_REG_WRITE(NFC_TIMING_1_REG, reg);
+	MV_NAND_REG_WRITE(NFC_TIMING_1_REG, reg); //  siklu_remarkM12
 
 	return MV_OK;
 }

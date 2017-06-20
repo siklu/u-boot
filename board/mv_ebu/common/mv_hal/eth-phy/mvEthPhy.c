@@ -148,7 +148,11 @@ MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, MV_BOOL eeeEnable)  // siklu_remarkM21
 		return MV_ERROR;
 	}
 
-	if (!MV_IS_MARVELL_OUI(id1, id2)) {
+	if ((id1 == 0xFFFF)&&(id2 == 0xFFFF))  {
+        mvOsPrintf("Port%d: phyAddr=0x%x, No PHY detected\n", ethPortNum, phyAddr);
+        return MV_ERROR;
+	}
+	else if (!MV_IS_MARVELL_OUI(id1, id2)) {
 		mvOsPrintf("Port%d: phyAddr=0x%x, Not Marvell PHY id1 %x id2 %x\n", ethPortNum, phyAddr, id1, id2);
 		return MV_ERROR;
 	}
