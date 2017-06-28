@@ -24,7 +24,7 @@
 #########################################################################
 
 include $(TOPDIR)/helper.mk
-include $(PROJECT_ROOT_DIR)/host/version_mrv.mk
+include $(PROJECT_ROOT_DIR)/host/version-$(PLATFORM_NAME).mk
 
 ifeq ($(CURDIR),$(SRCTREE))
 dir :=
