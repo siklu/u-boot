@@ -21,8 +21,11 @@
 #endif
 
 
-/* siklu */
-#define CONFIG_CMD_SF
+
+#ifdef CONFIG_SPI_BOOT /* siklu */
+# define SIKLU_BOARD 1   /* EVK board boot from SD card, instead it Siklu board boot from SPI NOR FLASH   */
+# define CONFIG_CMD_SF
+#endif /* CONFIG_SPI_BOOT  */
 
 
 #define PHYS_SDRAM_SIZE	SZ_512M
