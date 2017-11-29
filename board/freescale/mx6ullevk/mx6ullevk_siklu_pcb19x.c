@@ -19,6 +19,7 @@
 #include <libfdt.h>
 #include <fdt_support.h>
 
+#ifdef SIKLU_BOARD
 #include "siklu_def.h"
 #include "siklu_api.h"
 
@@ -27,6 +28,7 @@
 
 // #define BOOT_DEBUG
 
+extern uint32_t get_nand_part_offset_by_name(const char* name);
 
 extern int siklu_mutable_env_set(const char *varname, const char *varvalue, int save_if_diff_required);
 
@@ -604,7 +606,7 @@ static int rescue_restore_boot_image(void)
 
     // preset default mutual environment...
     {
-        extern uint32_t get_nand_part_offset_by_name(const char* name);
+
         extern int primary_format_mutual_env(uint32_t env_part_offs);
 
         uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name("env_var0");
@@ -696,7 +698,7 @@ static int do_siklu_set_dflt_env(cmd_tbl_t * cmdtp, int flag, int argc, char * c
 {
     int rc = CMD_RET_FAILURE; // the command isn't repeatable!
 
-    extern uint32_t get_nand_part_offset_by_name(const char* name);
+
     extern int primary_format_mutual_env(uint32_t env_part_offs);
 
     uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name("env_var0");
@@ -724,3 +726,4 @@ U_BOOT_CMD(ssde, 5, 0, do_siklu_set_dflt_env, "Set system default environment", 
 U_BOOT_CMD(smeprint, 5, 0, do_siklu_show_mut_env_area, "Show Siklu Mutual Environment Area",
         "Show Siklu Mutual Environment Area");
 
+#endif //

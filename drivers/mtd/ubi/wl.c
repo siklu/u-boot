@@ -107,6 +107,8 @@
  * eraseblocks with low erase counter to free physical eraseblocks with high
  * erase counter.
  */
+#define CONFIG_MTD_UBI_WL_THRESHOLD 4096   // edikk unknown define. added TBD
+
 #define UBI_WL_THRESHOLD CONFIG_MTD_UBI_WL_THRESHOLD
 
 /*

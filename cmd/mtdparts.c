@@ -1945,7 +1945,6 @@ static int do_chpart(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return 0;
 }
 
-#ifdef SIKLU_BOARD
 //==========  MV_SIKLU_WIGIG_BOARD  ======================   siklu edikk
 uint32_t get_nand_part_offset_by_name(const char* name)
 {
@@ -1983,7 +1982,6 @@ uint32_t get_nand_part_offset_by_name(const char* name)
 
 }
 
-#endif // SIKLU_BOARD
 
 /**
  * Routine implementing u-boot mtdparts command. Initialize/update default global

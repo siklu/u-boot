@@ -59,6 +59,20 @@
 #define CONFIG_SYS_MONITOR_BASE         0x20000
 #define CONFIG_SYS_MONITOR_LEN          0x20000           /* Reserve 512 kB for Monitor */
 
+
+/* #define CONFIG_SYS_USE_UBI */
+#define CONFIG_CMD_UBI
+/* #define CONFIG_CMD_UBIFS   do not support ubifs in uboot   */
+#define CONFIG_UBI_SILENCE_MSG
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_RBTREE
+#define CONFIG_LZO
+
+
+
+
 #endif /* CONFIG_SPI_BOOT      end section is specific for siklu board    */
 
 
@@ -81,6 +95,8 @@
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 #endif
 
+
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
 
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART1_BASE
@@ -105,6 +121,7 @@
 #define CONFIG_SYS_I2C_SPEED		100000
 #endif
 
+#ifndef SIKLU_BOARD
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -182,6 +199,8 @@
 			   "fi; " \
 		   "fi; " \
 	   "else run netboot; fi"
+
+#endif /* SIKLU_BOARD */
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_MEMTEST_START	0x80000000

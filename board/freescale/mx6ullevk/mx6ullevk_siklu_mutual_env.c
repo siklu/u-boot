@@ -20,7 +20,7 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-
+#ifdef SIKLU_BOARD
 
 static const char* trailer = "SKLTRAILER";
 static const char* final = "FINALSKL";
@@ -690,3 +690,4 @@ void siklu_print_mut_env_area(void)
     printf("\n");
 
 }
+#endif //
