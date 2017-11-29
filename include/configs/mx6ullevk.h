@@ -46,7 +46,9 @@
 #define CONFIG_APBH_DMA_BURST
 #define CONFIG_APBH_DMA_BURST8
 
-
+#ifndef CONFIG_CMD_SAVEENV
+# define CONFIG_CMD_SAVEENV
+#endif /* CONFIG_CMD_SAVEENV */
 
 /* environment starts here  */
 #define CONFIG_ENV_OFFSET             0 /*  nand_get_env_offs() */
@@ -222,12 +224,13 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-/* environment organization */
-#define CONFIG_SYS_MMC_ENV_DEV		1	/* USDHC2 */
-#define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
-#define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
 
 #ifndef SIKLU_BOARD   /* for EVK  */
+/* environment organization */
+# define CONFIG_SYS_MMC_ENV_DEV		1	/* USDHC2 */
+# define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
+# define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
+
 # define CONFIG_ENV_SIZE		SZ_8K
 # define CONFIG_ENV_OFFSET		(12 * SZ_64K)
 #endif /* SIKLU_BOARD */
