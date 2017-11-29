@@ -211,7 +211,7 @@
 #ifndef SIKLU_BOARD   /* for EVK  */
 # define CONFIG_ENV_SIZE		SZ_8K
 # define CONFIG_ENV_OFFSET		(12 * SZ_64K)
-#endif // SIKLU_BOARD
+#endif /* SIKLU_BOARD */
 
 #define CONFIG_IMX_THERMAL
 
