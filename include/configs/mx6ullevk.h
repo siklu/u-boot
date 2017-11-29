@@ -22,10 +22,44 @@
 
 
 
-#ifdef CONFIG_SPI_BOOT /* siklu */
+#ifdef CONFIG_SPI_BOOT /* follow section is specific for siklu board */
 # define SIKLU_BOARD 1   /* EVK board boot from SD card, instead it Siklu board boot from SPI NOR FLASH   */
 # define CONFIG_CMD_SF
-#endif /* CONFIG_SPI_BOOT  */
+
+# define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
+# define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
+# define MTDIDS_DEFAULT		"nand0=armada-nand" //      SPI  ;spi1=spi_flash
+# define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
+    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"
+
+
+#ifndef CONFIG_CMD_NAND
+# define CONFIG_CMD_NAND
+#endif
+#define CONFIG_SYS_MAX_NAND_DEVICE 1
+#define CONFIG_SYS_NAND_BASE		0x40000000
+#define CONFIG_SYS_NAND_5_ADDR_CYCLE
+#define CONFIG_SYS_NAND_ONFI_DETECTION
+
+/* DMA stuff, needed for GPMI/MXS NAND support */
+#define CONFIG_APBH_DMA
+#define CONFIG_APBH_DMA_BURST
+#define CONFIG_APBH_DMA_BURST8
+
+
+
+/* environment starts here  */
+#define CONFIG_ENV_OFFSET             0 /*  nand_get_env_offs() */
+
+/* should be complient to ENV_SIZE in tools/env/fw_env.c!   */
+#define CONFIG_ENV_SIZE			0x10000 /* 1 sector 128k  */
+#define CONFIG_ENV_RANGE		0x20000	/*  */
+
+#define CONFIG_ENV_ADDR                 CONFIG_ENV_OFFSET
+#define CONFIG_SYS_MONITOR_BASE         0x20000
+#define CONFIG_SYS_MONITOR_LEN          0x20000           /* Reserve 512 kB for Monitor */
+
+#endif /* CONFIG_SPI_BOOT      end section is specific for siklu board    */
 
 
 #define PHYS_SDRAM_SIZE	SZ_512M
@@ -174,8 +208,10 @@
 #define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
 #define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
 
-#define CONFIG_ENV_SIZE			SZ_8K
-#define CONFIG_ENV_OFFSET		(12 * SZ_64K)
+#ifndef SIKLU_BOARD   /* for EVK  */
+# define CONFIG_ENV_SIZE		SZ_8K
+# define CONFIG_ENV_OFFSET		(12 * SZ_64K)
+#endif // SIKLU_BOARD
 
 #define CONFIG_IMX_THERMAL
 

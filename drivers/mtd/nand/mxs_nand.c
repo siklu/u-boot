@@ -26,6 +26,7 @@
 #include <asm/mach-imx/regs-gpmi.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/mach-imx/dma.h>
+#include <asm/arch/mx6ull_pins.h>
 
 #define	MXS_NAND_DMA_DESCRIPTOR_COUNT		4
 
@@ -1216,3 +1217,56 @@ err1:
 	free(nand_info);
 	return err;
 }
+
+
+#ifdef SIKLU_BOARD  // EVK doesn't have NAND
+/*
+ * iMX6ull EVK board uses NAND CPU pins for different purposes
+ * we need reconfigure them for Siklu board
+ *
+ *
+ */
+
+#define NAND_PAD_CTRL  (0x10B0) // see datasheet page 1909, pp 33.6.224
+
+
+
+static const iomux_v3_cfg_t siklu_nand_pads[] = {
+
+	MX6_PAD_NAND_RE_B__NAND_RE_B	| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_WE_B__NAND_WE_B	| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA00__DATA00		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA01__DATA01		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA02__DATA02		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA03__DATA03		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA04__DATA04		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA05__DATA05		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA06__DATA06		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DATA07__DATA07		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_ALE__ALE			| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_WP_B__WP_B			| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_READY_B__READY_B	| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_CE0_B__CE0_B		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_CE1_B__CE1_B		| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_CLE__CLE			| MUX_PAD_CTRL(NAND_PAD_CTRL),
+	MX6_PAD_NAND_DQS__DQS			| MUX_PAD_CTRL(NAND_PAD_CTRL),
+};
+
+
+
+static void setup_nand_pins(void)
+{
+	imx_iomux_v3_setup_multiple_pads(siklu_nand_pads, ARRAY_SIZE(siklu_nand_pads));
+}
+
+
+
+int siklu_nand_init_mux(void)
+{
+
+	setup_nand_pins();
+	return 0;
+
+}
+
+#endif // SIKLU_BOARD

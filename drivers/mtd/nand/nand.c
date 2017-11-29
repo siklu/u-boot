@@ -153,15 +153,22 @@ void nand_init(void)
 	 * Avoid initializing NAND Flash multiple times,
 	 * otherwise it will calculate a wrong total size.
 	 */
+
 	if (initialized)
 		return;
 	initialized = 1;
+
+#ifdef SIKLU_BOARD // configure SoC pins to NAND functionality
+	extern int siklu_nand_init_mux(void);
+
+	siklu_nand_init_mux();
+#endif // 	SIKLU_BOARD
+
 
 #ifdef CONFIG_SYS_NAND_SELF_INIT
 	board_nand_init();
 #else
 	int i;
-
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		nand_init_chip(i);
 #endif

@@ -614,8 +614,6 @@ static void parse_cfg_cmd(struct imx_header *imxhdr, int32_t cmd, char *token,
 		imximage_ivt_offset = get_table_entry_id(imximage_boot_offset,
 					"imximage boot option", token);
 
-		printf("\n====> %s()   imximage_ivt_offset - 0x%x, token %s\n", __func__, imximage_ivt_offset, token); // edikk remove
-
 		if (imximage_ivt_offset == -1) {
 			fprintf(stderr, "Error: %s[%d] -Invalid boot device"
 				"(%s)\n", name, lineno, token);
