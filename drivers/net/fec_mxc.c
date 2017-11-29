@@ -180,12 +180,18 @@ static int fec_mdio_write(struct ethernet_regs *eth, uint8_t phyaddr,
 static int fec_phy_read(struct mii_dev *bus, int phyaddr, int dev_addr,
 			int regaddr)
 {
-	return fec_mdio_read(bus->priv, phyaddr, regaddr);
+	int ret = 0;
+
+	ret = fec_mdio_read(bus->priv, phyaddr, regaddr);
+	//printf("%s()   line %d, phy %d, dev %d, reg %d, val 0x%x\n",
+	//		__func__, __LINE__,phyaddr, dev_addr, regaddr, ret ); // edikk remove
+	return ret;
 }
 
 static int fec_phy_write(struct mii_dev *bus, int phyaddr, int dev_addr,
 			 int regaddr, u16 data)
 {
+	//printf("%s()   line %d\n", __func__, __LINE__); // edikk remove
 	return fec_mdio_write(bus->priv, phyaddr, regaddr, data);
 }
 

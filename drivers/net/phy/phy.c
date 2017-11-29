@@ -290,7 +290,7 @@ int genphy_update_link(struct phy_device *phydev)
 int genphy_parse_link(struct phy_device *phydev)
 {
 	int mii_reg = phy_read(phydev, MDIO_DEVAD_NONE, MII_BMSR);
-
+	printf("%s()   line %d, val 0x%x\n", __func__, __LINE__, mii_reg);  // edikk remove
 	/* We're using autonegotiation */
 	if (phydev->autoneg == AUTONEG_ENABLE) {
 		u32 lpa = 0;
@@ -434,8 +434,10 @@ int genphy_startup(struct phy_device *phydev)
 	int ret;
 
 	ret = genphy_update_link(phydev);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
+
 
 	return genphy_parse_link(phydev);
 }
@@ -889,8 +891,9 @@ struct phy_device *phy_connect(struct mii_dev *bus, int addr,
  */
 int phy_startup(struct phy_device *phydev)
 {
-	if (phydev->drv->startup)
+	if (phydev->drv->startup) {
 		return phydev->drv->startup(phydev);
+	}
 
 	return 0;
 }
