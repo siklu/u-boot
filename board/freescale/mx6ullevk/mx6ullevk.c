@@ -18,6 +18,8 @@
 #include <fsl_esdhc.h>
 #include <linux/sizes.h>
 #include <mmc.h>
+#include <phy.h>
+#include <linux/mdio.h>
 
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/mx6ull_pins.h>
@@ -154,6 +156,16 @@ static int setup_fec(int fec_id)
 		return ret;
 
 	enable_enet_clk(1);
+
+	return 0;
+}
+
+int board_phy_config(struct phy_device *phydev)
+{
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x8190);
+
+	if (phydev->drv->config)
+		phydev->drv->config(phydev);
 
 	return 0;
 }
