@@ -158,11 +158,11 @@ void nand_init(void)
 		return;
 	initialized = 1;
 
-#ifdef SIKLU_BOARD // configure SoC pins to NAND functionality
+#ifdef CONFIG_SIKLU_BOARD // configure SoC pins to NAND functionality
 	extern int siklu_nand_init_mux(void);
 
 	siklu_nand_init_mux();
-#endif // 	SIKLU_BOARD
+#endif // 	CONFIG_SIKLU_BOARD
 
 
 #ifdef CONFIG_SYS_NAND_SELF_INIT

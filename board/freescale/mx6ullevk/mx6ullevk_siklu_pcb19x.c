@@ -64,7 +64,7 @@ static int do_siklu_soc_reg_write(cmd_tbl_t * cmdtp, int flag, int argc,
 
 
 
-#ifdef SIKLU_BOARD
+#ifdef CONFIG_SIKLU_BOARD
 
 extern uint32_t get_nand_part_offset_by_name(const char* name);
 
@@ -112,7 +112,7 @@ static ulong ramd_addr = RAMD_ADDR;
 
 extern void siklu_wait_user4prevent_card_reboot(void);
 
-#ifdef SIKLU_BOARD
+#ifdef CONFIG_SIKLU_BOARD
 /*
  * If the root node of the DTB has a "model" property, show it.
  * Then call checkboard().
@@ -392,11 +392,11 @@ static int run_linux_code(int is_system_in_bist)
 		i += sprintf(buf + i, "bist=%s ", bist_state);
 	}
 
-#ifndef  SIKLU_BOARD
+#ifndef  CONFIG_SIKLU_BOARD
 	i += sprintf(buf + i, "board=evk ");
 #else
 	i += sprintf(buf + i, "board=siklu ");
-#endif //     SIKLU_BOARD
+#endif //     CONFIG_SIKLU_BOARD
 
 	if (siklu_is_restore2fact_default())
 	{

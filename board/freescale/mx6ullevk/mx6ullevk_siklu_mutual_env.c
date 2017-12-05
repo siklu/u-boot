@@ -20,7 +20,7 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-#ifdef SIKLU_BOARD
+#ifdef CONFIG_SIKLU_BOARD
 
 static const char* trailer = "SKLTRAILER";
 static const char* final = "FINALSKL";

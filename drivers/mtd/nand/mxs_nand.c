@@ -1219,7 +1219,7 @@ err1:
 }
 
 
-#ifdef SIKLU_BOARD  // EVK doesn't have NAND
+#ifdef CONFIG_SIKLU_BOARD  // EVK doesn't have NAND
 /*
  * iMX6ull EVK board uses NAND CPU pins for different purposes
  * we need reconfigure them for Siklu board
@@ -1269,4 +1269,4 @@ int siklu_nand_init_mux(void)
 
 }
 
-#endif // SIKLU_BOARD
+#endif // CONFIG_SIKLU_BOARD

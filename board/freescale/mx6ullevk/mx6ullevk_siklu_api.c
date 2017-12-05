@@ -20,7 +20,7 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-#ifdef SIKLU_BOARD
+#ifdef CONFIG_SIKLU_BOARD
 
 
 static int is_event_rest2fact_dflt = 0; // by default no
@@ -61,4 +61,4 @@ void siklu_wait_user4prevent_card_reboot(void)
     run_command("reset", 0);
 }
 
-#endif // SIKLU_BOARD
+#endif // CONFIG_SIKLU_BOARD

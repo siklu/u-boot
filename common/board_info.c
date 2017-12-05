@@ -11,7 +11,7 @@ int __weak checkboard(void)
 	return 0;
 }
 
-#ifndef SIKLU_BOARD
+#ifndef CONFIG_SIKLU_BOARD
 /*
  * If the root node of the DTB has a "model" property, show it.
  * Then call checkboard().

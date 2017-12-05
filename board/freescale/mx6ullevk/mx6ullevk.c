@@ -215,7 +215,7 @@ int board_late_init(void)
 
 int checkboard(void)
 {
-#ifdef SIKLU_BOARD
+#ifdef CONFIG_SIKLU_BOARD
 	puts("Board: Siklu PCB19x\n");
 #else
 	puts("Board: MX6ULL 14x14 EVK\n");
