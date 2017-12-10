@@ -5,6 +5,9 @@
  * Configuration settings for the Freescale i.MX6UL 14x14 EVK board.
  *
  * SPDX-License-Identifier:	GPL-2.0+
+ *
+ *
+ * See also sdk_nxp/infra/u-boot-2017.11/configs/mx6ull_14x14_skl_defconfig
  */
 #ifndef __MX6ULLEVK_CONFIG_H
 #define __MX6ULLEVK_CONFIG_H
@@ -118,8 +121,14 @@
 #define CONFIG_MXC_GPIO
 
 #define CONFIG_SPI
-#define CONFIG_FSL_IMX_ESPI
-/* #define CONFIG_FSL_ESPI */
+/* #define CONFIG_CMD_SPI  defined in sdk_nxp/infra/u-boot-2017.11/configs/mx6ull_14x14_skl_defconfig*/
+/* #define CONFIG_FSL_IMX_ESPI  */
+/* #define CONFIG_FSL_ESPI      */
+#define CONFIG_MXC_SPI
+/*#define CONFIG_SOFT_SPI   not used on siklu */
+
+
+
 
 #ifdef CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH
@@ -181,10 +190,5 @@
 #define CONFIG_IMX_THERMAL
 
 #define CONFIG_IOMUX_LPSR
-
-#define CONFIG_SOFT_SPI
-
-
-
 
 #endif
