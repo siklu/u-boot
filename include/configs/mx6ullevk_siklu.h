@@ -15,6 +15,13 @@
 #include "mx6_common.h"
 #include <asm/mach-imx/gpio.h>
 
+
+
+#undef CONFIG_CMD_NET /*   siklu edikk temporary disable network!!! */
+
+
+
+
 #ifdef CONFIG_SECURE_BOOT
 #ifndef CONFIG_CSF_SIZE
 #define CONFIG_CSF_SIZE 0x4000
@@ -69,11 +76,8 @@
 #define CONFIG_LZO
 
 
-
-
-
-
 #ifdef CONFIG_CMD_NET
+#error ABC
 /* already defined in defconfig
 # define CONFIG_CMD_PING
 # define CONFIG_CMD_DHCP
@@ -113,6 +117,9 @@
 
 #define CONFIG_MXC_GPIO
 
+#define CONFIG_SPI
+#define CONFIG_FSL_IMX_ESPI
+/* #define CONFIG_FSL_ESPI */
 
 #ifdef CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH

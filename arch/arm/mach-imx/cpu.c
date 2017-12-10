@@ -299,8 +299,9 @@ int cpu_eth_init(bd_t *bis)
 {
 	int rc = -ENODEV;
 
+#ifdef	CONFIG_CMD_NET
 	setup_iomux_fec(CONFIG_FEC_ENET_DEV); // edikk only for EVK? copied from old uboot
-
+#endif
 
 #if defined(CONFIG_FEC_MXC)
 

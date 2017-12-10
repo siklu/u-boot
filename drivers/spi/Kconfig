@@ -210,6 +210,16 @@ config FSL_QSPI
 	  used to access the SPI NOR flash on platforms embedding this
 	  Freescale IP core.
 
+
+config FSL_IMX_ESPI
+	bool "INX eSPI driver"
+	default n
+	help
+	  Enable the IMX 6ull eSPI driver. This driver can be used to
+	  access the SPI interface and SPI NOR flash on platforms embedding
+	  this IMX eSPI IP core.
+	   
+
 config NDS_AE3XX_SPI
 	bool "Andestech AE3XX SPI driver"
 	help

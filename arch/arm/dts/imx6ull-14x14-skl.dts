@@ -4,6 +4,9 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
+ *  Siklu:
+ *  	derived from sdk_nxp/infra/u-boot-2017.11/arch/arm/dts/imx6ull-14x14-evk.dts
+ *   used for Siklu pcb19x boards
  */
 
 /dts-v1/;
@@ -23,13 +26,6 @@
 		reg = <0x80000000 0x20000000>;
 	};
 
-	backlight {
-		compatible = "pwm-backlight";
-		pwms = <&pwm1 0 5000000>;
-		brightness-levels = <0 4 8 16 32 64 128 255>;
-		default-brightness-level = <6>;
-		status = "okay";
-	};
 
 	regulators {
 		compatible = "simple-bus";
@@ -79,7 +75,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		gpio_spi: gpio_spi@0 {
+		gpio_spi: gpio_spi@0 {  /* SNx4HC595 8-Bit Shift Registers With 3-State Output Registers */
 			compatible = "fairchild,74hc595";
 			gpio-controller;
 			oe-gpios = <&gpio5 8 0>;
