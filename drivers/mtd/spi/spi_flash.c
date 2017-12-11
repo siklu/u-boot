@@ -902,6 +902,8 @@ static const struct spi_flash_info *spi_flash_read_id(struct spi_flash *flash)
 	u8				id[SPI_FLASH_MAX_ID_LEN];
 	const struct spi_flash_info	*info;
 
+	memset(id,0,sizeof(id));
+
 	tmp = spi_flash_cmd(flash->spi, CMD_READ_ID, id, SPI_FLASH_MAX_ID_LEN);
 	if (tmp < 0) {
 		printf("SF: error %d reading JEDEC ID\n", tmp);

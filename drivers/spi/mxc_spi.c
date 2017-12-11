@@ -345,8 +345,25 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 	if (!mxcs)
 		return -EINVAL;
 
-	if (flags & SPI_XFER_BEGIN)
+
+	if (1) // edikk for debug only
+	{
+		printf(" SPI write %d bytes, start - %d, stop %d  ", n_bytes,
+							!!(flags & SPI_XFER_BEGIN), !!(flags & SPI_XFER_END)	);
+		if (dout) {
+			int i=0;
+			const u8* _dout = dout;
+
+			for (i=0; i<n_bytes; i++) {
+				printf(" %02x", _dout[i]);
+			}
+		}
+		printf("\n");
+	}
+
+	if (flags & SPI_XFER_BEGIN) {
 		mxc_spi_cs_activate(mxcs);
+	}
 
 	while (n_bytes > 0) {
 		if (n_bytes < MAX_SPI_BYTES)
@@ -460,7 +477,7 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 		puts("mxc_spi: SPI Slave not allocated !\n");
 		return NULL;
 	}
-	// printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
+
 	mxcs->ss_pol = (mode & SPI_CS_HIGH) ? 1 : 0;
 
 	ret = setup_cs_gpio(mxcs, bus, cs);
@@ -468,11 +485,11 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 		free(mxcs);
 		return NULL;
 	}
-	// printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
+
 	mxcs->base = spi_bases[bus];
 	mxcs->max_hz = max_hz;
 	mxcs->mode = mode;
-	printf("%s()  called, line %d, base 0x%lx\n", __func__, __LINE__, mxcs->base); // edikk remove
+
 	return &mxcs->slave;
 }
 
@@ -504,27 +521,21 @@ static int mxc_spi_probe(struct udevice *bus)
 	const void *blob = gd->fdt_blob;
 	int ret;
 
-	printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
-
 	if (gpio_request_by_name(bus, "cs-gpios", 0, &plat->ss,
 				 GPIOD_IS_OUT)) {
 		dev_err(bus, "No cs-gpios property\n");
 		return -EINVAL;
 	}
-	printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
 	// plat->base = dev_get_addr(bus);   edikk original line
 	plat->base = devfdt_get_addr(bus);
 	if (plat->base == FDT_ADDR_T_NONE)
 		return -ENODEV;
-
-	printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
 
 	ret = dm_gpio_set_value(&plat->ss, !(mxcs->ss_pol));
 	if (ret) {
 		dev_err(bus, "Setting cs error\n");
 		return ret;
 	}
-	printf("%s()  called, line %d\n", __func__, __LINE__); // edikk remove
 	mxcs->max_hz = fdtdec_get_int(blob, node, "spi-max-frequency",
 				      20000000);
 

@@ -18,21 +18,57 @@ static int spi_flash_read_write(struct spi_slave *spi,
 	unsigned long flags = SPI_XFER_BEGIN;
 	int ret;
 
+#ifdef CONFIG_SIKLU_BOARD // edikk repair CS problem!!!!
+	{
+#define MAX_BUF_SIZE 0x400
+		u8 tx_buf[MAX_BUF_SIZE];
+		u8 rx_buf[MAX_BUF_SIZE];
+		int ret = 0;
+
+		memset(tx_buf,0,sizeof(tx_buf));
+		memset(rx_buf,0,sizeof(rx_buf));
+		if ((data_len+cmd_len)>=MAX_BUF_SIZE) {
+			printf("%s() buff to short %d,%d\n", __func__, data_len+cmd_len, MAX_BUF_SIZE); // error
+		}
+
+		if (cmd) {
+			memcpy(tx_buf, cmd, cmd_len);
+		}
+
+		ret = spi_xfer(spi, (cmd_len+data_len) * 8, tx_buf, rx_buf, SPI_XFER_BEGIN | SPI_XFER_END);
+		if (data_in) {
+			memcpy(data_in, rx_buf+cmd_len, data_len);
+
+			if (1) //edikk for debug
+			{
+				int i;
+				printf("  RX data: ");
+				for (i=0;i<data_len;i++) {
+					printf(" %02x", rx_buf[cmd_len + i]);
+				}
+				printf("\n");
+
+			}
+		}
+		return 0;
+	}
+
+
+#else
 	if (data_len == 0)
 		flags |= SPI_XFER_END;
 
 	ret = spi_xfer(spi, cmd_len * 8, cmd, NULL, flags);
 	if (ret) {
-		debug("SF: Failed to send command (%zu bytes): %d\n",
-		      cmd_len, ret);
+		printf("SF: Failed to send command (%zu bytes): %d\n", cmd_len, ret);
 	} else if (data_len != 0) {
 		ret = spi_xfer(spi, data_len * 8, data_out, data_in,
 					SPI_XFER_END);
 		if (ret)
-			debug("SF: Failed to transfer %zu bytes of data: %d\n",
+			printf("SF: Failed to transfer %zu bytes of data: %d\n",
 			      data_len, ret);
 	}
-
+#endif
 	return ret;
 }
 
@@ -44,7 +80,27 @@ int spi_flash_cmd_read(struct spi_slave *spi, const u8 *cmd,
 
 int spi_flash_cmd(struct spi_slave *spi, u8 cmd, void *response, size_t len)
 {
+#ifdef CONFIG_SIKLU_BOARD  // edikk repair CS problem!!!!
+	{
+#undef MAX_BUF_SIZE
+#define MAX_BUF_SIZE 100
+		u8 tx_buf[MAX_BUF_SIZE];
+		u8 rx_buf[MAX_BUF_SIZE];
+
+		memset(tx_buf,0,sizeof(tx_buf));
+		memset(rx_buf,0,sizeof(rx_buf));
+		tx_buf[0] = cmd;
+
+		if ((len+1)>=MAX_BUF_SIZE) {
+			printf("%s() buff to short %d,%d\n", __func__, len, MAX_BUF_SIZE); // error
+		}
+		int ret = spi_xfer(spi, (1+len) * 8, tx_buf, rx_buf, SPI_XFER_BEGIN | SPI_XFER_END);
+		memcpy(response, rx_buf+1, len);
+		return 0;
+	}
+#else
 	return spi_flash_cmd_read(spi, &cmd, 1, response, len);
+#endif
 }
 
 int spi_flash_cmd_write(struct spi_slave *spi, const u8 *cmd, size_t cmd_len,

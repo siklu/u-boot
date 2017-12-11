@@ -133,9 +133,16 @@
 #ifdef CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH
 /* #define CONFIG_MXC_SPI  */
-#define CONFIG_SF_DEFAULT_BUS		0
+
+#define CONFIG_SYS_FLASH_CFI            /* Flash memory is CFI compliant */
+#define CONFIG_FLASH_CFI_DRIVER         /* Use drivers/cfi_flash.c */
+#define CONFIG_SYS_MAX_FLASH_BANKS	1   /* max num of flash banks	*/
+#define CONFIG_SYS_FLASH_BASE		0
+
+#define CONFIG_SPI_FLASH_GIGADEVICE
+#define CONFIG_SF_DEFAULT_BUS		2
 #define CONFIG_SF_DEFAULT_CS		0
-#define CONFIG_SF_DEFAULT_SPEED		20000000
+#define CONFIG_SF_DEFAULT_SPEED		10000000
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 #endif
 
