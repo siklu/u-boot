@@ -24,6 +24,7 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/mx6ull_pins.h>
 
+#include "siklu_api.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -175,6 +176,7 @@ int board_phy_config(struct phy_device *phydev)
 
 int board_init(void)
 {
+	int rc = 0;
 	/* Address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
@@ -184,7 +186,12 @@ int board_init(void)
 
 	// board_eth_init(gd->bd);
 
-	return 0;
+#ifdef CONFIG_SIKLU_BOARD
+	rc = siklu_board_init();
+#endif // 	CONFIG_SIKLU_BOARD
+
+
+	return rc;
 }
 
 #ifdef CONFIG_CMD_BMODE
@@ -212,7 +219,9 @@ int board_late_init(void)
 }
 
 
-
+/*
+ *
+ */
 int checkboard(void)
 {
 #ifdef CONFIG_SIKLU_BOARD

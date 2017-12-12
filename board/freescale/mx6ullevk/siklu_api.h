@@ -12,7 +12,8 @@
 extern int siklu_is_restore2fact_default(void);
 extern const char* siklu_mutable_env_get(const char *varname);
 
-
 extern uint32_t get_nand_part_offset_by_name(const char* name);
+extern int siklu_board_init(void);
+
 
 #endif /* SIKLU_API_H_ */

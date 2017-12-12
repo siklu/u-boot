@@ -320,7 +320,7 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 
 
 
-U_BOOT_CMD(scpld_ver, 5, 0, do_siklu_cpld_version_read,
+U_BOOT_CMD(scpldv, 5, 0, do_siklu_cpld_version_read,
 		"Read Siklu CPLD version register",
 		" [spi_mode 0..3*] Read Siklu CPLD version register");
 
