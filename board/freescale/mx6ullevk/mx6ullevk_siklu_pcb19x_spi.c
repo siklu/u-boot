@@ -223,6 +223,9 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		return rc;
 	}
 
+	// all code below move to int siklu_cpld_read(u8 reg, u8* data)
+
+
 	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
 	if (!spi) {
 		printf("%s: Failed to set up slave\n", __func__);
@@ -283,6 +286,9 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 
 	addr = simple_strtoul(argv[1], NULL, 16);
 	val  = simple_strtoul(argv[2], NULL, 16);
+
+
+	// vall code below move to int siklu_cpld_write(u8 reg, u8 data)
 
 
 	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);

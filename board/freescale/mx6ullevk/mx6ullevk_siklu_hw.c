@@ -47,6 +47,22 @@ static void setup_iomux_siklu_cpld(void)
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
 }
 
+
+ int siklu_cpld_read(u8 reg, u8* data)
+{
+	int rc = 0;
+	return rc;
+}
+ int siklu_cpld_write(u8 reg, u8 data)
+{
+	int rc = 0;
+	return rc;
+}
+
+
+
+
+
 int siklu_board_init(void) {
 	int rc = 0;
 	setup_iomux_siklu_cpld();
