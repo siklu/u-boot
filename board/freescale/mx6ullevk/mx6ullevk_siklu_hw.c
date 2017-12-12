@@ -21,9 +21,10 @@
 #include <asm/gpio.h>
 #include <asm/mach-imx/iomux-v3.h>
 
+#include <miiphy.h>
+
 #include "siklu_def.h"
 #include "siklu_api.h"
-
 
 static const iomux_v3_cfg_t cpld_pads[] = { //
 		MX6_PAD_CSI_DATA01__ECSPI2_SS0 | MUX_PAD_CTRL(NO_PAD_CTRL), //
@@ -48,6 +49,47 @@ int siklu_cpld_write(u8 reg, u8 data) {
 }
 
 /*
+ * SOHO Access
+ */
+int siklu_88e639x_reg_read(u8 port, u8 reg, u16* val) {
+	int rc = 0;
+	const char *devname;
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return -1;
+	}
+
+	if (miiphy_read(devname, port, reg, val) != 0) {
+		printf("%s() ERROR read port 0x%x, reg 0x%x\n", __func__, port, reg);
+		return -1;
+	}
+
+	return rc;
+}
+/*
+ *  SOHO Access
+ */
+int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val) {
+	int rc = 0;
+	const char *devname;
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return -1;
+	}
+
+	if (miiphy_write(devname, port, reg, val) != 0) {
+		printf("%s() ERROR write port 0x%x, reg 0x%x\n", __func__, port, reg);
+		return -1;
+	}
+
+	return rc;
+}
+
+/*
  *
  *
  */
@@ -68,7 +110,6 @@ int siklu_board_init(void) {
 	// TODO In CPLD:
 	// 	put to reset all unnecessary HW devices
 	// 	release SOHO reset
-
 
 	return rc;
 }
