@@ -10,6 +10,21 @@
 #include <common.h>
 #include <spi.h>
 
+static void *_memcpy(u8 *dest, const u8 *src, size_t size)
+{
+	unsigned char *dptr = dest;
+	const unsigned char *ptr = src;
+	const unsigned char *end = src + size;
+
+	while (ptr < end)
+		*dptr++ = *ptr++;
+
+	return dest;
+}
+
+
+
+
 static int spi_flash_read_write(struct spi_slave *spi,
 				const u8 *cmd, size_t cmd_len,
 				const u8 *data_out, u8 *data_in,
@@ -21,8 +36,8 @@ static int spi_flash_read_write(struct spi_slave *spi,
 #ifdef CONFIG_SIKLU_BOARD // edikk repair CS problem!!!!
 	{
 #define MAX_BUF_SIZE 0x400
-		u8 tx_buf[MAX_BUF_SIZE];
-		u8 rx_buf[MAX_BUF_SIZE];
+		static u8 tx_buf[MAX_BUF_SIZE];
+		static u8 rx_buf[MAX_BUF_SIZE];
 		int ret = 0;
 
 		memset(tx_buf,0,sizeof(tx_buf));
@@ -32,22 +47,21 @@ static int spi_flash_read_write(struct spi_slave *spi,
 		}
 
 		if (cmd) {
-			memcpy(tx_buf, cmd, cmd_len);
+			_memcpy(tx_buf, cmd, cmd_len);
 		}
 
 		ret = spi_xfer(spi, (cmd_len+data_len) * 8, tx_buf, rx_buf, SPI_XFER_BEGIN | SPI_XFER_END);
 		if (data_in) {
-			memcpy(data_in, rx_buf+cmd_len, data_len);
+			_memcpy(data_in, &rx_buf[cmd_len], data_len);
 
-			if (1) //edikk for debug
+			if (0) //edikk for debug
 			{
 				int i;
-				printf("  RX data: ");
+				printf("  RX data: (data_in %p, %p, %p) ", data_in, tx_buf, rx_buf);
 				for (i=0;i<data_len;i++) {
-					printf(" %02x", rx_buf[cmd_len + i]);
+					printf(" %02x", data_in[i]);
 				}
 				printf("\n");
-
 			}
 		}
 		return 0;

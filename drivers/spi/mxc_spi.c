@@ -346,7 +346,7 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 		return -EINVAL;
 
 
-	if (1) // edikk for debug only
+	if (0) // edikk for debug only
 	{
 		printf(" SPI write %d bytes, start - %d, stop %d  ", n_bytes,
 							!!(flags & SPI_XFER_BEGIN), !!(flags & SPI_XFER_END)	);
