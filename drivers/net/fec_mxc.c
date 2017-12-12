@@ -148,8 +148,8 @@ static void fec_mii_setspeed(struct ethernet_regs *eth)
 	speed = 9; // siklu force siklu RMII speed required values. TBD check the value ???
 #endif
 
-	printf("%s()   Called, line %d, pclk %u, speed %u, hold %u, eth->mii_speed %p\n",
-			__func__, __LINE__, pclk, speed, hold, &eth->mii_speed); // edikk remove
+	//printf("%s()   Called, line %d, pclk %u, speed %u, hold %u, eth->mii_speed %p\n",
+	//		__func__, __LINE__, pclk, speed, hold, &eth->mii_speed); // edikk remove
 	writel(speed << 1 | hold << 8, &eth->mii_speed);
 	debug("%s: mii_speed %08x\n", __func__, readl(&eth->mii_speed));
 }
