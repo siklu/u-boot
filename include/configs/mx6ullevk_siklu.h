@@ -20,10 +20,8 @@
 
 
 
-#undef CONFIG_CMD_NET /*   siklu edikk temporary disable network!!! */
 
-
-
+#define CONFIG_LIB_RAND /* required for CONFIG_NET_RANDOM_ETHADDR */
 
 #ifdef CONFIG_SECURE_BOOT
 #ifndef CONFIG_CSF_SIZE
@@ -80,7 +78,7 @@
 
 
 #ifdef CONFIG_CMD_NET
-#error ABC
+
 /* already defined in defconfig
 # define CONFIG_CMD_PING
 # define CONFIG_CMD_DHCP
@@ -88,7 +86,8 @@
 # define CONFIG_CMD_MII
 # define CONFIG_FEC_MXC
 # define CONFIG_MII
-# define CONFIG_FEC_ENET_DEV		1
+# define CONFIG_FEC_ENET_DEV		0
+# define CONFIG_NET_RANDOM_ETHADDR  // edikk siklu - replace by real ethaddr!!!!
 
 # if (CONFIG_FEC_ENET_DEV == 0)
 #  define IMX_FEC_BASE			ENET_BASE_ADDR
@@ -102,14 +101,9 @@
 # define CONFIG_ETHPRIME			"FEC"
 
 # define CONFIG_PHYLIB
-# define CONFIG_PHY_MICREL_KSZ8XXX
-# define CONFIG_PHY_MICREL_KSZ90X1
 
+# define CONFIG_PHY_FIXED  /* NXP SoC connected direct to SOHO Switch by 100M FD connection */
 #endif
-
-
-
-
 
 #define PHYS_SDRAM_SIZE	SZ_512M
 

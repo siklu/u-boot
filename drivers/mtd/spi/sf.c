@@ -15,7 +15,7 @@ static int spi_flash_read_write(struct spi_slave *spi,
 				const u8 *data_out, u8 *data_in,
 				size_t data_len)
 {
-	unsigned long flags = SPI_XFER_BEGIN;
+	//unsigned long flags = SPI_XFER_BEGIN;
 	int ret;
 
 #ifdef CONFIG_SIKLU_BOARD // edikk repair CS problem!!!!
@@ -94,7 +94,7 @@ int spi_flash_cmd(struct spi_slave *spi, u8 cmd, void *response, size_t len)
 		if ((len+1)>=MAX_BUF_SIZE) {
 			printf("%s() buff to short %d,%d\n", __func__, len, MAX_BUF_SIZE); // error
 		}
-		int ret = spi_xfer(spi, (1+len) * 8, tx_buf, rx_buf, SPI_XFER_BEGIN | SPI_XFER_END);
+		int __attribute__((unused)) ret = spi_xfer(spi, (1+len) * 8, tx_buf, rx_buf, SPI_XFER_BEGIN | SPI_XFER_END);
 		memcpy(response, rx_buf+1, len);
 		return 0;
 	}

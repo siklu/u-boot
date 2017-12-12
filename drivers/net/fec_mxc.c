@@ -143,6 +143,13 @@ static void fec_mii_setspeed(struct ethernet_regs *eth)
 #ifdef FEC_QUIRK_ENET_MAC
 	speed--;
 #endif
+
+#ifdef CONFIG_SIKLU_BOARD
+	speed = 9; // siklu force siklu RMII speed required values. TBD check the value ???
+#endif
+
+	printf("%s()   Called, line %d, pclk %u, speed %u, hold %u, eth->mii_speed %p\n",
+			__func__, __LINE__, pclk, speed, hold, &eth->mii_speed); // edikk remove
 	writel(speed << 1 | hold << 8, &eth->mii_speed);
 	debug("%s: mii_speed %08x\n", __func__, readl(&eth->mii_speed));
 }
@@ -183,15 +190,13 @@ static int fec_phy_read(struct mii_dev *bus, int phyaddr, int dev_addr,
 	int ret = 0;
 
 	ret = fec_mdio_read(bus->priv, phyaddr, regaddr);
-	//printf("%s()   line %d, phy %d, dev %d, reg %d, val 0x%x\n",
-	//		__func__, __LINE__,phyaddr, dev_addr, regaddr, ret ); // edikk remove
+
 	return ret;
 }
 
 static int fec_phy_write(struct mii_dev *bus, int phyaddr, int dev_addr,
 			 int regaddr, u16 data)
 {
-	//printf("%s()   line %d\n", __func__, __LINE__); // edikk remove
 	return fec_mdio_write(bus->priv, phyaddr, regaddr, data);
 }
 
@@ -1147,6 +1152,7 @@ int fecmxc_initialize_multi(bd_t *bd, int dev_id, int phy_id, uint32_t addr)
 	bus = fec_get_miibus(base_mii, dev_id);
 	if (!bus)
 		return -ENOMEM;
+
 #ifdef CONFIG_PHYLIB
 	phydev = phy_find_by_mask(bus, 1 << phy_id, PHY_INTERFACE_MODE_RGMII);
 	if (!phydev) {

@@ -222,6 +222,12 @@ int genphy_update_link(struct phy_device *phydev)
 {
 	unsigned int mii_reg;
 
+#ifdef CONFIG_SIKLU_BOARD
+	phydev->link = 1;  // siklu link always  up
+	return 0;
+#endif // 	CONFIG_SIKLU_BOARD
+
+
 	/*
 	 * Wait if the link is up, and autonegotiation is in progress
 	 * (ie - we're capable and it's not done)
@@ -290,7 +296,7 @@ int genphy_update_link(struct phy_device *phydev)
 int genphy_parse_link(struct phy_device *phydev)
 {
 	int mii_reg = phy_read(phydev, MDIO_DEVAD_NONE, MII_BMSR);
-	printf("%s()   line %d, val 0x%x\n", __func__, __LINE__, mii_reg);  // edikk remove
+
 	/* We're using autonegotiation */
 	if (phydev->autoneg == AUTONEG_ENABLE) {
 		u32 lpa = 0;

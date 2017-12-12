@@ -459,9 +459,6 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 	struct mxc_spi_slave *mxcs;
 	int ret;
 
-	printf("%s()  called, line %d, bus %d, cs %d, max_hz %d, mode %d\n",
-			__func__, __LINE__, bus, cs, max_hz, mode); // edikk remove
-
 	if (bus >= ARRAY_SIZE(spi_bases)) {
 		printf("%s() Error on line %d\n", __func__, __LINE__);
 		return NULL;
