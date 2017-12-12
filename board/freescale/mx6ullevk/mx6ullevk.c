@@ -206,6 +206,7 @@ static const struct boot_mode board_boot_modes[] = {
 
 int board_late_init(void)
 {
+	int rc = 0;
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif
@@ -215,7 +216,12 @@ int board_late_init(void)
 	env_set("board_rev", "14X14");
 #endif
 
-	return 0;
+
+#ifdef CONFIG_SIKLU_BOARD
+	rc = siklu_board_late_init();
+#endif // 	CONFIG_SIKLU_BOARD
+
+	return rc;
 }
 
 

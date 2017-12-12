@@ -14,6 +14,7 @@ extern const char* siklu_mutable_env_get(const char *varname);
 
 extern uint32_t get_nand_part_offset_by_name(const char* name);
 extern int siklu_board_init(void);
+extern int siklu_board_late_init(void);
 
 
 extern int siklu_cpld_read(u8 reg, u8* data);

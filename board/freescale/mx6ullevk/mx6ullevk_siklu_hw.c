@@ -24,14 +24,6 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-#define MDIO_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
-	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST | PAD_CTL_ODE)
-
-#define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
-	PAD_CTL_SPEED_HIGH   |                                  \
-	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST)
-
-#define ENET_CLK_PAD_CTRL  (PAD_CTL_DSE_40ohm   | PAD_CTL_SRE_FAST)
 
 static const iomux_v3_cfg_t cpld_pads[] = { //
 		MX6_PAD_CSI_DATA01__ECSPI2_SS0 | MUX_PAD_CTRL(NO_PAD_CTRL), //
@@ -42,30 +34,41 @@ static const iomux_v3_cfg_t cpld_pads[] = { //
 //
 		};
 
-static void setup_iomux_siklu_cpld(void)
-{
+static void setup_iomux_siklu_cpld(void) {
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
 }
 
-
- int siklu_cpld_read(u8 reg, u8* data)
-{
+int siklu_cpld_read(u8 reg, u8* data) {
 	int rc = 0;
 	return rc;
 }
- int siklu_cpld_write(u8 reg, u8 data)
-{
+int siklu_cpld_write(u8 reg, u8 data) {
 	int rc = 0;
 	return rc;
 }
 
+/*
+ *
+ *
+ */
+int siklu_board_late_init(void) {
+	int rc = 0;
 
+	// TODO Via MDIO bus:
+	// 		Enable SOHO Port#5 - output to network, configure 1G autoneg
+	//		Enable SOHO Port#0 - connection to NXP SoC, configure strict 100FD
 
-
+	return rc;
+}
 
 int siklu_board_init(void) {
 	int rc = 0;
 	setup_iomux_siklu_cpld();
+
+	// TODO In CPLD:
+	// 	put to reset all unnecessary HW devices
+	// 	release SOHO reset
+
 
 	return rc;
 }
