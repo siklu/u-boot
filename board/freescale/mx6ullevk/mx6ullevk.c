@@ -197,9 +197,23 @@ int board_init(void)
 #ifdef CONFIG_CMD_BMODE
 static const struct boot_mode board_boot_modes[] = {
 	/* 4 bit bus width */
+#ifdef CONFIG_SIKLU_BOARD
+
+		/*
+ 	{"ecspi1:0",	MAKE_CFGVAL(0x30, 0x00, 0x00, 0x08)},
+	{"ecspi1:1",	MAKE_CFGVAL(0x30, 0x00, 0x00, 0x18)},
+	{"ecspi1:2",	MAKE_CFGVAL(0x30, 0x00, 0x00, 0x28)},
+	{"ecspi1:3",	MAKE_CFGVAL(0x30, 0x00, 0x00, 0x38)},
+
+From CLI:
+	bmode - sd1|sd2|qspi1|normal|usb|sata|ecspi1:0|ecspi1:1|ecspi1:2|ecspi1:3|esdhc1|esdhc2|esdhc3|esdhc4 [noreset]
+		 */
+
+#else
 	{"sd1", MAKE_CFGVAL(0x42, 0x20, 0x00, 0x00)},
 	{"sd2", MAKE_CFGVAL(0x40, 0x28, 0x00, 0x00)},
 	{"qspi1", MAKE_CFGVAL(0x10, 0x00, 0x00, 0x00)},
+#endif //
 	{NULL,	 0},
 };
 #endif
