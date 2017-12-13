@@ -9,4 +9,4 @@ obj-y  := mx6ullevk.o \
 
 obj-$(CONFIG_SIKLU_BOARD) += mx6ullevk_siklu_pcb19x_spi.o	\
 	mx6ullevk_siklu_hw.o  mx6ullevk_siklu_pcb19x_i2c.o \
-	mx6ullevk_siklu_soho.o
+	mx6ullevk_siklu_soho.o mx6ullevk_siklu_eth.o
