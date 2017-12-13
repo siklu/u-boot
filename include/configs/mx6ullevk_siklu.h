@@ -88,6 +88,7 @@
 # define CONFIG_MII
 # define CONFIG_FEC_ENET_DEV		0
 # define CONFIG_NET_RANDOM_ETHADDR  // edikk siklu - replace by real ethaddr!!!!
+# define CONFIG_FEC_FIXED_SPEED			100 /* No autoneg, fix Gb */
 
 # if (CONFIG_FEC_ENET_DEV == 0)
 #  define IMX_FEC_BASE			ENET_BASE_ADDR
