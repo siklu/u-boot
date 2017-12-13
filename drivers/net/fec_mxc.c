@@ -8,6 +8,8 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
+// #define DEBUG // edikk remove
+
 #include <common.h>
 #include <dm.h>
 #include <malloc.h>
@@ -512,6 +514,11 @@ static int fec_open(struct eth_device *edev)
 	miiphy_duplex(edev->name, fec->phy_id);
 #endif
 
+#ifdef CONFIG_SIKLU_BOARD
+	speed = 100;  // siklu - miiphy_speed() returns wrong value 10M instead 100M. therefore overwite
+#endif //
+
+
 #ifdef FEC_QUIRK_ENET_MAC
 	{
 		u32 ecr = readl(&fec->eth->ecntrl) & ~FEC_ECNTRL_SPEED;
@@ -582,6 +589,10 @@ static int fec_init(struct eth_device *dev, bd_t *bd)
 		/* FIFO receive start register */
 		writel(0x520, &fec->eth->r_fstart);
 	}
+
+	// siklu - enable MIB statistics
+	writel(0, &fec->eth->mib_control);// siklu edikk tbd ??? put right value here
+
 
 	/* size and address of each buffer */
 	writel(FEC_MAX_PKT_SIZE, &fec->eth->emrbr);
@@ -748,6 +759,7 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 	}
 
 	if (!timeout) {
+		printf("%s()  error on line %d\n", __func__, __LINE__); // edikk ???
 		ret = -EINVAL;
 		goto out;
 	}
@@ -774,8 +786,10 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 			break;
 	}
 
-	if (!timeout)
+	if (!timeout) {
+		printf("%s()  error on line %d\n", __func__, __LINE__); // edikk ???
 		ret = -EINVAL;
+	}
 
 out:
 	debug("fec_send: status 0x%x index %d ret %i\n",

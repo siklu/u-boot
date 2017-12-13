@@ -54,9 +54,10 @@ int fixedphy_probe(struct phy_device *phydev)
 	priv->pause = fdtdec_get_bool(gd->fdt_blob, ofnode, "pause");
 	priv->asym_pause = fdtdec_get_bool(gd->fdt_blob, ofnode, "asym-pause");
 
+
+#endif //
 	/* fixed-link phy must not be reset by core phy code */
 	phydev->flags |= PHY_FLAG_BROKEN_RESET;
-#endif //
 	return 0;
 }
 
