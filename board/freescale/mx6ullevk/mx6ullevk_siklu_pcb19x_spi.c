@@ -19,10 +19,6 @@
 #include <spi.h>
 
 
-#define CONFIG_CPLD_DEFAULT_BUS		1
-#define CONFIG_CPLD_DEFAULT_CS		1
-#define CONFIG_CPLD_DEFAULT_SPEED	10000000
-#define CONFIG_CPLD_DEFAULT_MODE	SPI_MODE_0
 
 
 /*
@@ -146,9 +142,6 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 }
 
 
-/*
- *
- */
 static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -208,17 +201,8 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
 
-	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
-	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
-	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
-	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
-	u32 addr;
-	struct spi_slave *spi;
-	int ret;
-	u8 tx_buf[10];
+	u8 addr;
 	u8 rx_buf[10];
-#define CPLD_READ_SEQ_LENGTH    4
-#define SPI_READ_MEMORY_COMMAND 0x0B
 
 	if (argc > 1) {
 		addr = simple_strtoul(argv[1], NULL, 16);
@@ -228,42 +212,10 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		return rc;
 	}
 
-	// all code below move to int siklu_cpld_read(u8 reg, u8* data)
-
-
-	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
-	if (!spi) {
-		printf("%s: Failed to set up slave\n", __func__);
-		return rc;
-	}
-
-	ret = spi_claim_bus(spi);
-	if (ret) {
-		printf("%s: Failed to claim SPI bus: %d\n", __func__, ret);
-		goto err_claim_bus;
-	}
-
-	memset(tx_buf,0,sizeof(tx_buf));
 	memset(rx_buf,0,sizeof(rx_buf));
 
-	tx_buf[0] = SPI_READ_MEMORY_COMMAND;
-	tx_buf[1] = addr;
+	return siklu_cpld_read(addr, rx_buf);
 
-	ret = spi_xfer(spi, CPLD_READ_SEQ_LENGTH * 8, tx_buf, rx_buf,
-	SPI_XFER_BEGIN | SPI_XFER_END);
-	if (ret < 0) {
-		printf("%s: Failed XFER SPI: ret - %d\n", __func__, ret);
-		goto err_claim_bus;
-	}
-
-	printf("\n RX buf: %2x %2x (%2x) %2x\n",rx_buf[0], rx_buf[1], rx_buf[2], rx_buf[3]);
-
-	// last before exit
-	spi_free_slave(spi);
-
-	return CMD_RET_SUCCESS;
-	err_claim_bus: spi_free_slave(spi);
-	return CMD_RET_FAILURE;
 }
 
 
@@ -271,17 +223,7 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
 
-	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
-	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
-	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
-	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
-	u32 addr, val;
-	struct spi_slave *spi;
-	int ret;
-	u8 tx_buf[10];
-#define CPLD_WRITE_SEQ_LENGTH    3
-#define SPI_WRITE_MEMORY_COMMAND 0x02
-
+	u8 addr, data;
 
 	if (argc < 3) {
 		printf("%s: Not enough arguments\n", __func__);
@@ -289,43 +231,9 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 	}
 
 	addr = simple_strtoul(argv[1], NULL, 16);
-	val  = simple_strtoul(argv[2], NULL, 16);
+	data = simple_strtoul(argv[2], NULL, 16);
 
-
-	// vall code below move to int siklu_cpld_write(u8 reg, u8 data)
-
-
-	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
-	if (!spi) {
-		printf("%s: Failed to set up slave\n", __func__);
-		return rc;
-	}
-
-	ret = spi_claim_bus(spi);
-	if (ret) {
-		printf("%s: Failed to claim SPI bus: %d\n", __func__, ret);
-		goto err_claim_bus;
-	}
-
-	memset(tx_buf,0,sizeof(tx_buf));
-
-	tx_buf[0] = SPI_WRITE_MEMORY_COMMAND;
-	tx_buf[1] = addr;
-	tx_buf[2] = val;
-
-	ret = spi_xfer(spi, CPLD_WRITE_SEQ_LENGTH * 8, tx_buf, NULL,
-	SPI_XFER_BEGIN | SPI_XFER_END);
-	if (ret < 0) {
-		printf("%s: Failed XFER SPI: ret - %d\n", __func__, ret);
-		goto err_claim_bus;
-	}
-
-	// last before exit
-	spi_free_slave(spi);
-
-	return CMD_RET_SUCCESS;
-	err_claim_bus: spi_free_slave(spi);
-	return CMD_RET_FAILURE;
+	return siklu_cpld_write(addr, data);
 }
 
 

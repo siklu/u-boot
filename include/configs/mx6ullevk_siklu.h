@@ -139,9 +139,6 @@
 #define CONFIG_SF_DEFAULT_SPEED		10000000
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 
-
-
-
 #endif
 
 

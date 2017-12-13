@@ -26,6 +26,11 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
+#include "siklu_def.h"
+#include "siklu_api.h"
+#include <spi.h>
+
+
 static const iomux_v3_cfg_t cpld_pads[] = { //
 		MX6_PAD_CSI_DATA01__ECSPI2_SS0 | MUX_PAD_CTRL(NO_PAD_CTRL), //
 				MX6_PAD_LCD_HSYNC__ECSPI2_SS1 | MUX_PAD_CTRL(NO_PAD_CTRL), //
@@ -40,12 +45,99 @@ static void setup_iomux_siklu_cpld(void) {
 }
 
 int siklu_cpld_read(u8 reg, u8* data) {
-	int rc = 0;
-	return rc;
+
+	int rc = CMD_RET_FAILURE;
+
+	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
+	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
+	struct spi_slave *spi;
+	int ret;
+	u8 tx_buf[10];
+#define CPLD_READ_SEQ_LENGTH    4
+#define SPI_READ_MEMORY_COMMAND 0x0B
+
+	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
+	if (!spi) {
+		printf("%s: Failed to set up slave\n", __func__);
+		return rc;
+	}
+
+	ret = spi_claim_bus(spi);
+	if (ret) {
+		printf("%s: Failed to claim SPI bus: %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	memset(tx_buf,0,sizeof(tx_buf));
+
+	tx_buf[0] = SPI_READ_MEMORY_COMMAND;
+	tx_buf[1] = reg;
+
+	ret = spi_xfer(spi, CPLD_READ_SEQ_LENGTH * 8, tx_buf, data,
+	SPI_XFER_BEGIN | SPI_XFER_END);
+	if (ret < 0) {
+		printf("%s: Failed XFER SPI: ret - %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	printf("\n RX buf: %2x %2x (%2x) %2x\n",data[0], data[1], data[2], data[3]);
+
+	// last before exit
+	spi_free_slave(spi);
+
+	return CMD_RET_SUCCESS;
+	err_claim_bus: spi_free_slave(spi);
+	return CMD_RET_FAILURE;
 }
+
+
 int siklu_cpld_write(u8 reg, u8 data) {
-	int rc = 0;
-	return rc;
+
+	int rc = CMD_RET_FAILURE;
+
+	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
+	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
+	struct spi_slave *spi;
+	int ret;
+	u8 tx_buf[10];
+#define CPLD_WRITE_SEQ_LENGTH    3
+#define SPI_WRITE_MEMORY_COMMAND 0x02
+
+	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
+	if (!spi) {
+		printf("%s: Failed to set up slave\n", __func__);
+		return rc;
+	}
+
+	ret = spi_claim_bus(spi);
+	if (ret) {
+		printf("%s: Failed to claim SPI bus: %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	memset(tx_buf,0,sizeof(tx_buf));
+
+	tx_buf[0] = SPI_WRITE_MEMORY_COMMAND;
+	tx_buf[1] = reg;
+	tx_buf[2] = data;
+
+	ret = spi_xfer(spi, CPLD_WRITE_SEQ_LENGTH * 8, tx_buf, NULL,
+	SPI_XFER_BEGIN | SPI_XFER_END);
+	if (ret < 0) {
+		printf("%s: Failed XFER SPI: ret - %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	// last before exit
+	spi_free_slave(spi);
+
+	return CMD_RET_SUCCESS;
+	err_claim_bus: spi_free_slave(spi);
+	return CMD_RET_FAILURE;
 }
 
 /*
