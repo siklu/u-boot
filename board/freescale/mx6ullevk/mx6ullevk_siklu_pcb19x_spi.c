@@ -19,6 +19,10 @@
 #include <spi.h>
 
 
+#define CONFIG_CPLD_DEFAULT_BUS		1
+#define CONFIG_CPLD_DEFAULT_CS		1
+#define CONFIG_CPLD_DEFAULT_SPEED	10000000
+#define CONFIG_CPLD_DEFAULT_MODE	SPI_MODE_0
 
 
 /*
@@ -149,10 +153,11 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
 
-	const u32 bus = 1;
-	const u32 cs = 1;
-	const u32 max_hz = 1000000;
-	u32 spi_mode = 0;
+	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
+	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
+
 	struct spi_slave *spi;
 	int ret;
 #define CPLD_VERSION_SEQ_LENGTH 3
@@ -203,10 +208,10 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
 
-	const u32 bus = 1;
-	const u32 cs = 1;
-	const u32 max_hz = 1000000;
-	u32 spi_mode = 0;
+	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
+	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
 	u32 addr;
 	struct spi_slave *spi;
 	int ret;
@@ -251,8 +256,7 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x\n",rx_buf[3]);
-
+	printf("\n RX buf: %2x %2x (%2x) %2x\n",rx_buf[0], rx_buf[1], rx_buf[2], rx_buf[3]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -267,10 +271,10 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
 
-	const u32 bus = 1;
-	const u32 cs = 1;
-	const u32 max_hz = 1000000;
-	u32 spi_mode = 0;
+	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
+	const u32 cs = CONFIG_CPLD_DEFAULT_CS;
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	u32 spi_mode = CONFIG_CPLD_DEFAULT_MODE;
 	u32 addr, val;
 	struct spi_slave *spi;
 	int ret;
