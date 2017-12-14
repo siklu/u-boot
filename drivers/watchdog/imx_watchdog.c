@@ -10,6 +10,23 @@
 #include <asm/arch/imx-regs.h>
 #include <fsl_wdog.h>
 
+
+
+
+
+static int do_siklu_wdog_reg_show(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_SUCCESS;
+	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
+
+		printf(" wcr  0x%04x\n", wdog->wcr);/* Control */
+		printf(" wsr  0x%04x\n", wdog->wsr);/* Service */
+		printf(" wrsr 0x%04x\n", wdog->wrsr);/* Reset Status */
+
+	return rc;
+}
+
+
 #ifdef CONFIG_IMX_WATCHDOG
 void hw_watchdog_reset(void)
 {
@@ -53,3 +70,8 @@ void __attribute__((weak)) reset_cpu(ulong addr)
 		 */
 	}
 }
+
+
+U_BOOT_CMD(wdogs, 5, 0, do_siklu_wdog_reg_show, "Show WDOG Regs",
+		" Show WDOG Regs");
+
