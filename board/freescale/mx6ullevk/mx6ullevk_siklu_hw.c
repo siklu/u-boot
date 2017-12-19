@@ -40,8 +40,29 @@ static const iomux_v3_cfg_t cpld_pads[] = { //
 //
 		};
 
+
+static const iomux_v3_cfg_t i2c1_pads[] = {
+				MX6_PAD_CSI_MCLK__CSI_MCLK | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_PIXCLK__CSI_PIXCLK | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_MCLK__I2C1_SDA | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_PIXCLK__I2C1_SCL | MUX_PAD_CTRL(NO_PAD_CTRL)
+};
+
+static const iomux_v3_cfg_t i2c2_pads[] = {
+				MX6_PAD_CSI_HSYNC__CSI_HSYNC | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_VSYNC__CSI_VSYNC | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_VSYNC__I2C2_SDA | MUX_PAD_CTRL(NO_PAD_CTRL),
+				MX6_PAD_CSI_HSYNC__I2C2_SCL | MUX_PAD_CTRL(NO_PAD_CTRL)
+};
+
+
 static void setup_iomux_siklu_cpld(void) {
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
+}
+
+static void setup_iomux_siklu_i2c(void) {
+	imx_iomux_v3_setup_multiple_pads(i2c1_pads, ARRAY_SIZE(i2c1_pads));
+	imx_iomux_v3_setup_multiple_pads(i2c2_pads, ARRAY_SIZE(i2c2_pads));
 }
 
 int siklu_cpld_read(u8 reg, u8* data) {
@@ -82,7 +103,7 @@ int siklu_cpld_read(u8 reg, u8* data) {
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x %2x (%2x) %2x\n",data[0], data[1], data[2], data[3]);
+	printf("\n RX buf: %2x %2x %2x (%2x)\n",data[0], data[1], data[2], data[3]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -198,6 +219,7 @@ int siklu_board_late_init(void) {
 int siklu_board_init(void) {
 	int rc = 0;
 	setup_iomux_siklu_cpld();
+	setup_iomux_siklu_i2c();
 
 	// TODO In CPLD:
 	// 	put to reset all unnecessary HW devices
