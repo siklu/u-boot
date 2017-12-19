@@ -78,22 +78,23 @@
 
 
 #define CONFIG_CMD_DATE
-
 /*
  * RTC
  */
 #ifdef CONFIG_CMD_DATE
-
-#define CONFIG_SYS_RTC_BUS_NUM		0
-
-/* #define CONFIG_RTC_PCF8563   installed on pcb19x PCF8523  */
-#define CONFIG_RTC_PCF8523
-#define CONFIG_SYS_I2C_RTC_ADDR	0x68
-
-
+# define CONFIG_SYS_RTC_BUS_NUM		0
+# define CONFIG_RTC_PCF8523
+# define CONFIG_SYS_I2C_RTC_ADDR	0x68
 #endif /* CONFIG_CMD_DATE */
 
 
+#define CONFIG_IMX_THERMAL   /* used for measure internal CPU temperature */
+#define CONFIG_TMP421_THERMAL   /* used for measure board temperature */
+
+#ifdef  CONFIG_TMP421_THERMAL
+# define CONFIG_SYS_TEMP_SENS_BUS_NUM		0
+# define CONFIG_SYS_I2C_TEMP_SENS_ADDR		0x4c
+#endif
 
 
 
@@ -211,7 +212,8 @@
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 
-#define CONFIG_IMX_THERMAL
+
+
 
 #define CONFIG_IOMUX_LPSR
 
