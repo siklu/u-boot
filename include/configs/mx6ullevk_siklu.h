@@ -77,6 +77,26 @@
 #define CONFIG_LZO
 
 
+#define CONFIG_CMD_DATE
+
+/*
+ * RTC
+ */
+#ifdef CONFIG_CMD_DATE
+
+#define CONFIG_SYS_RTC_BUS_NUM		0
+
+/* #define CONFIG_RTC_PCF8563   installed on pcb19x PCF8523  */
+#define CONFIG_RTC_PCF8523
+#define CONFIG_SYS_I2C_RTC_ADDR	0x68
+
+
+#endif /* CONFIG_CMD_DATE */
+
+
+
+
+
 #ifdef CONFIG_CMD_NET
 
 /* already defined in defconfig
