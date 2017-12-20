@@ -59,8 +59,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define RAMD_ADDR           0x82000000 // address to copy RAMD from uimage
 #define RAMD_MAX_SIZE		 0x2000000  // 32 MB max?
 
-#define DTB_ADDR_STR		 "81000000" //
-#define DTB_ADDR_HEX		0x81000000 //
+#define DTB_ADDR_STR		 "84000000" //
+#define DTB_ADDR_HEX		0x84000000 //
 
 extern int seeprom_get_assembly_type_v1(char* assembly); // siklu_remarkM24
 
