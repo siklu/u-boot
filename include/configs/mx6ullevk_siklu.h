@@ -32,14 +32,15 @@
 
 # define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 # define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
-# define MTDIDS_DEFAULT		"nand0=armada-nand" //      SPI  ;spi1=spi_flash
-# define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
+# define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
+# define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
     "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"
 
 
 #ifndef CONFIG_CMD_NAND
 # define CONFIG_CMD_NAND
 #endif
+/* #define CONFIG_CMD_NAND_TRIMFFS  */
 #define CONFIG_SYS_MAX_NAND_DEVICE 1
 #define CONFIG_SYS_NAND_BASE		0x40000000
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
