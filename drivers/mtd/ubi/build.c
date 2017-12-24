@@ -39,6 +39,8 @@
 
 #include "ubi.h"
 
+#define CONFIG_MTD_UBI_WL_THRESHOLD 4096   // edikk unknown define. copied from linux kernel. TBD
+
 /* Maximum length of the 'mtd=' parameter */
 #define MTD_PARAM_LEN_MAX 64
 

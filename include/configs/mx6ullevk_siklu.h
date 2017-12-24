@@ -69,8 +69,9 @@
 
 /* #define CONFIG_SYS_USE_UBI */
 #define CONFIG_CMD_UBI
-/* #define CONFIG_CMD_UBIFS   do not support ubifs in uboot   */
-#define CONFIG_UBI_SILENCE_MSG
+/* #define CONFIG_CMD_UBIFS   do not support ubifs in uboot ???   */
+#define CONFIG_CMD_UBIFS
+/*#define CONFIG_UBI_SILENCE_MSG disable this define prints additional logs on terminal. remove it later. edikk */
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_CMD_MTDPARTS
