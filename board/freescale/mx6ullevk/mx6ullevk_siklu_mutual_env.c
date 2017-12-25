@@ -636,6 +636,8 @@ static int siklu_mutable_env_power_up_set(const char *varname, const char *varva
 const char* siklu_mutable_env_get(const char *varname)
 {
     int count = 0;
+#if 0    // edikk follow functionality yet not works
+    // temporary replace it by standard env get!!!!
     if (!is_mutable_env_initiated)
         return NULL;
 
@@ -650,6 +652,9 @@ const char* siklu_mutable_env_get(const char *varname)
             return pair->value;
         }
     }
+#else
+    const char*s = env_get(varname);
+#endif
     return NULL;
 }
 /*
