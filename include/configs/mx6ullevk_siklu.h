@@ -33,8 +33,8 @@
 # define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 # define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
 # define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
-# define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
-    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"
+# define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),40M(uimage0),"  \
+    "40M(uimage1)," "16M(conf),-(log)"
 
 
 #ifndef CONFIG_CMD_NAND
