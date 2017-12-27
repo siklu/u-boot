@@ -254,7 +254,7 @@ int print_cpuinfo(void)
  * pin conflicts for fec1 and fec2, GPIO1_IO06 and GPIO1_IO07 can only
  * be used for ENET1 or ENET2, cannot be used for both.
  */
-static const iomux_v3_cfg_t fec1_pads[] = {
+static const iomux_v3_cfg_t fec1_pads[] = { // not called on siklu pcb19x
 	MX6_PAD_GPIO1_IO06__ENET1_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_DATA0__ENET1_TDATA00 | MUX_PAD_CTRL(ENET_PAD_CTRL),
@@ -294,7 +294,9 @@ static void setup_iomux_fec(int fec_id)
 }
 
 
-
+/*
+ * this function not called on siklu PCB19x
+ */
 int cpu_eth_init(bd_t *bis)
 {
 	int rc = -ENODEV;
