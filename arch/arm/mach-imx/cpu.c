@@ -282,7 +282,7 @@ static const iomux_v3_cfg_t fec2_pads[] = {
 	MX6_PAD_ENET2_RX_ER__ENET2_RX_ER | MUX_PAD_CTRL(ENET_PAD_CTRL),
 };
 
-
+// not called on siklu pcb19x
 static void setup_iomux_fec(int fec_id)
 {
 	if (fec_id == 0)
@@ -302,7 +302,7 @@ int cpu_eth_init(bd_t *bis)
 	int rc = -ENODEV;
 
 #ifdef	CONFIG_CMD_NET
-	setup_iomux_fec(CONFIG_FEC_ENET_DEV); // edikk only for EVK? copied from old uboot
+	setup_iomux_fec(CONFIG_FEC_ENET_DEV);
 #endif
 
 #if defined(CONFIG_FEC_MXC)
