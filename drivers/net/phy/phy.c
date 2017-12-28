@@ -694,7 +694,7 @@ static struct phy_device *create_phy_by_mask(struct mii_dev *bus,
 	while (phy_mask) {
 		int addr = ffs(phy_mask) - 1;
 
-#ifdef SIKLU_PCB19x_SWAP_MDIO_BUS
+#ifdef SIKLU_PCB19x_SWITCH_MDIO_BUS
 		int r = 0; /* siklu commentaries: this code is little tricky: We need "real PHY" here
 		but 10G phy and TI transceiver works by clause45 mode and don't answer. Therefore I return here '0'
 		as if it answered  */

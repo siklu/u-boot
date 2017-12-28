@@ -129,7 +129,7 @@
 # define CONFIG_PHYLIB
 
 # define CONFIG_PHY_FIXED  /* NXP SoC connected direct to SOHO Switch by 100M FD connection */
-# define SIKLU_PCB19x_SWAP_MDIO_BUS 1 /*  PCB19x requires swap MDIO busses between ENET1 and ENET2   */
+# define SIKLU_PCB19x_SWITCH_MDIO_BUS 1 /*  PCB19x requires switch 2 MDIO busses on ENET1   */
 #endif
 
 #define PHYS_SDRAM_SIZE	SZ_512M

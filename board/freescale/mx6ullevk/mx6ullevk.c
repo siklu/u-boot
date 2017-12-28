@@ -91,7 +91,7 @@ int board_early_init_f(void)
  * be used for ENET1 or ENET2, cannot be used for both.
  */
 static const iomux_v3_cfg_t  fec1_pads[] = {
-#ifdef SIKLU_PCB19x_SWAP_MDIO_BUS   // edikk  fec1_pads. used this setup
+#ifdef SIKLU_PCB19x_SWITCH_MDIO_BUS   // edikk  fec1_pads. used this setup
 	/* Special commentaries for Siklu board:
 		28.12.2017
 		PCB19x allows use only ENET1 controller.
@@ -101,9 +101,10 @@ static const iomux_v3_cfg_t  fec1_pads[] = {
 		specified bus)
 	 */
 
-	MX6_PAD_ENET2_RX_DATA1__ENET1_MDC | MUX_PAD_CTRL(MDC_PAD_CTRL),   // ENET1 MDC  connect 10GPHY and Transceiver
+	MX6_PAD_ENET2_RX_DATA1__ENET1_MDC | MUX_PAD_CTRL(MDC_PAD_CTRL), // ENET1 MDC  connect 10GPHY and Transceiver
+	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),    //  ENET1 MDC  also connected to SOHO
 	MX6_PAD_ENET2_RX_DATA0__ENET1_MDIO  | MUX_PAD_CTRL(MDIO_PAD_CTRL),// ENET1 MDIO connect 10GPHY and Transceiver
-	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),     //  ENET1 MDC  also connected to SOHO
+	// MX6_PAD_GPIO1_IO06__ENET1_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),   // by default connected to GPIO1_IO06 pin
 
 #else
 
