@@ -120,6 +120,69 @@ static int fec_mdio_read(struct ethernet_regs *eth, uint8_t phyaddr,
 	return val;
 }
 
+
+int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
+		uint8_t phyaddr,
+		uint8_t devaddr,
+		uint16_t* addr_data)
+{
+	uint32_t reg;		/* convenient holder for the PHY register */
+	uint32_t phy;		/* convenient holder for the PHY */
+	uint32_t _op;
+	uint32_t start;
+	uint16_t data;
+	uint32_t reg_val;
+	int val;
+
+	if (op == CLAUSE45_OP_READ)
+		data=0xFFFF;
+	else
+		data = *addr_data;
+
+
+	printf("%s() op %d, phyaddr %x, devaddr %x, addr_data %x\n",
+			__func__, op, phyaddr, devaddr, * addr_data); // edikk remove
+
+
+	/*
+	 * reading from any PHY's register is done by properly
+	 * programming the FEC's MII data register.
+	 */
+	writel(FEC_IEVENT_MII, &eth->ievent);
+	reg = devaddr << FEC_MII_DATA_RA_SHIFT;
+	phy = phyaddr << FEC_MII_DATA_PA_SHIFT;
+	_op = (op & 0x3) << FEC_MII_DATA_OP_SHIFT;
+
+	reg_val = FEC_MII_DATA_ST | _op | FEC_MII_DATA_TA | phy | reg | data;
+	printf("%s() Write mii_data %p data 0x%x\n", __func__, &eth->mii_data, reg_val); // edikk remove
+	writel(reg_val , &eth->mii_data);
+
+	/* wait for the related interrupt */
+	start = get_timer(0);
+	while (!(readl(&eth->ievent) & FEC_IEVENT_MII)) {
+		if (get_timer(start) > (CONFIG_SYS_HZ / 1000)) {
+			printf("Read MDIO failed...\n");
+			return -1;
+		}
+	}
+
+	/* clear mii interrupt bit */
+	writel(FEC_IEVENT_MII, &eth->ievent);
+
+	/* it's now safe to read the PHY's register */
+	val = (unsigned short)readl(&eth->mii_data);
+	debug("%s: phy: %02x reg:%02x val:%#x\n", __func__, phyaddr,
+	      devaddr, val);
+	printf("%s() Read data 0x%x\n", __func__, val); // edikk remove
+	* addr_data = val;
+	return 0;
+
+}
+
+
+
+
+
 static void fec_mii_setspeed(struct ethernet_regs *eth)
 {
 	/*

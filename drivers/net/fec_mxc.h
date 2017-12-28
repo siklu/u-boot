@@ -312,5 +312,20 @@ void imx_get_mac_from_fuse(int dev_id, unsigned char *mac);
 
 #define FEC_MII_DATA_RA_SHIFT	18	/* MII Register address bits */
 #define FEC_MII_DATA_PA_SHIFT	23	/* MII PHY address bits */
+#define FEC_MII_DATA_OP_SHIFT	28	/* MII PHY operation code bits */
+
+
+typedef enum
+{
+	CLAUSE45_OP_ADDR	= 0,
+	CLAUSE45_OP_WRITE	= 1,
+	CLAUSE45_OP_READ	= 3,
+	CLAUSE45_OP_READ_ADDR	= 2,
+} CLAUSE45_OP_E;
+extern int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
+		uint8_t phyaddr,
+		uint8_t regaddr,
+		uint16_t* addr_data);
+
 
 #endif	/* __FEC_MXC_H */
