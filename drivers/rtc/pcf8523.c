@@ -207,6 +207,7 @@ int rtc_set(struct rtc_time *tmp)
     pcf8523_set_pm(5);   //battery switch-over function is enabled in direct switching mode;
     //battery low detection function is disabled
 #else
+    (void)pcf8523_set_pm; // prevent warning
     rtc_write( REG_CONTROL3, 0xA0);  // siklu_remark008
     /* rtc_write( REG_CONTROL3, 0x80); Baruch decides do not set PM mode=0b100 in uboot,
     only in linux  */

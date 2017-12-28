@@ -108,6 +108,8 @@ static int do_siklu_read_temperature(cmd_tbl_t * cmdtp, int flag, int argc,
 	u16 local_temp_reg, remote1_temp_reg, remote2_temp_reg;
 	int local_temp, remote1_temp, remote2_temp;
 
+	(void)rtc_write; //prevent compil warning
+
 	local_temp_reg = (rtc_read(TMP421_TEMP_MSB[0]) << 8)
 			| rtc_read(TMP421_TEMP_LSB[0]);
 
