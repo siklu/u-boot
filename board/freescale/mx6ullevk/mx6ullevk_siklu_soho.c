@@ -14,9 +14,86 @@
 #include <fdt_support.h>
 
 #include <miiphy.h>
+#include "../drivers/net/fec_mxc.h"
+
+#include <asm/io.h>
+#include <linux/errno.h>
+#include <linux/compiler.h>
+
+#include <asm/arch/clock.h>
+#include <asm/arch/imx-regs.h>
+#include <asm/mach-imx/sys_proto.h>
+
+#include <asm/mach-imx/iomux-v3.h>
+#include <asm/mach-imx/boot_mode.h>
+#include <asm/io.h>
+#include <netdev.h>
+#include <fsl_esdhc.h>
+#include <linux/sizes.h>
+#include <mmc.h>
+#include <phy.h>
+#include <linux/mdio.h>
+
+#include <asm/arch/imx-regs.h>
+#include <asm/arch/mx6ull_pins.h>
 
 #include "siklu_def.h"
 #include "siklu_api.h"
+
+/*
+ * SOHO Access
+ */
+int siklu_88e639x_reg_read(u8 port, u8 reg, u16* val) {
+	int rc = 0;
+
+	const char *devname;
+
+	// connect SOHO MDIO
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
+
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return -1;
+	}
+
+	if (miiphy_read(devname, port, reg, val) != 0) {
+		printf("%s() ERROR read port 0x%x, reg 0x%x\n", __func__, port, reg);
+		return -1;
+	}
+
+	// return bus to 10G PHY
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
+
+	return rc;
+}
+/*
+ *  SOHO Access
+ */
+int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val) {
+	int rc = 0;
+
+	/* use current device  */
+	const char *devname;
+
+	// connect SOHO MDIO
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
+
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return -1;
+	}
+
+	if (miiphy_write(devname, port, reg, val) != 0) {
+		printf("%s() ERROR write port 0x%x, reg 0x%x\n", __func__, port, reg);
+		return -1;
+	}
+	// return bus to 10G PHY
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
+	return rc;
+}
 
 /*
  *

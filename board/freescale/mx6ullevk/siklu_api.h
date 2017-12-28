@@ -23,4 +23,13 @@ extern int siklu_cpld_write(u8 reg, u8 data);
 extern int siklu_88e639x_reg_read(u8 port, u8 reg, u16* val);
 extern int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val);
 
+
+typedef enum {
+	SIKLU_MDIO_BUS0, // SOHO
+	SIKLU_MDIO_BUS1, // 10G PHY and TI Transceiver
+} SIKLU_MDIO_BUS_E;
+
+extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
+
+
 #endif /* SIKLU_API_H_ */

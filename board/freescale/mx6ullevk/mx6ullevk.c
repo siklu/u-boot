@@ -93,18 +93,19 @@ int board_early_init_f(void)
 static const iomux_v3_cfg_t  fec1_pads[] = {
 #ifdef SIKLU_PCB19x_SWAP_MDIO_BUS   // edikk  fec1_pads. used this setup
 	/* Special commentaries for Siklu board:
-	 * SOHO Switch MDIO bus connected to ENET2_MDIO & ENET2_MDC
-	 * 	but RMII connected to ENET1
-	 * TI Transceiver and 10GPHY MDIO bus connected to 	ENET1_MDIO & ENET1_MDC
-	 * Data path doesn't connected to CPU
+		28.12.2017
+		PCB19x allows use only ENET1 controller.
+		I tried init ENET2 MDIO module only but it isn't simple
+		Therefore I decided connect ENET1 MDC to both buses (the pin is push-pull out
+		and able to push both buses, but MDIO switch before generate transaction to
+		specified bus)
 	 */
-		//MX6_PAD_GPIO1_IO06__ENET2_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
-		//MX6_PAD_GPIO1_IO07__ENET2_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_ENET2_RX_DATA1__ENET1_MDC | MUX_PAD_CTRL(MDC_PAD_CTRL),// connect 10GPHY and Transceiver
-	MX6_PAD_ENET2_RX_DATA0__ENET1_MDIO  | MUX_PAD_CTRL(MDIO_PAD_CTRL),// connect 10GPHY and Transceiver
+
+	MX6_PAD_ENET2_RX_DATA1__ENET1_MDC | MUX_PAD_CTRL(MDC_PAD_CTRL),   // ENET1 MDC  connect 10GPHY and Transceiver
+	MX6_PAD_ENET2_RX_DATA0__ENET1_MDIO  | MUX_PAD_CTRL(MDIO_PAD_CTRL),// ENET1 MDIO connect 10GPHY and Transceiver
+	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),     //  ENET1 MDC  also connected to SOHO
 
 #else
-
 
 	MX6_PAD_GPIO1_IO06__ENET1_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
