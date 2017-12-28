@@ -71,6 +71,15 @@ int board_early_init_f(void)
 #define MDIO_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
 	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST | PAD_CTL_ODE)
 
+#ifdef CONFIG_SIKLU_BOARD
+# define MDC_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
+	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST ) // Siklu board pcb19x requires Open-Drain Disabled for MDC
+#else
+# define MDC_PAD_CTRL  (MDIO_PAD_CTRL)
+#endif
+
+
+
 #define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
 	PAD_CTL_SPEED_HIGH   |                                  \
 	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST)
@@ -82,8 +91,24 @@ int board_early_init_f(void)
  * be used for ENET1 or ENET2, cannot be used for both.
  */
 static const iomux_v3_cfg_t  fec1_pads[] = {
+#ifdef SIKLU_PCB19x_SWAP_MDIO_BUS   // edikk  fec1_pads. used this setup
+	/* Special commentaries for Siklu board:
+	 * SOHO Switch MDIO bus connected to ENET2_MDIO & ENET2_MDC
+	 * 	but RMII connected to ENET1
+	 * TI Transceiver and 10GPHY MDIO bus connected to 	ENET1_MDIO & ENET1_MDC
+	 * Data path doesn't connected to CPU
+	 */
+		//MX6_PAD_GPIO1_IO06__ENET2_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
+		//MX6_PAD_GPIO1_IO07__ENET2_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET2_RX_DATA1__ENET1_MDC | MUX_PAD_CTRL(MDC_PAD_CTRL),// connect 10GPHY and Transceiver
+	MX6_PAD_ENET2_RX_DATA0__ENET1_MDIO  | MUX_PAD_CTRL(MDIO_PAD_CTRL),// connect 10GPHY and Transceiver
+
+#else
+
+
 	MX6_PAD_GPIO1_IO06__ENET1_MDIO | MUX_PAD_CTRL(MDIO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL),
+#endif //
 	MX6_PAD_ENET1_TX_DATA0__ENET1_TDATA00 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_DATA1__ENET1_TDATA01 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_EN__ENET1_TX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),

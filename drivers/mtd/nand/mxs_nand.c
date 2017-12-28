@@ -156,6 +156,7 @@ static inline uint32_t mxs_nand_get_ecc_strength(uint32_t page_data_size,
 {
 	int ecc_strength;
 	int max_ecc_strength_supported;
+	uint32_t ret = 0;
 
 	/* Refer to Chapter 17 for i.MX6DQ, Chapter 18 for i.MX6SX */
 	if (is_mx6sx() || is_mx7())
@@ -175,7 +176,8 @@ static inline uint32_t mxs_nand_get_ecc_strength(uint32_t page_data_size,
 			/ (galois_field *
 			   mxs_nand_ecc_chunk_cnt(page_data_size));
 
-	return min(round_down(ecc_strength, 2), max_ecc_strength_supported);
+	ret = min(round_down(ecc_strength, 2), max_ecc_strength_supported);
+	return ret;
 }
 
 static inline uint32_t mxs_nand_get_mark_offset(uint32_t page_data_size,
@@ -1206,7 +1208,7 @@ int board_nand_init(struct nand_chip *nand)
 	nand->ecc.mode		= NAND_ECC_HW;
 	nand->ecc.bytes		= 9;
 	nand->ecc.size		= 512;
-	nand->ecc.strength	= 8;
+	nand->ecc.strength	= 4; // edikk prev value 8 but linux uses '4', therefore change to 4
 
 	return 0;
 

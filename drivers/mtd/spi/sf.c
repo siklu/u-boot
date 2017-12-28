@@ -38,7 +38,7 @@ static int spi_flash_read_write(struct spi_slave *spi,
 #define MAX_BUF_SIZE 0x400
 		static u8 tx_buf[MAX_BUF_SIZE];
 		static u8 rx_buf[MAX_BUF_SIZE];
-		int ret = 0;
+		int  __attribute__ ((unused)) ret = 0;
 
 		memset(tx_buf,0,sizeof(tx_buf));
 		memset(rx_buf,0,sizeof(rx_buf));

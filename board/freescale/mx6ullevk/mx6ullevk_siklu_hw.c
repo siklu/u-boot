@@ -26,8 +26,6 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-#include "siklu_def.h"
-#include "siklu_api.h"
 #include <spi.h>
 
 

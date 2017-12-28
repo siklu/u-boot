@@ -17,8 +17,7 @@ DECLARE_GLOBAL_DATA_PTR;
 int fixedphy_probe(struct phy_device *phydev)
 {
 	struct fixed_link *priv;
-	int ofnode = phydev->addr;
-	u32 val;
+
 #ifdef CONFIG_SIKLU_BOARD
 
 	priv = malloc(sizeof(*priv));
@@ -34,6 +33,9 @@ int fixedphy_probe(struct phy_device *phydev)
 
 
 #else
+	int ofnode = phydev->addr;
+	u32 val;
+
 	/* check for mandatory properties within fixed-link node */
 	val = fdt_getprop_u32_default_node(gd->fdt_blob,
 					   ofnode, 0, "speed", 0);
