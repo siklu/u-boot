@@ -90,7 +90,6 @@ int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val) {
 		printf("%s() ERROR write port 0x%x, reg 0x%x\n", __func__, port, reg);
 		return -1;
 	}
-	// return bus to 10G PHY
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
 	return rc;
 }

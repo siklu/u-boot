@@ -135,13 +135,10 @@ static int do_siklu_read_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
 
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS1);
 
-	addr_data = reg;
+	addr_data = reg; // preset reg address
 	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_ADDR, TI10031_DEV_ADDR, dev_addr, &addr_data);
-	printf(" ret %d\n", ret); // edikk remove
-
-
+	// on next operation addr_data will hold reg value
 	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_READ, TI10031_DEV_ADDR, dev_addr, &addr_data);
-	printf(" ret %d, data 0x%x\n", ret, addr_data); // edikk remove
 
 	printf("  [0x%04X]\n", addr_data);
 

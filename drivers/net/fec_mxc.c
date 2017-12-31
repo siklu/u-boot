@@ -140,10 +140,6 @@ int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
 		data = *addr_data;
 
 
-	printf("%s() op %d, phyaddr %x, devaddr %x, addr_data %x\n",
-			__func__, op, phyaddr, devaddr, * addr_data); // edikk remove
-
-
 	/*
 	 * reading from any PHY's register is done by properly
 	 * programming the FEC's MII data register.
@@ -153,8 +149,7 @@ int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
 	phy = phyaddr << FEC_MII_DATA_PA_SHIFT;
 	_op = (op & 0x3) << FEC_MII_DATA_OP_SHIFT;
 
-	reg_val = FEC_MII_DATA_ST | _op | FEC_MII_DATA_TA | phy | reg | data;
-	printf("%s() Write mii_data %p data 0x%x\n", __func__, &eth->mii_data, reg_val); // edikk remove
+	reg_val =  _op | FEC_MII_DATA_TA | phy | reg | data; // clause45 requires 2 first bits = '00'
 	writel(reg_val , &eth->mii_data);
 
 	/* wait for the related interrupt */
@@ -173,7 +168,6 @@ int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
 	val = (unsigned short)readl(&eth->mii_data);
 	debug("%s: phy: %02x reg:%02x val:%#x\n", __func__, phyaddr,
 	      devaddr, val);
-	printf("%s() Read data 0x%x\n", __func__, val); // edikk remove
 	* addr_data = val;
 	return 0;
 
@@ -818,7 +812,7 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 	}
 
 	if (!timeout) {
-		printf("%s()  error on line %d\n", __func__, __LINE__); // edikk ???
+		printf("%s()  error on line %d\n", __func__, __LINE__);
 		ret = -EINVAL;
 		goto out;
 	}
@@ -846,7 +840,7 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 	}
 
 	if (!timeout) {
-		printf("%s()  error on line %d\n", __func__, __LINE__); // edikk ???
+		printf("%s()  error on line %d\n", __func__, __LINE__);
 		ret = -EINVAL;
 	}
 
