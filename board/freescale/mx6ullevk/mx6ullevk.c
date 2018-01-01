@@ -151,10 +151,9 @@ int board_eth_init(bd_t *bis)
 	int rc;
 
 	setup_iomux_fec(CONFIG_FEC_ENET_DEV);
-
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
 	rc =  fecmxc_initialize_multi(bis, CONFIG_FEC_ENET_DEV,
 				       CONFIG_FEC_MXC_PHYADDR, IMX_FEC_BASE);
-
 	return rc;
 }
 

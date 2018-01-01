@@ -169,7 +169,7 @@ int siklu_board_late_init(void) {
 	// TODO Via MDIO bus:
 	// 		Enable SOHO Port#5 - output to network, configure 1G autoneg
 	//		Enable SOHO Port#0 - connection to NXP SoC, configure strict 100FD
-
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0); // by default connect SOHO Switch
 	return rc;
 }
 

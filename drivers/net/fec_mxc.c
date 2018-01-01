@@ -173,10 +173,6 @@ int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
 
 }
 
-
-
-
-
 static void fec_mii_setspeed(struct ethernet_regs *eth)
 {
 	/*

@@ -83,7 +83,6 @@ static int do_siklu_read_88x3310_phy(cmd_tbl_t * cmdtp, int flag, int argc,
 		printf("  ERROR read PHY\n");
 		return CMD_RET_FAILURE;
 	}
-
 	printf("  [0x%04X]\n", val);
 
 	return rc;
@@ -108,7 +107,7 @@ static int do_siklu_write_88x3310_phy(cmd_tbl_t * cmdtp, int flag, int argc,
  */
 static int do_siklu_read_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
-	int rc = CMD_RET_FAILURE, ret;
+	int  ret;
 
 	const char *devname;
 	uint32_t dev_addr = 0, reg = 0;
@@ -127,7 +126,7 @@ static int do_siklu_read_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
 	devname = miiphy_get_current_dev();
 	if (!devname) {
 		printf("No available MDIO Controller!\n");
-		return -1;
+		return CMD_RET_FAILURE;
 	}
 
 	dev_addr = simple_strtoul(argv[1], NULL, 16);
@@ -137,12 +136,19 @@ static int do_siklu_read_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
 
 	addr_data = reg; // preset reg address
 	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_ADDR, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return CMD_RET_FAILURE;
+	}
 	// on next operation addr_data will hold reg value
 	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_READ, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return CMD_RET_FAILURE;
+	}
 
 	printf("  [0x%04X]\n", addr_data);
-
-	return rc;
+	return CMD_RET_SUCCESS;
 }
 
 /*
@@ -150,12 +156,47 @@ static int do_siklu_read_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
  */
 static int do_siklu_write_TLK10031_reg(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
-	int rc = CMD_RET_FAILURE;
+	int ret;
+
+	const char *devname;
+	uint32_t dev_addr = 0, reg_addr = 0;
+	uint16_t addr_data, reg_val;
+
+	if (argc != 4) {
+		printf("Wrong number arguments %d\n", argc);
+		return CMD_RET_USAGE;
+	}
+
+#if defined(CONFIG_MII_INIT)
+	mii_init ();
+#endif
+
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return CMD_RET_FAILURE;
+	}
+
+	dev_addr = simple_strtoul(argv[1], NULL, 16);
+	reg_addr = 0xFFFF & simple_strtoul(argv[2], NULL, 16);
+	reg_val = 0xFFFF & simple_strtoul(argv[3], NULL, 16);
 
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS1);
-	printf("TBD");
 
-	return rc;
+	addr_data = reg_addr; // preset reg_addr address
+	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_ADDR, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return CMD_RET_FAILURE;
+	}
+	addr_data = reg_val;// preset reg_val value
+	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_WRITE, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return CMD_RET_FAILURE;
+	}
+	return CMD_RET_SUCCESS;
 }
 
 U_BOOT_CMD(phy10r, 5, 1, do_siklu_read_88x3310_phy, "Read 88x3310 10G PHY",

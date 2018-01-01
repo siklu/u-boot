@@ -201,6 +201,7 @@ static int do_siklu_soho_access(cmd_tbl_t * cmdtp, int flag, int argc,
 	u8 reg;
 	u16 val;
 
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
 	switch (argc) {
 
 	case 2: // display all registers in required page
@@ -234,11 +235,14 @@ static int do_siklu_soho_access(cmd_tbl_t * cmdtp, int flag, int argc,
 static int do_siklu_soho_ver_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
+	int ret;
+
 #define SOHO_NXP_CPU_PORT 	0
 #define SWITCH_IDENT_REG	3
 	u16 val;
 
-	int ret = siklu_88e639x_reg_read(SOHO_NXP_CPU_PORT, SWITCH_IDENT_REG, &val);
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0);
+	ret = siklu_88e639x_reg_read(SOHO_NXP_CPU_PORT, SWITCH_IDENT_REG, &val);
 	if (ret == 0) {
 		printf(" 0x%04X\n", val);
 	} else {
