@@ -95,10 +95,41 @@ static int do_siklu_read_88x3310_phy(cmd_tbl_t * cmdtp, int flag, int argc,
 static int do_siklu_write_88x3310_phy(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
+	const char *devname;
+	uint32_t dev_addr = 0, reg_addr = 0;
+	uint16_t reg_val = 0, temp;
+
+	if (argc != 4) {
+		printf("Wrong number arguments %d\n", argc);
+		return CMD_RET_USAGE;
+	}
+
+#if defined(CONFIG_MII_INIT)
+	mii_init ();
+#endif
+
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return -1;
+	}
+
+	dev_addr = simple_strtoul(argv[1], NULL, 16);
+	reg_addr = 0xFFFF & simple_strtoul(argv[2], NULL, 16);
+	reg_val  = 0xFFFF & simple_strtoul(argv[3], NULL, 16);
 
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS1);
-	printf("TBD");
 
+	// Phase #1 according to datasheet p93, pp3.11.1.1
+	temp = (0 << 14) | (dev_addr & 0x1f);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 13, temp);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 14, reg_addr);
+
+	// Phase #2
+	 temp = (1 << 14) | (dev_addr & 0x1f);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 13, temp);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 14, reg_val);
 	return rc;
 }
 
