@@ -37,10 +37,8 @@
     "40M(uimage1)," "16M(conf),-(log)"
 
 
-#ifndef CONFIG_CMD_NAND
-# define CONFIG_CMD_NAND
-#endif
-/* #define CONFIG_CMD_NAND_TRIMFFS  */
+
+#define CONFIG_CMD_NAND_TRIMFFS
 #define CONFIG_SYS_MAX_NAND_DEVICE 1
 #define CONFIG_SYS_NAND_BASE		0x40000000
 #define CONFIG_SYS_NAND_5_ADDR_CYCLE
@@ -67,18 +65,38 @@
 #define CONFIG_SYS_MONITOR_LEN          0x20000           /* Reserve 512 kB for Monitor */
 
 
-/* #define CONFIG_SYS_USE_UBI */
-#define CONFIG_CMD_UBI
-/* #define CONFIG_CMD_UBIFS   do not support ubifs in uboot ???   */
-#define CONFIG_CMD_UBIFS
-/*#define CONFIG_UBI_SILENCE_MSG disable this define prints additional logs on terminal. remove it later. edikk */
-#define CONFIG_UBI_SILENCE_MSG
+/**************      NAND and NAND file-system related declarations     ***************/
+
+/* follow defime means that SW images stored over NAND commands, no UBI    */
+#define SW_PARTS_IS_PURE_NAND_PARTITIONS 1
+
+#ifndef SW_PARTS_IS_PURE_NAND_PARTITIONS
+	/* #define CONFIG_SYS_USE_UBI */
+	#define CONFIG_CMD_UBI
+	/* #define CONFIG_CMD_UBIFS   do not support ubifs in uboot ???   */
+	#define CONFIG_CMD_UBIFS
+	/*#define CONFIG_UBI_SILENCE_MSG disable this define prints additional logs on terminal. remove it later. edikk */
+	#define CONFIG_UBI_SILENCE_MSG
+
+	/* edikk for test only JFFS2 !!!! */
+	#define CONFIG_CMD_JFFS2
+	# define CONFIG_JFFS2_NAND
+	# define CONFIG_FS_JFFS2
+	# define CONFIG_JFFS2_DEV		"nand0"
+	# define CONFIG_JFFS2_PART_SIZE		0x02800000
+	# define CONFIG_JFFS2_PART_OFFSET	0x00060000
+	/* edikk for test only JFFS2 end !!!! */
+
+#endif /* !SW_PARTS_IS_PURE_NAND_PARTITIONS */
 
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_RBTREE
 #define CONFIG_LZO
+
+
+/**************      NAND and NAND file-system related declarations  end   ***************/
 
 
 #define CONFIG_CMD_DATE

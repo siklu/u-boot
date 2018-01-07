@@ -97,7 +97,7 @@ static int is_image_valid(ulong load_addr) {
  *  copy image from ubi partition to RAM
  *  validate SW image
  */
-static int validate_sw_image(int img2load) {
+static int validate_sw_image_and_copy2ram(int img2load) {
 	int rc = 0;
 	char buf[512];
 
@@ -109,6 +109,12 @@ static int validate_sw_image(int img2load) {
 		printf(" Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
+#ifdef SW_PARTS_IS_PURE_NAND_PARTITIONS
+
+	sprintf(buf, "nand read 0x%x uimage%d 0x%x",
+			ADDR_IN_RAM4ACTIVE_UIMAGE, img2load, MAX_ACTIVE_UIMAGE_SIZE - 1);
+
+#else
 	//
 	sprintf(buf, "ubi part uimage%d", img2load);
 	rc = _run_command(buf, 0);
@@ -124,6 +130,8 @@ static int validate_sw_image(int img2load) {
 		printf(" Execute command \"%s\" FAIL\n", buf);
 		return -1;
 	}
+#endif // 	SW_PARTS_IS_PURE_NAND_PARTITIONS
+
 	//
 	sprintf(buf, "iminfo %x", ADDR_IN_RAM4ACTIVE_UIMAGE);
 	rc = _run_command(buf, 0);
@@ -342,7 +350,11 @@ static int run_linux_code(int is_system_in_bist) {
 #endif //     CONFIG_SIKLU_BOARD
 
 
-	// i += sprintf(buf + i, "mem=256 "); // edikk please check this limit
+#ifdef SW_PARTS_IS_PURE_NAND_PARTITIONS
+	i += sprintf(buf + i, "sw_image=nand ");
+#else
+	i += sprintf(buf + i, "sw_image=ubi ");
+#endif //     SW_PARTS_IS_PURE_NAND_PARTITIONS
 
 	if (siklu_is_restore2fact_default()) {
 		i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
@@ -406,12 +418,12 @@ static int execute_siklu_boot(int forced_image) {
 			img2load = !!simple_strtoul(primary_image_s, NULL, 10);
 		}
 	}
-	rc = validate_sw_image(img2load); // validate preferred bank
+	rc = validate_sw_image_and_copy2ram(img2load); // validate preferred bank
 
 	if (rc < 0) // validating fail, attempt to load next uimage
 			{
 		img2load = !img2load;
-		rc = validate_sw_image(img2load); // validate mate image
+		rc = validate_sw_image_and_copy2ram(img2load); // validate mate image
 		if (rc < 0) { // both images are wrong!
 			printf("%s()  Both uimage files are wrong\n", __func__);
 			rc = rescue_restore_boot_image();

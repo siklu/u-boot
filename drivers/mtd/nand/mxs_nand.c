@@ -1208,7 +1208,7 @@ int board_nand_init(struct nand_chip *nand)
 	nand->ecc.mode		= NAND_ECC_HW;
 	nand->ecc.bytes		= 9;
 	nand->ecc.size		= 512;
-	nand->ecc.strength	= 4; // edikk prev value 8 but linux uses '4', therefore change to 4
+	nand->ecc.strength	= 8; 
 
 	return 0;
 
