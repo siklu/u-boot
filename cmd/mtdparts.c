@@ -1945,7 +1945,7 @@ static int do_chpart(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return 0;
 }
 
-//==========  MV_SIKLU_WIGIG_BOARD  ======================   siklu edikk
+//==========  MV_SIKLU_WIGIG_BOARD  ======================   siklu
 uint32_t get_nand_part_offset_by_name(const char* name)
 {
     struct list_head *dentry, *pentry;

@@ -30,10 +30,11 @@
 #endif
 
 
-# define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
-# define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
-# define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
-# define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),40M(uimage0),"  \
+
+#define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
+#define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
+#define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
+#define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),40M(uimage0),"  \
     "40M(uimage1)," "16M(conf),-(log)"
 
 
@@ -77,15 +78,6 @@
 	#define CONFIG_CMD_UBIFS
 	/*#define CONFIG_UBI_SILENCE_MSG disable this define prints additional logs on terminal. remove it later. edikk */
 	#define CONFIG_UBI_SILENCE_MSG
-
-	/* edikk for test only JFFS2 !!!! */
-	#define CONFIG_CMD_JFFS2
-	# define CONFIG_JFFS2_NAND
-	# define CONFIG_FS_JFFS2
-	# define CONFIG_JFFS2_DEV		"nand0"
-	# define CONFIG_JFFS2_PART_SIZE		0x02800000
-	# define CONFIG_JFFS2_PART_OFFSET	0x00060000
-	/* edikk for test only JFFS2 end !!!! */
 
 #endif /* !SW_PARTS_IS_PURE_NAND_PARTITIONS */
 

@@ -10,10 +10,6 @@
 #include <rtc.h>
 #include <i2c.h>
 
-#ifdef CONFIG_SIKLU_BOARD
-//# include <siklu_common.h>    edikk TBD?
-//# include <siklu_common_hw.h>
-#endif
 
 
 #if defined(CONFIG_CMD_DATE)

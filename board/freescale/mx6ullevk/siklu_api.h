@@ -25,6 +25,13 @@ extern int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val);
 
 
 typedef enum {
+	MODULE_RFIC_70,
+	MODULE_RFIC_80,
+} MODULE_RFIC_E;
+
+extern int siklu_rfic_module_read(MODULE_RFIC_E module, u8 reg, u8* data);
+
+typedef enum {
 	SIKLU_MDIO_BUS0, // SOHO
 	SIKLU_MDIO_BUS1, // 10G PHY and TI Transceiver
 } SIKLU_MDIO_BUS_E;

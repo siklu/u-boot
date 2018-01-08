@@ -18,9 +18,6 @@
 #include "siklu_api.h"
 #include <spi.h>
 
-
-
-
 /*
  *
  */
@@ -38,7 +35,6 @@ static int do_siklu_snor_mid_read(cmd_tbl_t * cmdtp, int flag, int argc,
 	u8 tx_buf[10];
 	u8 rx_buf[10];
 
-
 	if (argc > 1) {
 		spi_mode = simple_strtoul(argv[1], NULL, 10);
 	}
@@ -55,8 +51,8 @@ static int do_siklu_snor_mid_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	memset(tx_buf,0,sizeof(tx_buf));
-	memset(rx_buf,0x00,sizeof(rx_buf));
+	memset(tx_buf, 0, sizeof(tx_buf));
+	memset(rx_buf, 0x00, sizeof(rx_buf));
 
 	tx_buf[0] = 0x9F; // revision ID command
 
@@ -67,8 +63,8 @@ static int do_siklu_snor_mid_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x %2x %2x %2x\n",
-			rx_buf[0], rx_buf[1], rx_buf[2], rx_buf[3]);
+	printf("\n RX buf: %2x %2x %2x %2x\n", rx_buf[0], rx_buf[1], rx_buf[2],
+			rx_buf[3]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -78,9 +74,6 @@ static int do_siklu_snor_mid_read(cmd_tbl_t * cmdtp, int flag, int argc,
 	return CMD_RET_FAILURE;
 
 }
-
-
-
 
 /*
  *
@@ -99,7 +92,6 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 	u8 tx_buf[10];
 	u8 rx_buf[10];
 
-
 	if (argc > 1) {
 		spi_mode = simple_strtoul(argv[1], NULL, 10);
 	}
@@ -116,11 +108,10 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	memset(tx_buf,0,sizeof(tx_buf));
-	memset(rx_buf,0,sizeof(rx_buf));
+	memset(tx_buf, 0, sizeof(tx_buf));
+	memset(rx_buf, 0, sizeof(rx_buf));
 
 	tx_buf[0] = 0x90; // revision ID command
-
 
 	ret = spi_xfer(spi, JEDEC_SEQ_LENGTH * 8, tx_buf, rx_buf,
 	SPI_XFER_BEGIN | SPI_XFER_END);
@@ -129,8 +120,8 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x %2x %2x %2x (%2x %2x)\n",
-			rx_buf[0], rx_buf[1], rx_buf[2], rx_buf[3], rx_buf[4], rx_buf[5]);
+	printf("\n RX buf: %2x %2x %2x %2x (%2x %2x)\n", rx_buf[0], rx_buf[1],
+			rx_buf[2], rx_buf[3], rx_buf[4], rx_buf[5]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -141,6 +132,45 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 }
 
+
+
+/*
+ *
+ */
+static int do_siklu_rfic_read(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_FAILURE, ret;
+	int module = 0;
+	MODULE_RFIC_E _mod;
+	u8 val = 0, reg_addr = 0x7F;
+
+	if (argc == 3) {
+		module = simple_strtoul(argv[1], NULL, 10);
+		reg_addr = simple_strtoul(argv[2], NULL, 16);
+	} else {
+		printf(" Not enough arguments - %d\n", argc);
+		return CMD_RET_USAGE;
+	}
+
+	if (module == 70)
+		_mod = MODULE_RFIC_70;
+	else if (module == 80)
+		_mod = MODULE_RFIC_80;
+	else {
+		printf(" Wrong module - %d\n", module);
+		return CMD_RET_USAGE;
+	}
+
+	ret = siklu_rfic_module_read(_mod, reg_addr, &val);
+	if (ret == 0)
+		printf(" RFIC%d, reg 0x%2x, value 0x%x\n", module, reg_addr, val);
+	else {
+		printf(" Read fail\n");
+		rc = CMD_RET_FAILURE;
+	}
+
+	return rc;
+}
 
 static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
@@ -173,8 +203,8 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	memset(tx_buf,0,sizeof(tx_buf));
-	memset(rx_buf,0x55,sizeof(rx_buf));
+	memset(tx_buf, 0, sizeof(tx_buf));
+	memset(rx_buf, 0x55, sizeof(rx_buf));
 
 	tx_buf[0] = 0x9F; // revision ID command
 
@@ -185,7 +215,8 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x %2x (%2x) %2x\n",rx_buf[0], rx_buf[1], rx_buf[2], rx_buf[3]);
+	printf("\n RX buf: %2x %2x (%2x) %2x\n", rx_buf[0], rx_buf[1], rx_buf[2],
+			rx_buf[3]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -196,7 +227,6 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 }
 
-
 static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -206,18 +236,16 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 	if (argc > 1) {
 		addr = simple_strtoul(argv[1], NULL, 16);
-	}
-	else {
+	} else {
 		printf("%s: Not enough arguments\n", __func__);
 		return rc;
 	}
 
-	memset(rx_buf,0,sizeof(rx_buf));
+	memset(rx_buf, 0, sizeof(rx_buf));
 
 	return siklu_cpld_read(addr, rx_buf);
 
 }
-
 
 static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
@@ -236,18 +264,14 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 	return siklu_cpld_write(addr, data);
 }
 
-
-
 U_BOOT_CMD(scpldv, 5, 0, do_siklu_cpld_version_read,
 		"Read Siklu CPLD version register",
 		" [spi_mode 0..3*] Read Siklu CPLD version register");
 
-U_BOOT_CMD(scpldr, 5, 0, do_siklu_cpld_read,
-		"Read Siklu CPLD register",
+U_BOOT_CMD(scpldr, 5, 0, do_siklu_cpld_read, "Read Siklu CPLD register",
 		"[cpld read addr]");
 
-U_BOOT_CMD(scpldw, 5, 0, do_siklu_cpld_write,
-		"Write Siklu CPLD register",
+U_BOOT_CMD(scpldw, 5, 0, do_siklu_cpld_write, "Write Siklu CPLD register",
 		"[cpld write addr] [val]");
 
 U_BOOT_CMD(snor_jdec, 5, 0, do_siklu_snor_jedec_read,
@@ -255,7 +279,7 @@ U_BOOT_CMD(snor_jdec, 5, 0, do_siklu_snor_jedec_read,
 		" [spi_mode 0..3*] Read serial-NOR JEDEC data");
 
 U_BOOT_CMD(snor_mid, 5, 0, do_siklu_snor_mid_read,
-		"Read serial-NOR Manufacture ID",
-		" Read serial-NOR Manufacture ID");
+		"Read serial-NOR Manufacture ID", " Read serial-NOR Manufacture ID");
 
-
+U_BOOT_CMD(srficr, 5, 0, do_siklu_rfic_read, "Read RFIC register",
+		"[module: 70/80] [reg]");

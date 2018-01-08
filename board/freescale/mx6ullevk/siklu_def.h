@@ -9,10 +9,6 @@
 #define SIKLU_DEF_H_
 
 
-/* no need here, declared in include/configs/mx6ullevk_siklu.h
-#define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
-    "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"   // edikk TBD
-*/
 
 #define SIKLU_BIST_ENVIRONMENT_NAME "bist"
 #define SIKLU_BIST_MUT_ENVIRONMENT_NAME "SK_bist" // siklu_remark002
@@ -23,6 +19,12 @@
 #define CONFIG_CPLD_DEFAULT_CS		1
 #define CONFIG_CPLD_DEFAULT_SPEED	10000000
 #define CONFIG_CPLD_DEFAULT_MODE	SPI_MODE_0
+
+#define CONFIG_RFIC_DEFAULT_BUS			0
+#define CONFIG_RFIC70_DEFAULT_CS		0
+#define CONFIG_RFIC80_DEFAULT_CS		1
+#define CONFIG_RFIC_DEFAULT_SPEED	1000000
+#define CONFIG_RFIC_DEFAULT_MODE	SPI_MODE_0
 
 
 #endif /* SIKLU_DEF_H_ */

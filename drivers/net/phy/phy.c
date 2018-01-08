@@ -702,7 +702,6 @@ static struct phy_device *create_phy_by_mask(struct mii_dev *bus,
 #else
 		int r = get_phy_id(bus, addr, devad, &phy_id);
 #endif
-		// printf("%s() Find PHY ID 0x%x, phy_id %x\n", __func__, r, phy_id); // edikk  ABC
 
 		/* If the PHY ID is mostly f's, we didn't find anything */
 		if (r == 0 && (phy_id & 0x1fffffff) != 0x1fffffff)
