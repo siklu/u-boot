@@ -321,5 +321,5 @@ U_BOOT_CMD(srficr, 5, 0, do_siklu_rfic_read, "Read RFIC register",
 		"[module: 70/80] [reg]");
 
 U_BOOT_CMD(srficw, 5, 0, do_siklu_rfic_write, "Write RFIC register",
-		"[module: 70/80] [reg] [val");
+		"[module: 70/80] [reg] [val]");
 
