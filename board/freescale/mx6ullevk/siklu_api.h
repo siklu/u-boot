@@ -29,7 +29,8 @@ typedef enum {
 	MODULE_RFIC_80,
 } MODULE_RFIC_E;
 
-extern int siklu_rfic_module_read(MODULE_RFIC_E module, u8 reg, u8* data);
+extern int siklu_rfic_module_read (MODULE_RFIC_E module, u8 reg, u8* data);
+extern int siklu_rfic_module_write(MODULE_RFIC_E module, u8 reg, u8  data);
 
 typedef enum {
 	SIKLU_MDIO_BUS0, // SOHO

@@ -132,8 +132,6 @@ static int do_siklu_snor_jedec_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 }
 
-
-
 /*
  *
  */
@@ -171,7 +169,45 @@ static int do_siklu_rfic_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 	return rc;
 }
+/*
+ *
+ */
+static int do_siklu_rfic_write(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_FAILURE, ret;
+	int module = 0;
+	MODULE_RFIC_E _mod;
+	u8 val = 0, reg_addr = 0x7F;
 
+	if (argc == 4) {
+		module = simple_strtoul(argv[1], NULL, 10);
+		reg_addr = simple_strtoul(argv[2], NULL, 16);
+		val = simple_strtoul(argv[3], NULL, 16);
+	} else {
+		printf(" Not enough arguments - %d\n", argc);
+		return CMD_RET_USAGE;
+	}
+
+	if (module == 70)
+		_mod = MODULE_RFIC_70;
+	else if (module == 80)
+		_mod = MODULE_RFIC_80;
+	else {
+		printf(" Wrong module - %d\n", module);
+		return CMD_RET_USAGE;
+	}
+
+	ret = siklu_rfic_module_write(_mod, reg_addr, val);
+	if (ret != 0) {
+		printf(" Write fail\n");
+		rc = CMD_RET_FAILURE;
+	}
+	return rc;
+}
+
+/*
+ *
+ */
 static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -283,3 +319,7 @@ U_BOOT_CMD(snor_mid, 5, 0, do_siklu_snor_mid_read,
 
 U_BOOT_CMD(srficr, 5, 0, do_siklu_rfic_read, "Read RFIC register",
 		"[module: 70/80] [reg]");
+
+U_BOOT_CMD(srficw, 5, 0, do_siklu_rfic_write, "Write RFIC register",
+		"[module: 70/80] [reg] [val");
+

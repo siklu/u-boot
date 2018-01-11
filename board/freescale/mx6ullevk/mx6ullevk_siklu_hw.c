@@ -51,14 +51,14 @@ static const iomux_v3_cfg_t rfic_pads[] = { //
 		/*  */
 #ifndef GPIO_ECSPI1_SS_MANUAL_CONTROL
 				MX6_PAD_CSI_DATA05__ECSPI1_SS0 | MUX_PAD_CTRL(NO_PAD_CTRL), //
-				MX6_PAD_LCD_DATA05__ECSPI1_SS1 | MUX_PAD_CTRL(NO_PAD_CTRL), //
-				MX6_PAD_LCD_DATA06__ECSPI1_SS2 | MUX_PAD_CTRL(NO_PAD_CTRL), //
-				MX6_PAD_LCD_DATA07__ECSPI1_SS3 | MUX_PAD_CTRL(NO_PAD_CTRL), //
+				MX6_PAD_LCD_DATA05__ECSPI1_SS1 | MUX_PAD_CTRL(NO_PAD_CTRL),//
+				MX6_PAD_LCD_DATA06__ECSPI1_SS2 | MUX_PAD_CTRL(NO_PAD_CTRL),//
+				MX6_PAD_LCD_DATA07__ECSPI1_SS3 | MUX_PAD_CTRL(NO_PAD_CTRL),//
 #else
 				MX6_PAD_CSI_DATA05__GPIO4_IO26 | MUX_PAD_CTRL(NO_PAD_CTRL), //
-				MX6_PAD_LCD_DATA05__GPIO3_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL),//
-				MX6_PAD_LCD_DATA06__GPIO3_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),//
-				MX6_PAD_LCD_DATA07__GPIO3_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),//
+				MX6_PAD_LCD_DATA05__GPIO3_IO10 | MUX_PAD_CTRL(NO_PAD_CTRL), //
+				MX6_PAD_LCD_DATA06__GPIO3_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL), //
+				MX6_PAD_LCD_DATA07__GPIO3_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL), //
 #endif //
 				MX6_PAD_CSI_DATA04__ECSPI1_SCLK | MUX_PAD_CTRL(NO_PAD_CTRL), //
 				MX6_PAD_CSI_DATA06__ECSPI1_MOSI | MUX_PAD_CTRL(NO_PAD_CTRL), //
@@ -68,9 +68,9 @@ static const iomux_v3_cfg_t rfic_pads[] = { //
 
 static const iomux_v3_cfg_t i2c1_pads[] = { //
 		MX6_PAD_CSI_MCLK__CSI_MCLK | MUX_PAD_CTRL(NO_PAD_CTRL), //
-		MX6_PAD_CSI_PIXCLK__CSI_PIXCLK | MUX_PAD_CTRL(NO_PAD_CTRL), //
-		MX6_PAD_CSI_MCLK__I2C1_SDA | MUX_PAD_CTRL(NO_PAD_CTRL), //
-		MX6_PAD_CSI_PIXCLK__I2C1_SCL | MUX_PAD_CTRL(NO_PAD_CTRL) //
+				MX6_PAD_CSI_PIXCLK__CSI_PIXCLK | MUX_PAD_CTRL(NO_PAD_CTRL), //
+				MX6_PAD_CSI_MCLK__I2C1_SDA | MUX_PAD_CTRL(NO_PAD_CTRL), //
+				MX6_PAD_CSI_PIXCLK__I2C1_SCL | MUX_PAD_CTRL(NO_PAD_CTRL) //
 		};
 
 static const iomux_v3_cfg_t i2c2_pads[] = { MX6_PAD_CSI_HSYNC__CSI_HSYNC
@@ -182,14 +182,12 @@ int siklu_rfic_module_read(MODULE_RFIC_E module, u8 reg, u8* data) {
 	if (module == MODULE_RFIC_70) {
 		cs = CONFIG_RFIC70_DEFAULT_CS;
 		gpio_cs = GPIO_ECSPI1_SS0;
-	}
-	else {
+	} else {
 		cs = CONFIG_RFIC80_DEFAULT_CS;
 		gpio_cs = GPIO_ECSPI1_SS1;
 	}
 
 	gpio_direction_output(gpio_cs, 0);
-
 
 	spi_mode = 0; // write data to RFIC in mode#0
 	rc = siklu_rfic_1byte_xfer(spi_mode, cs, SPI_XFER_BEGIN, reg | 0x80, &din);
@@ -205,6 +203,63 @@ int siklu_rfic_module_read(MODULE_RFIC_E module, u8 reg, u8* data) {
 	}
 	gpio_direction_output(gpio_cs, 1);
 	return 0;
+
+}
+
+int siklu_rfic_module_write(MODULE_RFIC_E module, u8 reg, u8 data) {
+	int ret = -1;
+	u32 cs;
+	u32 spi_mode = 0;
+	u8 din;
+	u32 gpio_cs;
+	u32 bus = CONFIG_RFIC_DEFAULT_BUS;
+	u8 tx_buf[10];
+	const u32 max_hz = CONFIG_CPLD_DEFAULT_SPEED;
+	struct spi_slave *spi;
+
+	siklu_rfic_module_access_init();
+	if (module == MODULE_RFIC_70) {
+		cs = CONFIG_RFIC70_DEFAULT_CS;
+		gpio_cs = GPIO_ECSPI1_SS0;
+	} else {
+		cs = CONFIG_RFIC80_DEFAULT_CS;
+		gpio_cs = GPIO_ECSPI1_SS1;
+	}
+
+	gpio_direction_output(gpio_cs, 0);
+
+	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
+	if (!spi) {
+		printf("%s: Failed to set up slave\n", __func__);
+		return ret;
+	}
+
+	ret = spi_claim_bus(spi);
+	if (ret) {
+		printf("%s: Failed to claim SPI bus: %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	memset(tx_buf, 0, sizeof(tx_buf));
+
+	tx_buf[0] = reg & 0x7F;
+	tx_buf[1] = data;
+
+	ret = spi_xfer(spi, 2 * 8, tx_buf, NULL, SPI_XFER_BEGIN | SPI_XFER_END);
+	if (ret < 0) {
+		printf("%s: Failed XFER SPI: ret - %d\n", __func__, ret);
+		goto err_claim_bus;
+	}
+
+	// last before exit
+	gpio_direction_output(gpio_cs, 1);
+	spi_free_slave(spi);
+
+	return 0;
+	err_claim_bus: //
+	gpio_direction_output(gpio_cs, 1);
+	spi_free_slave(spi);
+	return ret;
 
 }
 
