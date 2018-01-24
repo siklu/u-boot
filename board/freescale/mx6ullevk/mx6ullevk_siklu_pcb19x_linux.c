@@ -26,11 +26,14 @@ extern uint32_t get_nand_part_offset_by_name(const char* name);
 extern int siklu_mutable_env_set(const char *varname, const char *varvalue,
 		int save_if_diff_required);
 
+
+// #define BOOT_DEBUG
+
 #ifdef BOOT_DEBUG
 static inline int _run_command(const char *cmd, int flag)
 {
 	int rc;
-	printf(" *** Run command: \"%s\" end command\n", cmd);
+	printf(" *** Run command:    \"%s\"\n", cmd);
 	rc = run_command(cmd, flag);
 	printf(" ***                  rc %d\n", rc);
 	return rc;
@@ -113,7 +116,11 @@ static int validate_sw_image_and_copy2ram(int img2load) {
 
 	sprintf(buf, "nand read 0x%x uimage%d 0x%x",
 			ADDR_IN_RAM4ACTIVE_UIMAGE, img2load, MAX_ACTIVE_UIMAGE_SIZE - 1);
-
+	rc = _run_command(buf, 0);
+	if (rc != 0) {
+		printf(" Execute command \"%s\" FAIL\n", buf);
+		return -1;
+	}
 #else
 	//
 	sprintf(buf, "ubi part uimage%d", img2load);
@@ -506,7 +513,8 @@ static int rescue_restore_boot_image(void) {
 
 	printf("%s()  Execute RESQUE RESTORE and REBOOT\n", __func__);
 	// execute 'dhcp' command, get network parameters, get uimage file name, server IP
-	sprintf(buf, "dhcp");
+	// sprintf(buf, "setenv autoload no;dhcp");
+	sprintf(buf, "dhcp"); // current command gets pointer to CVMX uImage instead NXP!
 	rc = _run_command(buf, 0);
 	if (rc != 0) {
 		printf("Execution command \"%s\" FAIL.\n", buf);

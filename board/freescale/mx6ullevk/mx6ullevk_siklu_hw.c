@@ -210,7 +210,7 @@ int siklu_rfic_module_write(MODULE_RFIC_E module, u8 reg, u8 data) {
 	int ret = -1;
 	u32 cs;
 	u32 spi_mode = 0;
-	u8 din;
+	u8 __attribute__((unused))  din;
 	u32 gpio_cs;
 	u32 bus = CONFIG_RFIC_DEFAULT_BUS;
 	u8 tx_buf[10];
