@@ -361,6 +361,7 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 		printf("\n");
 	}
 
+	//printf("%s()   called flag %lx, line %d\n", __func__, flags, __LINE__); // edikk remove
 	if (flags & SPI_XFER_BEGIN) {
 		mxc_spi_cs_activate(mxcs);
 	}
@@ -384,6 +385,7 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 		n_bytes -= blk_size;
 	}
 
+	//printf("%s()   called flag %lx, line %d\n", __func__, flags, __LINE__); // edikk remove
 	if (flags & SPI_XFER_END) {
 		mxc_spi_cs_deactivate(mxcs);
 	}
@@ -435,17 +437,23 @@ static int setup_cs_gpio(struct mxc_spi_slave *mxcs,
 {
 	int ret;
 
+
 	mxcs->gpio = board_spi_cs_gpio(bus, cs);
 	if (mxcs->gpio == -1)
 		return 0;
 
 	gpio_request(mxcs->gpio, "spi-cs");
+#ifdef CONFIG_SIKLU_BOARD
+	{ // siklu configure IOMUXC_SW_MUX_CTL_PAD_UART2_TX_DATA register connect to
+		// ALT5  Select mux mode: ALT5 mux port: GPIO1_IO20 of instance: gpio1
+		writel(0x5, (uint32_t*) 0x20e0094);
+	}
+#endif // 	CONFIG_SIKLU_BOARD
 	ret = gpio_direction_output(mxcs->gpio, !(mxcs->ss_pol));
 	if (ret) {
 		printf("mxc_spi: cannot setup gpio %d\n", mxcs->gpio);
 		return -EINVAL;
 	}
-
 	return 0;
 }
 

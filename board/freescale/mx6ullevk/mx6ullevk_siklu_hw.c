@@ -91,15 +91,30 @@ static void setup_iomux_siklu_i2c(void) {
 int board_spi_cs_gpio(unsigned bus, unsigned cs) {
 	int rc = -1;
 
+	switch (bus) {
+	case 0:   // RF not functional in uboot
 #ifdef  _GPIO_ECSPI1_SS_MANUAL_CONTROL // code below disabled. MXC_SPI doesn't control CS output, we use this manually
-
-	if (bus == 0) {
+	{
 		if (cs == 0)
 		rc = IMX_GPIO_NR(4, 26);
 		else if (cs == 1)
 		rc = IMX_GPIO_NR(3, 10);
 	}
 #endif //
+		break;
+	case 1:  // CPLD
+		break;
+	case 2: // serial-NOR
+	{
+		if (cs == 0) {
+			rc = IMX_GPIO_NR(1, 20);
+		}
+	}
+		break;
+	default:
+		break;
+
+	}
 
 	return rc;
 }
@@ -210,7 +225,7 @@ int siklu_rfic_module_write(MODULE_RFIC_E module, u8 reg, u8 data) {
 	int ret = -1;
 	u32 cs;
 	u32 spi_mode = 0;
-	u8 __attribute__((unused))  din;
+	u8 __attribute__((unused)) din;
 	u32 gpio_cs;
 	u32 bus = CONFIG_RFIC_DEFAULT_BUS;
 	u8 tx_buf[10];

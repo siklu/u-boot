@@ -10,6 +10,7 @@
 #include <common.h>
 #include <spi.h>
 
+/*  edikk delete after debug
 static void *_memcpy(u8 *dest, const u8 *src, size_t size)
 {
 	unsigned char *dptr = dest;
@@ -22,7 +23,14 @@ static void *_memcpy(u8 *dest, const u8 *src, size_t size)
 	return dest;
 }
 
-
+ define max sf read/write buffer for siklu board
+#ifndef SIKLU_SYSEEPROM_SF_SIZE
+# define SIKLU_SYSEEPROM_SF_SIZE (0x010000) // define also in board/freescale/mx6ullevk/siklu_def.h
+#endif
+#define MAX_BUF_SIZE  0x200100 //  SIKLU_SYSEEPROM_SF_SIZE    // reserve 4k
+static u8 tx_buf[MAX_BUF_SIZE];
+static u8 rx_buf[MAX_BUF_SIZE];
+*/
 
 
 static int spi_flash_read_write(struct spi_slave *spi,
@@ -30,14 +38,11 @@ static int spi_flash_read_write(struct spi_slave *spi,
 				const u8 *data_out, u8 *data_in,
 				size_t data_len)
 {
-	//unsigned long flags = SPI_XFER_BEGIN;
+	unsigned long flags = SPI_XFER_BEGIN;
 	int ret;
 
-#ifdef CONFIG_SIKLU_BOARD // edikk repair CS problem!!!!
+#ifdef _CONFIG_SIKLU_BOARD // edikk repair CS problem!!!!  edikk delete after debug
 	{
-#define MAX_BUF_SIZE 0x400
-		static u8 tx_buf[MAX_BUF_SIZE];
-		static u8 rx_buf[MAX_BUF_SIZE];
 		int  __attribute__ ((unused)) ret = 0;
 
 		memset(tx_buf,0,sizeof(tx_buf));
@@ -94,12 +99,8 @@ int spi_flash_cmd_read(struct spi_slave *spi, const u8 *cmd,
 
 int spi_flash_cmd(struct spi_slave *spi, u8 cmd, void *response, size_t len)
 {
-#ifdef CONFIG_SIKLU_BOARD  // edikk repair CS problem!!!!
+#ifdef _CONFIG_SIKLU_BOARD  // edikk repair CS problem!!!!
 	{
-#undef MAX_BUF_SIZE
-#define MAX_BUF_SIZE 100
-		u8 tx_buf[MAX_BUF_SIZE];
-		u8 rx_buf[MAX_BUF_SIZE];
 
 		memset(tx_buf,0,sizeof(tx_buf));
 		memset(rx_buf,0,sizeof(rx_buf));
