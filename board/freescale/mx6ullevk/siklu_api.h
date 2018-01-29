@@ -39,5 +39,17 @@ typedef enum {
 
 extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
 
+extern int siklu_sf_sys_eeprom_read(const char* buf, int size);
+extern int siklu_sf_sys_eeprom_write(const char* buf, int size);
+extern int siklu_sf_sys_eeprom_erase(void);
 
+// SYSEEPROM related API
+extern int siklu_syseeprom_init(void);
+extern int siklu_syseeprom_display(void);
+
+/*
+extern int env_print_se(char *name, int flag);
+extern int setenv_se(const char *varname, const char *varvalue);
+extern int saveenv_se(void);
+*/
 #endif /* SIKLU_API_H_ */

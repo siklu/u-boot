@@ -27,4 +27,7 @@
 #define CONFIG_RFIC_DEFAULT_MODE	SPI_MODE_0
 
 
+#define SIKLU_SYSEEPROM_SF_OFFS		0x1f0000
+#define SIKLU_SYSEEPROM_SF_SIZE		0x010000 // defined also in drivers/mtd/spi/sf.c
+
 #endif /* SIKLU_DEF_H_ */
