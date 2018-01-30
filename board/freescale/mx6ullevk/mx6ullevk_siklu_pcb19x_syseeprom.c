@@ -62,7 +62,7 @@ static int se_erase(void) {
 }
 
 /*
- *
+ *	Write to SYSEEPROM area string instead valid SYSEEPROM data
  */
 static int se_test(void) {
 	int rc;
@@ -80,6 +80,60 @@ static int se_test(void) {
 		rc = run_command(cmd, 0);
 	}
 #endif
+	return rc;
+}
+
+static int se_init(void) {
+	int rc = siklu_syseeprom_init();
+	if (rc != 0) {
+		rc = siklu_syseeprom_restore_default();
+		if (rc != 0) {
+			printf("Error restore default SYSEEPROM\n");
+			return -1;
+		}
+		// second attempt for init after restore
+		rc = siklu_syseeprom_init();
+		if (rc != 0) {
+			printf("Error init SYSEEPROM\n");
+			return -1;
+		}
+	}
+	return rc;
+}
+
+static int se_get_value(const char *key) {
+	int rc = -1;
+
+	if (key) {
+		char val[KEY_VAL_FIELD_SIZE];
+		memset(val, 0, sizeof(val));
+		rc = siklu_syseeprom_get_val(key, val);
+		if (rc == 0)
+			printf(" %s\n", val);
+		else {
+			printf(" No key \"%s\" in database\n", key);
+		}
+	} else
+		printf("%s: key is NULL\n", __func__);
+	return rc;
+}
+
+static int se_set_value(const char *name, const char *value) {
+	int rc = -1;
+
+	if (name) {
+		rc = siklu_syseeprom_set_val(name, value);
+		if (rc == 0) {
+			/*
+			 rc = saveenv_se();
+			 if (rc)
+			 printf("%s: saveenv_se()=%d\n", __func__, rc);
+			 */
+		} else
+			printf("%s: setenv_se()=%d\n", __func__, rc);
+	} else
+		printf("%s: name is NULL\n", __func__);
+
 	return rc;
 }
 
@@ -101,9 +155,19 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 	else if (ECMD("t"))
 		rc = se_test();
 	else if (ECMD("i"))
-		rc = siklu_syseeprom_init();
-	else if (ECMD("d"))
+		rc = se_init();
+	else if ((ECMD("d")) || (ECMD("f")))
 		rc = siklu_syseeprom_display();
+	else if (ECMD("get")) {
+		rc = se_get_value(argv[2]);
+	} else if (ECMD("set"))
+		rc = se_set_value(argv[2], argv[3]);
+	else {
+		printf("%s: unknown option %s\n", __func__, argv[1]);
+	}
+
+	if (rc != 0)
+		rc = CMD_RET_FAILURE;
 
 #if 0
 	else if (ECMD("f"))
@@ -134,8 +198,6 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 		rc = set_value("SE_mac", new_mac);
 
 	}
-	else
-	printf("%s: unknown option %s\n", __func__, argv[1]);
 
 #endif // 0
 

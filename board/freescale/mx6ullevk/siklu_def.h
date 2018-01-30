@@ -31,4 +31,10 @@
 #define SIKLU_SYSEEPROM_SF_OFFS		0x1f0000
 #define SIKLU_SYSEEPROM_SF_SIZE		0x010000 // defined also in drivers/mtd/spi/sf.c
 
+// SYSEEPROM defines
+#define KEY_VAL_FIELD_SIZE 		64
+#define SYSEEPROM_NUM_FIELDS 	64
+#define SIKLU_SF_ENV_SIZE		0x1000 // less than sector size, limited to 4k
+
+
 #endif /* SIKLU_DEF_H_ */

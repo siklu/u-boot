@@ -22,10 +22,7 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-#define KEY_VAL_FIELD_SIZE 		64
-#define SYSEEPROM_NUM_FIELDS 	64
 
-#define SIKLU_SF_ENV_SIZE		0x1000 // less than sector size, limited to 4k
 
 typedef struct {
 	u8 occup;
@@ -59,7 +56,10 @@ static const char siklu_default_environment_se[] = { //
 						"SE_port_map=c---" ";" "\0" //
 		};
 
-static int siklu_syseeprom_restore_default(void) {
+/*
+ * called if SYSEEPROM data was damaged or not yet created
+ */
+int siklu_syseeprom_restore_default(void) {
 	int rc = 0;
 
 	// printf("%s() called, line %d\n", __func__, __LINE__); // edikk remove
@@ -132,6 +132,9 @@ static int siklu_fill_pair(char* buf) {
 	return rc;
 }
 
+/*
+ * Called once on power up
+ */
 static int siklu_fill_tupples_from_sf(sf_env_siklu_se_t* p_sf_env_siklu_se) {
 	int rc = 0;
 	int i = 0;
@@ -156,7 +159,9 @@ static int siklu_fill_tupples_from_sf(sf_env_siklu_se_t* p_sf_env_siklu_se) {
 
 	return rc;
 }
-
+/*
+ * display SYSEEPROM parsed data in memory array
+ */
 int siklu_syseeprom_display(void) {
 	int rc = 0, i;
 
@@ -169,11 +174,75 @@ int siklu_syseeprom_display(void) {
 	return rc;
 }
 
+
+int siklu_syseeprom_get_val(const char* key, char* val)
+{
+	int rc = 0, i;
+
+	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
+		key_val_pair_t* p_key_val = key_val_pair + i;
+		if (p_key_val->occup) {
+			if (strncmp(p_key_val->key,key, KEY_VAL_FIELD_SIZE - 1) == 0) {
+				strcpy(val, p_key_val->val);
+				return 0;
+			}
+		}
+	}
+	// not founf :-(
+	strcpy(val, "");
+	rc = -1;
+	return rc;
+}
+/*
+ *
+ */
+int   siklu_syseeprom_set_val(const char* key, char* val)
+{
+	int rc = 0, i;
+
+	// 1st step does the key already exists
+	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
+		key_val_pair_t* p_key_val = key_val_pair + i;
+		if (p_key_val->occup) {
+			if (strncmp(p_key_val->key,key, KEY_VAL_FIELD_SIZE - 1) == 0) {
+				// ok it already exists, update value and exit
+				if ((!val) || strlen(val)==0) {// clear entry
+					memset(p_key_val, 0, sizeof(key_val_pair_t));
+				}
+				else // udate entry
+					strcpy(p_key_val->val, val);
+				return 0;
+			}
+			else
+				continue;
+		}
+	}
+	// if not create new
+	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
+		key_val_pair_t* p_key_val = key_val_pair + i;
+		if (!p_key_val->occup) {
+			strncpy(p_key_val->key, key, KEY_VAL_FIELD_SIZE - 1);
+			strncpy(p_key_val->val, val, KEY_VAL_FIELD_SIZE - 1);
+			p_key_val->occup = 1;
+			return 0;
+		}
+	}
+
+	// no free entries
+	printf("%s()   no free entries for key %s\n", __func__, key);
+	rc = -1;
+
+	return rc;
+}
+
+
+
+
 /*
  *
  */
 int siklu_syseeprom_init(void) {
-	int rc = 0;
+	int rc = -1;
 	int err_line = 0;
 	u32 crc;
 
@@ -191,11 +260,13 @@ int siklu_syseeprom_init(void) {
 
 	// check valid key
 	if (p_sf_env_siklu_se->info.control_info.valid_key != VALID_KEY_WORD) {
+		rc = -1;
 		err_line = __LINE__;
 		goto _bad_data;
 	}
 	// check data length
 	if (p_sf_env_siklu_se->info.control_info.data_size >= SIKLU_SF_ENV_SIZE) {
+		rc = -1;
 		err_line = __LINE__;
 		goto _bad_data;
 	}
@@ -204,6 +275,7 @@ int siklu_syseeprom_init(void) {
 	crc = crc32(0L, (unsigned char *) p_sf_env_siklu_se->info.data,
 			p_sf_env_siklu_se->info.control_info.data_size);
 	if (crc != p_sf_env_siklu_se->info.control_info.crc) {
+		rc = -1;
 		err_line = __LINE__;
 		goto _bad_data;
 	}
@@ -214,11 +286,10 @@ int siklu_syseeprom_init(void) {
 		err_line = __LINE__;
 		goto _bad_data;
 	}
-
+	rc = 0;
 	return rc;
 	_bad_data: //
-	printf("%s() Error on line %d, restore default\n", __func__, err_line);
-	rc = siklu_syseeprom_restore_default();
+	printf("%s() Error on line %d\n", __func__, err_line);
 	return rc;
 
 }
