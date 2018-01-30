@@ -3,6 +3,8 @@
  *
  *  Created on: Aug 29, 2017
  *      Author: edwardk
+ *      Same code used in host/sysapi/sysapi-nxp/
+ *      Any changes here should be reflected
  */
 
 #ifndef SIKLU_API_H_

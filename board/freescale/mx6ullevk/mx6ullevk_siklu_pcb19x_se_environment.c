@@ -3,6 +3,8 @@
  *
  *  Created on: Jan 29, 2018
  *      Author: edwardk
+ *      Same code used in host/sysapi/sysapi-nxp/
+ *      Any changes here should be reflected
  */
 
 #include <common.h>
