@@ -48,11 +48,7 @@ extern int siklu_syseeprom_init(void);
 extern int siklu_syseeprom_display(void);
 extern int siklu_syseeprom_restore_default(void);
 extern int siklu_syseeprom_get_val(const char* name, char* val);
-extern int   siklu_syseeprom_set_val(const char* name, char* val);
+extern int  siklu_syseeprom_set_val(const char* name, const char* val);
+extern int  siklu_syseeprom_udate(void);
 
-/*
-extern int env_print_se(char *name, int flag);
-extern int setenv_se(const char *varname, const char *varvalue);
-extern int saveenv_se(void);
-*/
 #endif /* SIKLU_API_H_ */

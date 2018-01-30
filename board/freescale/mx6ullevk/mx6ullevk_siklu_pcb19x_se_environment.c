@@ -22,8 +22,6 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 
-
-
 typedef struct {
 	u8 occup;
 	char key[KEY_VAL_FIELD_SIZE];
@@ -174,15 +172,13 @@ int siklu_syseeprom_display(void) {
 	return rc;
 }
 
-
-int siklu_syseeprom_get_val(const char* key, char* val)
-{
+int siklu_syseeprom_get_val(const char* key, char* val) {
 	int rc = 0, i;
 
 	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
 		key_val_pair_t* p_key_val = key_val_pair + i;
 		if (p_key_val->occup) {
-			if (strncmp(p_key_val->key,key, KEY_VAL_FIELD_SIZE - 1) == 0) {
+			if (strncmp(p_key_val->key, key, KEY_VAL_FIELD_SIZE - 1) == 0) {
 				strcpy(val, p_key_val->val);
 				return 0;
 			}
@@ -196,24 +192,22 @@ int siklu_syseeprom_get_val(const char* key, char* val)
 /*
  *
  */
-int   siklu_syseeprom_set_val(const char* key, char* val)
-{
+int siklu_syseeprom_set_val(const char* key, const char* val) {
 	int rc = 0, i;
 
 	// 1st step does the key already exists
 	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
 		key_val_pair_t* p_key_val = key_val_pair + i;
 		if (p_key_val->occup) {
-			if (strncmp(p_key_val->key,key, KEY_VAL_FIELD_SIZE - 1) == 0) {
+			if (strncmp(p_key_val->key, key, KEY_VAL_FIELD_SIZE - 1) == 0) {
 				// ok it already exists, update value and exit
-				if ((!val) || strlen(val)==0) {// clear entry
+				if ((!val) || strlen(val) == 0) {			// clear entry
 					memset(p_key_val, 0, sizeof(key_val_pair_t));
-				}
-				else // udate entry
+				} else
+					// udate entry
 					strcpy(p_key_val->val, val);
 				return 0;
-			}
-			else
+			} else
 				continue;
 		}
 	}
@@ -235,8 +229,35 @@ int   siklu_syseeprom_set_val(const char* key, char* val)
 	return rc;
 }
 
+static int siklu_syseeprom_build_image(sf_env_siklu_se_t* p_sf_env_siklu_se) {
+	int rc = 0, i, offs = 0;
+	memset(p_sf_env_siklu_se, 0, sizeof(sf_env_siklu_se));
 
+	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
+		key_val_pair_t* p_key_val = key_val_pair + i;
+		if (p_key_val->occup) {
+			offs += sprintf(p_sf_env_siklu_se->info.data + offs, "%s=%s;",
+					p_key_val->key, p_key_val->val);
+		}
+	}
+	p_sf_env_siklu_se->info.control_info.data_size = offs;
+	p_sf_env_siklu_se->info.control_info.crc = crc32(0L,
+			(unsigned char *) p_sf_env_siklu_se->info.data,
+			p_sf_env_siklu_se->info.control_info.data_size);
+	p_sf_env_siklu_se->info.control_info.valid_key = VALID_KEY_WORD;
+	return rc;
+}
 
+int siklu_syseeprom_udate(void) {
+	int rc = 0;
+
+	memset(p_sf_env_siklu_se, 0, sizeof(sf_env_siklu_se));
+	rc = siklu_syseeprom_build_image(p_sf_env_siklu_se);
+	if (rc == 0)
+		rc = siklu_sf_sys_eeprom_write(p_sf_env_siklu_se->buff,
+				sizeof(sf_env_siklu_se_t));
+	return rc;
+}
 
 /*
  *

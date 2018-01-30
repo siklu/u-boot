@@ -101,6 +101,22 @@ static int se_init(void) {
 	return rc;
 }
 
+
+/*
+ *
+ */
+static int se_update_storage(void) {
+	int rc = 0;
+	rc = siklu_syseeprom_udate();
+	if (rc != 0) {
+		printf("Error update SYSEEPROM\n");
+		return -1;
+	}
+	return rc;
+}
+
+
+
 static int se_get_value(const char *key) {
 	int rc = -1;
 
@@ -156,6 +172,8 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 		rc = se_test();
 	else if (ECMD("i"))
 		rc = se_init();
+	else if (ECMD("u"))
+		rc = se_update_storage();
 	else if ((ECMD("d")) || (ECMD("f")))
 		rc = siklu_syseeprom_display();
 	else if (ECMD("get")) {
@@ -208,16 +226,13 @@ U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom,
 		"Read/Maintenance System Serial EEPROM raw data",
 		"r [size] - read raw data of 'size' bytes. Default 'size' is 0x100\n\
         f - display entire EEPROM\n\
-        w - primary format (NOT IMPLEMENTED)\n\
+        w - primary format (NOT IMPLEMENTED use instead 'e' and 'i')\n\
         e - erase \n\
         t - test \n\
         i - init \n\
         d - display \n\
-		b - set baseband serial (NOT IMPLEMENTED)\n\
-        m - set MAC in form as a continuous string without a colon inside\n\
-        p - set Product Name (NOT IMPLEMENTED)\n\
-        a - set assembly board type (NOT IMPLEMENTED)\n\
-        get <name> - get value of EEPROM variable 'name'\n\
+        u - Write latest data to storage\n\
+		get <name> - get value of EEPROM variable 'name'\n\
         set <name> [<value>] - set EEPROM variable 'name' to 'value'.\n\
                                If 'value' is skipped, 'name' is deleted.");
 
