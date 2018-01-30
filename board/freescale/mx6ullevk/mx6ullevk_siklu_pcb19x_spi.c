@@ -300,6 +300,34 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 	return siklu_cpld_write(addr, data);
 }
 
+
+static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_FAILURE;
+	u8 rx_buf[10];
+	u8 poe_pair1_exist, poe_pair2_exist;
+	memset(rx_buf, 0, sizeof(rx_buf));
+
+	rc = siklu_cpld_read(CONFIG_CPLD_DIP_MODE_REG_ADDR, rx_buf);
+	if (rc != CMD_RET_SUCCESS)
+	{
+		printf("\ncpld read failed\n");
+		return rc;
+	}
+
+	poe_pair1_exist = rx_buf[3] & 1<<4 ;
+	poe_pair2_exist = rx_buf[3] & 1<<5 ;
+
+	if (poe_pair1_exist && poe_pair2_exist)
+		printf("\n 4-pairs\n");
+	else if (poe_pair1_exist || poe_pair2_exist)
+		printf("\n 2-pairs\n");
+	else
+		printf("\n No pairs\n");
+
+	return rc;
+}
+
 U_BOOT_CMD(scpldv, 5, 0, do_siklu_cpld_version_read,
 		"Read Siklu CPLD version register",
 		" [spi_mode 0..3*] Read Siklu CPLD version register");
@@ -322,4 +350,7 @@ U_BOOT_CMD(srficr, 5, 0, do_siklu_rfic_read, "Read RFIC register",
 
 U_BOOT_CMD(srficw, 5, 0, do_siklu_rfic_write, "Write RFIC register",
 		"[module: 70/80] [reg] [val]");
+
+U_BOOT_CMD(spoe, 5, 0, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
+
 
