@@ -340,8 +340,9 @@ static int run_linux_code(int is_system_in_bist) {
 #else
 	// edikk - eval board uses different command line parameters !!!!
 	i +=
-			sprintf(buf + i,
-					"env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram r ip=dhcp ",
+			sprintf(buf + i,  // do not up eth0 via dhcp on boot linux
+					// "env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram r ip=dhcp ",
+					"env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram r ",
 					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
 #endif
 
