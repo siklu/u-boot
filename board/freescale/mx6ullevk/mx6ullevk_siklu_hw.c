@@ -380,16 +380,37 @@ int siklu_cpld_write(u8 reg, u8 data) {
 
 /*
  *
- *
+ *	In case of error also return 0!
  */
 int siklu_board_late_init(void) {
 	int rc = 0;
+	char val[KEY_VAL_FIELD_SIZE];
 
 	// TODO Via MDIO bus:
 	// 		Enable SOHO Port#5 - output to network, configure 1G autoneg
 	//		Enable SOHO Port#0 - connection to NXP SoC, configure strict 100FD
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0); // by default connect SOHO Switch
-	return rc;
+
+	// extract board MAC address and init environment variable
+	rc = siklu_syseeprom_init();
+	if (rc != 0) {
+		printf(" Init SYSEEPROM Fail\n");
+		goto _err_hndlr;
+	}
+	memset(val, 0, sizeof(val));
+	rc = siklu_syseeprom_get_val("SE_mac", val);
+	if (rc != 0) {
+		printf(" Read MAC from SYSEEPROM Fail\n");
+		goto _err_hndlr;
+	}
+
+	env_set("ethaddr", val);
+	return 0;
+
+_err_hndlr:
+	env_set("ethaddr", ""); // erase environment
+	return 0;
+
 }
 
 int siklu_board_init(void) {

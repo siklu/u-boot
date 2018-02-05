@@ -120,7 +120,7 @@ static int se_update_storage(void) {
 
 
 
-static int se_get_value(const char *key) {
+static int se_print_value(const char *key) {
 	int rc = -1;
 
 	if (key) {
@@ -180,7 +180,7 @@ static int do_maintenance_sys_serial_eeprom(cmd_tbl_t *cmdtp, int flag,
 	else if ((ECMD("d")) || (ECMD("f")))
 		rc = siklu_syseeprom_display();
 	else if (ECMD("get")) {
-		rc = se_get_value(argv[2]);
+		rc = se_print_value(argv[2]);
 	} else if (ECMD("set"))
 		rc = se_set_value(argv[2], argv[3]);
 	else {
