@@ -204,7 +204,6 @@
 				      "gpmi_bch_apb", "per1_bch";
 			dmas = <&dma_apbh 0>;
 			dma-names = "rx-tx";
-			status = "disabled";
 		};
 
 		aips1: aips-bus@02000000 {

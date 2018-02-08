@@ -37,7 +37,7 @@
 #define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env_ro),128k(env_var0),128k(env_var1),40M(uimage0),"  \
     "40M(uimage1)," "16M(conf),-(log)"
 
-
+#define CONFIG_NAND_ECC_BCH
 
 #define CONFIG_CMD_NAND_TRIMFFS
 #define CONFIG_SYS_MAX_NAND_DEVICE 1
