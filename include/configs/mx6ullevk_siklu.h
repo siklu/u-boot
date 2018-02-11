@@ -19,8 +19,6 @@
 #include <asm/mach-imx/gpio.h>
 
 
-
-
 #define CONFIG_LIB_RAND /* required for CONFIG_NET_RANDOM_ETHADDR */
 
 #ifdef CONFIG_SECURE_BOOT
@@ -68,8 +66,9 @@
 
 /**************      NAND and NAND file-system related declarations     ***************/
 
-/* follow defime means that SW images stored over NAND commands, no UBI    */
-/* #define SW_PARTS_IS_PURE_NAND_PARTITIONS 1 */
+/* follow define means that SW images stored over NAND commands, no UBI
+  11.02.2018 after solve a problem we return to store uimage in UBI */
+/* #define SW_PARTS_IS_PURE_NAND_PARTITIONS 1  */
 
 #ifndef SW_PARTS_IS_PURE_NAND_PARTITIONS
 	/* #define CONFIG_SYS_USE_UBI */
@@ -122,7 +121,7 @@
 # define CONFIG_FEC_MXC
 # define CONFIG_MII
 # define CONFIG_FEC_ENET_DEV		0
-# define CONFIG_NET_RANDOM_ETHADDR  // edikk siklu - replace by real ethaddr!!!!
+# define CONFIG_NET_RANDOM_ETHADDR  // if no SIKLU eth addr, generate random
 # define CONFIG_FEC_FIXED_SPEED			100 /* No autoneg, fix Gb */
 
 # if (CONFIG_FEC_ENET_DEV == 0)
