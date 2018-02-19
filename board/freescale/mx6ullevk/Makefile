@@ -18,5 +18,5 @@ obj-$(CONFIG_SIKLU_BOARD) += mx6ullevk_siklu_pcb19x_spi.o	\
 	mx6ullevk_siklu_clause45.o mx6ullevk_siklu_mdio.o \
 	mx6ullevk_siklu_pcb19x_syseeprom.o mx6ullevk_siklu_pcb19x_sf.o \
 	mx6ullevk_siklu_pcb19x_se_environment.o \
-	mx6ullevk_siklu_mem_test.o
+	mx6ullevk_siklu_mem_test.o mx6ullevk_siklu_pcb19x_led.o
 	

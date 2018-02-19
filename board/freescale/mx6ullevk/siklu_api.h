@@ -39,6 +39,23 @@ typedef enum {
 	SIKLU_MDIO_BUS1, // 10G PHY and TI Transceiver
 } SIKLU_MDIO_BUS_E;
 
+
+typedef enum {
+    SKL_LED_MODEM,
+    SKL_LED_ETH1,
+    SKL_LED_ETH2_0,
+    SKL_LED_ETH2_1,
+    SKL_LED_POWER,
+} SKL_BOARD_LED_TYPE_E;
+
+typedef enum {
+    SKL_LED_MODE_OFF,
+    SKL_LED_MODE_GREEN,
+    SKL_LED_MODE_YELLOW,
+    SKL_LED_MODE_GREEN_BLINK,
+    SKL_LED_MODE_YELLOW_BLINK,
+}  SKL_BOARD_LED_MODE_E;
+
 extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
 
 extern int siklu_sf_sys_eeprom_read(const char* buf, int size);

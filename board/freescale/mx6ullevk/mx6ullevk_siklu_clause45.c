@@ -22,8 +22,6 @@
 
 #include "../drivers/net/fec_mxc.h"
 
-#define PHY_88x3310_DEV_ADDR 	2
-#define TI10031_DEV_ADDR 		4
 
 static const struct ethernet_regs *enet1_eth =
 		(struct ethernet_regs *) 0x02188000;
