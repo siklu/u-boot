@@ -337,8 +337,7 @@ typedef union
 	u8 uint8;
 	struct
 	{
-		u8 cfg_hw_asm_ver:6;	// Read HW assembly resistors
-		u8 padding0:2;
+		u8 cfg_hw_asm_ver:8;	// Read HW assembly resistors
 	} s;
 } T_CPLD_LOGIC_HW_ASM_VER_REGS;
 

@@ -12,7 +12,7 @@
 #include <version.h>
 #include <libfdt.h>
 #include <fdt_support.h>
-
+#include <environment.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/crm_regs.h>
@@ -25,6 +25,8 @@
 
 #include "siklu_def.h"
 #include "siklu_api.h"
+#include "cpld_reg.h"
+
 
 #include <spi.h>
 
@@ -79,8 +81,19 @@ static const iomux_v3_cfg_t i2c2_pads[] = { MX6_PAD_CSI_HSYNC__CSI_HSYNC
 		| MUX_PAD_CTRL(NO_PAD_CTRL), MX6_PAD_CSI_HSYNC__I2C2_SCL
 		| MUX_PAD_CTRL(NO_PAD_CTRL) };
 
+
+static const iomux_v3_cfg_t board_id_pads[] = {
+		MX6_PAD_SD1_DATA0__GPIO2_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),
+		MX6_PAD_SD1_DATA1__GPIO2_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),
+		MX6_PAD_SD1_DATA2__GPIO2_IO20 | MUX_PAD_CTRL(NO_PAD_CTRL),
+		MX6_PAD_SD1_DATA3__GPIO2_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL) };
+
 static void setup_iomux_siklu_cpld(void) {
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
+}
+
+static void setup_iomux_siklu_board_id(void) {
+	imx_iomux_v3_setup_multiple_pads(board_id_pads, ARRAY_SIZE(board_id_pads));
 }
 
 static void setup_iomux_siklu_i2c(void) {
@@ -418,6 +431,7 @@ int siklu_board_init(void) {
 	setup_iomux_siklu_cpld();
 	setup_iomux_siklu_i2c();
 	siklu_rfic_module_access_init();
+	setup_iomux_siklu_board_id();
 
 	// TODO In CPLD:
 	// 	put to reset all unnecessary HW devices
@@ -425,3 +439,158 @@ int siklu_board_init(void) {
 
 	return rc;
 }
+
+static int get_cpld_hw_ver(int * cpld_hw_ver)
+{
+	int rc = CMD_RET_FAILURE;
+	u8 rx_buf[10];
+	memset(rx_buf, 0, sizeof(rx_buf));
+
+	rc = siklu_cpld_read(R_CPLD_LOGIC_HW_ASM_VER, rx_buf);
+	if (rc != CMD_RET_SUCCESS)
+	{
+		printf("\ncpld read failed\n");
+		return rc;
+	}
+
+	*cpld_hw_ver = rx_buf[3];
+
+	return rc;
+}
+
+
+static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    char buffer[32];
+    int cpld_hw_ver = 0;
+    const char *se_asm = "SE_assembly";
+    int boardId0, boardId1, boardId2, boardId3;
+
+// octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
+// do not change format below! each new line should include "key" and "value" delimited by ":" !!!
+//printf("Product name        : %s\n", siklu_get_board_product_name());
+    siklu_syseeprom_get_val(se_asm, buffer);
+    printf("Board HW name       : %s\n", buffer);
+//printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
+//printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
+//printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
+    printf("DDR clock           : %lu MHz\n", gd->mem_clk);
+//printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
+//printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
+//printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
+//printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
+//printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
+//printf("SF                  : %s\n", flash->name);
+
+#define GPIO2_IO18	IMX_GPIO_NR(2, 18)
+#define GPIO2_IO19	IMX_GPIO_NR(2, 19)
+#define GPIO2_IO20	IMX_GPIO_NR(2, 20)
+#define GPIO2_IO21	IMX_GPIO_NR(2, 21)
+
+    gpio_direction_input(GPIO2_IO18);
+    gpio_direction_input(GPIO2_IO19);
+    gpio_direction_input(GPIO2_IO20);
+    gpio_direction_input(GPIO2_IO21);
+
+    boardId0 = gpio_get_value(GPIO2_IO18);
+    boardId1 = gpio_get_value(GPIO2_IO19);
+    boardId2 = gpio_get_value(GPIO2_IO20);
+    boardId3 = gpio_get_value(GPIO2_IO21);
+
+    printf("Board ID            : %x\n", (boardId3 << 3) | (boardId2 << 2) | (boardId1 << 1) | (boardId0 << 0));
+
+    get_cpld_hw_ver(&cpld_hw_ver);
+    printf("HW Version          : %x\n", cpld_hw_ver);
+
+    return rc;
+}
+
+
+typedef enum
+{
+    BIST_MODE_DISABLED = 0,
+    BIST_MODE_ON = 1,
+    BIST_MODE_AND_MONITORING = 2,
+    BIST_MODE_LAST = BIST_MODE_AND_MONITORING,
+} BIST_MODE_E;
+
+/*
+ *
+ */
+static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
+
+    if (argc == 1) // show current mode
+    {
+        char *bist_state;
+        bist_state = env_get(SIKLU_BIST_ENVIRONMENT_NAME);
+
+        if (bist_state == NULL)
+        {
+            printf("No BIST mode\n");
+        }
+        else
+        {
+            BIST_MODE_E state = (BIST_MODE_E) simple_strtol(bist_state, NULL, 10);
+            switch (state)
+            {
+            case BIST_MODE_DISABLED:
+                printf("No BIST mode\n");
+                break;
+            case BIST_MODE_ON:
+                printf("System in BIST mode\n");
+                break;
+            case BIST_MODE_AND_MONITORING:
+                printf("System in BIST mode with Monitoring\n");
+                break;
+            default:
+                printf("Wrong BIST mode! Disable BIST for future runs\n");
+                env_set(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+                env_save();
+                break;
+            }
+        }
+    }
+
+    else if (argc == 2)
+    {
+        // set new BIST mode
+        BIST_MODE_E bist_mode = simple_strtoul(argv[1], NULL, 10);
+
+        switch (bist_mode)
+        {
+        case BIST_MODE_DISABLED:
+            printf("Disable BIST mode\n");
+            env_set(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            break;
+        case BIST_MODE_ON:
+            printf("Set System in BIST mode\n");
+            env_set(SIKLU_BIST_ENVIRONMENT_NAME, "1");
+            break;
+        case BIST_MODE_AND_MONITORING:
+            printf("System in BIST mode with Monitoring\n");
+            env_set(SIKLU_BIST_ENVIRONMENT_NAME, "2");
+            break;
+        default:
+            printf("Wrong BIST mode! Disable BIST for future runs\n");
+            env_set(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            break;
+        }
+        env_save();
+    }
+    else
+    {
+        // wrong arguments
+        printf("Wrong arguments\n");
+        printf("Usage:\n%s\n", cmdtp->usage);
+        return CMD_RET_FAILURE;
+    }
+
+    return rc;
+}
+
+U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " Display Board HW info");
+U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
+
