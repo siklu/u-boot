@@ -22,9 +22,7 @@
 #include "siklu_api.h"
 
 extern uint32_t get_nand_part_offset_by_name(const char* name);
-
-extern int siklu_mutable_env_set(const char *varname, const char *varvalue,
-		int save_if_diff_required);
+extern int env_save(void);
 
 
 // #define BOOT_DEBUG
@@ -73,6 +71,104 @@ static ulong ramd_addr = RAMD_ADDR;
 extern void siklu_wait_user4prevent_card_reboot(void);
 
 #ifdef CONFIG_SIKLU_BOARD
+
+
+
+
+/*
+ * returns:     1 - required update environment
+ *              0 - no need update
+ *
+ */
+static int siklu_boot_process_control(void)
+{
+    int rc = 0;
+    const char* primary_image = env_get("SK_primary_image");
+    // preset by default "SK_primary_image" environment
+    if (!primary_image)
+    {
+        printf("%s() SK_primary_image isn't set! restore it\n", __func__);
+        env_set("SK_primary_image", "0");
+        return 1;
+    }
+    else
+    {
+        if (!((primary_image[0] == '0') || (primary_image[0] == '1')))
+        {
+            printf("%s() Error \"SK_primary_image\" value %s. restore default\n", __func__, primary_image);
+            env_set("SK_primary_image", "0");
+            primary_image = env_get("SK_primary_image");
+            rc = 1;
+        }
+    }
+
+    /* check presence "SK_bist" mutual environment variable
+      * if it presence with value '1' or '2'  configure sbist mode
+      */
+    const char* mut_bist = env_get(SIKLU_BIST_MUT_ENVIRONMENT_NAME); // string presences in mutual environment
+    const char *uboot_bist = env_get(SIKLU_BIST_ENVIRONMENT_NAME);// string presences in regular uboot environment
+    if ((mut_bist)&&(!uboot_bist) && ( ((strcmp (mut_bist, "1") == 0)) || (strcmp (mut_bist, "2") == 0))) {
+        // we fall here if bist mode set in mutual environment but doesn't set un regular environment
+    	// this occurs only in the case that bist mode configured via hwtest utility!
+        char cmd[100];
+    	printf("The System enters BIST mode due to SW demand\n"); // siklu_remark002
+        sprintf(cmd, "sbist %s", mut_bist);
+        rc = run_command(cmd, 0);
+        // now we should remove BIST flag from mutual environment
+        env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL);
+    }
+
+    // check presents an value of "SK_try_count" variable
+    const char *try_count = env_get("SK_try_count");
+    if (!try_count)
+    {
+        // regular boot process, no need swap
+        return 0;
+    }
+    if (*try_count == '0')
+    {
+        // need swap when the value reach ZERO!
+        printf("SK_try_count reaches 0, swap partitions\n");
+        if (primary_image[0] == '0')
+        {
+            env_set("SK_primary_image", "1");
+        }
+        else if (primary_image[0] == '1')
+        {
+            env_set("SK_primary_image", "0");
+        }
+        // delete the environment
+        env_set("SK_try_count", NULL);
+        rc = 1;
+    }
+    else
+    {
+#define MAX_MUT_ENV_STRING_SIZE 50
+        // decrement try_count
+        char new_try_count[MAX_MUT_ENV_STRING_SIZE];
+        *new_try_count = *try_count - 1;
+        *(new_try_count + 1) = 0;
+        env_set("SK_try_count", new_try_count);
+        rc = 1;
+    }
+
+     return rc;
+}
+
+
+
+int siklu_board_late_init_env(void)
+{
+
+	siklu_boot_process_control();
+	env_save();
+	return 0;
+}
+
+
+
+
+
 /*
  * If the root node of the DTB has a "model" property, show it.
  * Then call checkboard().
@@ -418,7 +514,7 @@ static int execute_siklu_boot(int forced_image) {
 	if (forced_image != BOOT_FROM_IMAGE_IN_ENV)
 		img2load = forced_image;
 	else {
-		const char *primary_image_s = siklu_mutable_env_get("SK_primary_image");
+		const char *primary_image_s = env_get("SK_primary_image");
 		if (primary_image_s) {
 			img2load = !!simple_strtoul(primary_image_s, NULL, 10);
 		}
@@ -440,7 +536,7 @@ static int execute_siklu_boot(int forced_image) {
 			// here we need change boot selector to opposite side
 			char new_part[20];
 			sprintf(new_part, "%d", img2load);
-			siklu_mutable_env_set("SK_primary_image", new_part, 1);
+			env_set("SK_primary_image", new_part);
 			// required reset here
 			printf(
 					"\n\n\tSwap boot partition due to bad current. The system will up after reboot\n\n");
@@ -575,16 +671,6 @@ static int rescue_restore_boot_image(void) {
 		return -1;
 	}
 
-	// preset default mutual environment...
-	{
-
-		extern int primary_format_mutual_env(uint32_t env_part_offs);
-
-		uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name(
-				"env_var0");
-		primary_format_mutual_env(mut_env_in_nand_flash_start);
-	}
-
 	// save default regular environment
 	sprintf(buf, "env save");
 	rc = _run_command(buf, 0);
@@ -612,7 +698,7 @@ static int do_siklu_boot(cmd_tbl_t * cmdtp, int flag, int argc,
 	(void) argc;
 	(void) argv;
 
-	if (siklu_mutable_env_get("SK_primary_image") == 0) {
+	if (env_get("SK_primary_image") == 0) {
 		printf(
 				"No SK_primary_image environment!... The SW should be restored\n");
 		rc = rescue_restore_boot_image();
@@ -658,42 +744,9 @@ static int do_siklu_ram_boot(cmd_tbl_t * cmdtp, int flag, int argc,
 	return rc;
 }
 
-/*
- *
- *
- */
-static int do_siklu_set_dflt_env(cmd_tbl_t * cmdtp, int flag, int argc,
-		char * const argv[]) {
-	int rc = CMD_RET_FAILURE; // the command isn't repeatable!
-
-	extern int primary_format_mutual_env(uint32_t env_part_offs);
-
-	uint32_t mut_env_in_nand_flash_start = get_nand_part_offset_by_name(
-			"env_var0");
-	primary_format_mutual_env(mut_env_in_nand_flash_start);
-
-	return rc;
-}
-
-/*
- *  siklu_remark002
- */
-static int do_siklu_show_mut_env_area(cmd_tbl_t * cmdtp, int flag, int argc,
-		char * const argv[]) {
-	int rc = CMD_RET_SUCCESS;
-
-	extern void siklu_print_mut_env_area(void);
-	siklu_print_mut_env_area();
-
-	return rc;
-}
 
 U_BOOT_CMD(siklu_boot, 5, 0, do_siklu_boot,
 		"Boot Siklu software from FLASH storage", "[img2load* none/0/1] ");
 U_BOOT_CMD(siklu_boot_ram, 5, 0, do_siklu_ram_boot,
 		"Boot Siklu software from RAM", "[uimage addr] ");
-U_BOOT_CMD(ssde, 5, 0, do_siklu_set_dflt_env, "Set system default environment",
-		"Set system default environment");
-U_BOOT_CMD(smeprint, 5, 0, do_siklu_show_mut_env_area,
-		"Show Siklu Mutual Environment Area",
-		"Show Siklu Mutual Environment Area");
+

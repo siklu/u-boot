@@ -258,7 +258,8 @@ int board_late_init(void)
 
 
 #ifdef CONFIG_SIKLU_BOARD
-	rc = siklu_board_late_init();
+	rc = siklu_board_late_init_hw();
+	rc = siklu_board_late_init_env();
 #endif // 	CONFIG_SIKLU_BOARD
 
 	return rc;

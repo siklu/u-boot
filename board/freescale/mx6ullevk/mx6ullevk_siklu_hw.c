@@ -391,11 +391,18 @@ int siklu_cpld_write(u8 reg, u8 data) {
 	return CMD_RET_FAILURE;
 }
 
+
+
+
+
+
+
+
 /*
  *
  *	In case of error also return 0!
  */
-int siklu_board_late_init(void) {
+int siklu_board_late_init_hw(void) {
 	int rc = 0;
 	char val[KEY_VAL_FIELD_SIZE];
 
@@ -418,6 +425,9 @@ int siklu_board_late_init(void) {
 	}
 
 	env_set("ethaddr", val);
+
+
+
 	return 0;
 
 _err_hndlr:
