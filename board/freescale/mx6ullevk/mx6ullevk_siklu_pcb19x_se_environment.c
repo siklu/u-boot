@@ -48,6 +48,10 @@ typedef struct {
 static sf_env_siklu_se_t sf_env_siklu_se;
 static sf_env_siklu_se_t* p_sf_env_siklu_se = &sf_env_siklu_se;
 
+
+
+static int syseeprom_access_init = 0;
+
 static const char siklu_default_environment_se[] = { //
 		"SE_product_name=WIGIG_ST" ";" //
 						"SE_mac=00:24:a4:00:de:ad" ";"//
@@ -177,6 +181,9 @@ int siklu_syseeprom_display(void) {
 int siklu_syseeprom_get_val(const char* key, char* val) {
 	int rc = 0, i;
 
+	if (!syseeprom_access_init)
+		siklu_syseeprom_init();
+
 	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
 		key_val_pair_t* p_key_val = key_val_pair + i;
 		if (p_key_val->occup) {
@@ -196,6 +203,9 @@ int siklu_syseeprom_get_val(const char* key, char* val) {
  */
 int siklu_syseeprom_set_val(const char* key, const char* val) {
 	int rc = 0, i;
+
+	if (!syseeprom_access_init)
+		siklu_syseeprom_init();
 
 	// 1st step does the key already exists
 	for (i = 0; i < SYSEEPROM_NUM_FIELDS; i++) {
@@ -269,6 +279,8 @@ int siklu_syseeprom_init(void) {
 	int err_line = 0;
 	u32 crc;
 
+	printf("Init SYSEEPROM Data...\n");
+
 	// clear tupples and structure
 	memset(key_val_pair, 0, sizeof(key_val_pair));
 	memset(p_sf_env_siklu_se, 0, sizeof(sf_env_siklu_se));
@@ -309,6 +321,7 @@ int siklu_syseeprom_init(void) {
 		err_line = __LINE__;
 		goto _bad_data;
 	}
+	syseeprom_access_init = 1;
 	rc = 0;
 	return rc;
 	_bad_data: //
