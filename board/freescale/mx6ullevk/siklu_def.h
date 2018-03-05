@@ -42,5 +42,9 @@
 #define SYSEEPROM_NUM_FIELDS 	64
 #define SIKLU_SF_ENV_SIZE		0x1000 // less than sector size, limited to 4k
 
+// PLL
+# define CONFIG_SYS_PLL_BUS_NUM					0
+# define CONFIG_SYS_I2C_UNBURNED_PLL_ADDR		0x69
+# define CONFIG_SYS_I2C_BURNED_PLL_ADDR			0x59
 
 #endif /* SIKLU_DEF_H_ */

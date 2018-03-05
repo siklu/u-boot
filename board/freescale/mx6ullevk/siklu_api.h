@@ -19,6 +19,7 @@ extern int siklu_board_init(void);
 extern int siklu_board_late_init_hw(void);
 extern int siklu_board_late_init_env(void);
 
+extern u8 current_pll_addr;
 
 extern int siklu_cpld_read(u8 reg, u8* data);
 extern int siklu_cpld_write(u8 reg, u8 data);
@@ -26,6 +27,8 @@ extern int siklu_cpld_write(u8 reg, u8 data);
 extern int siklu_88e639x_reg_read(u8 port, u8 reg, u16* val);
 extern int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val);
 
+extern void siklu_si5344d_get_pll_device_addr(void);
+extern int siklu_si5344d_pll_reg_burn(void);
 
 typedef enum {
 	MODULE_RFIC_70,

@@ -199,6 +199,12 @@ int board_phy_config(struct phy_device *phydev)
 #endif
 
 
+void siklu_primary_si5344d_pll_init(void)
+{
+	siklu_si5344d_get_pll_device_addr();
+	siklu_si5344d_pll_reg_burn();
+}
+
 
 int board_init(void)
 {
@@ -256,6 +262,7 @@ int board_late_init(void)
 	env_set("board_rev", "14X14");
 #endif
 
+	siklu_primary_si5344d_pll_init();
 
 #ifdef CONFIG_SIKLU_BOARD
 	rc = siklu_board_late_init_hw();
