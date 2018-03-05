@@ -143,7 +143,7 @@ static int do_siklu_si5344d_pll_reg_write(cmd_tbl_t *cmdtp, int flag, int argc, 
 	return rc;
 }
 
-static int get_pll_part_number(u16 *part_number)
+int get_pll_part_number(u16 *part_number)
 {
 	int rc = CMD_RET_FAILURE;
 	u8 val0, val1;
@@ -155,7 +155,7 @@ static int get_pll_part_number(u16 *part_number)
 	return rc;
 }
 
-static int get_pll_device_grade(u8 *device_grade)
+int get_pll_device_grade(u8 *device_grade)
 {
 	int rc = CMD_RET_FAILURE;
 #define PLL_DEVICE_GRADE_REG_ADDR 0x4
@@ -164,7 +164,7 @@ static int get_pll_device_grade(u8 *device_grade)
 
 }
 
-static int get_pll_device_revision(u8 *device_revision)
+int get_pll_device_revision(u8 *device_revision)
 {
 	int rc = CMD_RET_FAILURE;
 #define PLL_DEVICE_REVISION_REG_ADDR 0x5
@@ -173,7 +173,7 @@ static int get_pll_device_revision(u8 *device_revision)
 
 }
 
-static int get_pll_tool_version(u32 *tool_version)
+int get_pll_tool_version(u32 *tool_version)
 {
 	int rc = CMD_RET_FAILURE;
 	u8 val_special_and_revision, val_minor, val_minor_and_major;

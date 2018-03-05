@@ -332,8 +332,7 @@ int siklu_cpld_read(u8 reg, u8* data) {
 		goto err_claim_bus;
 	}
 
-	printf("\n RX buf: %2x %2x %2x (%2x)\n", data[0], data[1], data[2],
-			data[3]);
+//	printf("\n RX buf: %2x %2x %2x (%2x)\n", data[0], data[1], data[2], data[3]);
 
 	// last before exit
 	spi_free_slave(spi);
@@ -474,8 +473,12 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     int rc = CMD_RET_SUCCESS;
     char buffer[32];
     int cpld_hw_ver = 0;
+    u32 val;
     const char *se_asm = "SE_assembly";
     int boardId0, boardId1, boardId2, boardId3;
+    u8 device_grade, device_revision;
+    u16 part_number;
+    u32 tool_version;
 
 // octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
 // do not change format below! each new line should include "key" and "value" delimited by ":" !!!
@@ -487,7 +490,9 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
 //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
     printf("DDR clock           : %lu MHz\n", gd->mem_clk);
 //printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
-//printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
+
+	rc = get_siklu_cpld_version(CONFIG_CPLD_DEFAULT_MODE, &val);
+    printf("CPLD version        : 0x%02x\n", val);
 //printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
 //printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
 //printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
@@ -513,6 +518,17 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     get_cpld_hw_ver(&cpld_hw_ver);
     printf("HW Version          : %x\n", cpld_hw_ver);
 
+    get_88x3310_phy_version(&val);
+    printf("88x3310 Phy Version : 0x%04x\n", val);
+    get_TLK10031_version(&val);
+    printf("TLK10031 Version    : 0x%04x\n", val);
+
+	get_pll_part_number(&part_number);
+    get_pll_device_grade(&device_grade);
+	get_pll_device_revision(&device_revision);
+	get_pll_tool_version(&tool_version);
+
+	printf("PLL Version         : %04x.%02x.%02x.%06x\n", part_number, device_grade, device_revision, tool_version);
     return rc;
 }
 

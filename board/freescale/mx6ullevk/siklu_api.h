@@ -30,6 +30,14 @@ extern int siklu_88e639x_reg_write(u8 port, u8 reg, u16 val);
 extern void siklu_si5344d_get_pll_device_addr(void);
 extern int siklu_si5344d_pll_reg_burn(void);
 
+extern void get_88x3310_phy_version(u32 *val_version);
+extern void get_TLK10031_version(u32 *val_version);
+extern int get_siklu_cpld_version(u32 spi_mode, u32 *val);
+extern int get_pll_part_number(u16 *part_number);
+extern int get_pll_device_grade(u8 *device_grade);
+extern int get_pll_device_revision(u8 *device_revision);
+extern int get_pll_tool_version(u32 *tool_version);
+
 typedef enum {
 	MODULE_RFIC_70,
 	MODULE_RFIC_80,

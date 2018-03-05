@@ -38,6 +38,88 @@ static inline int _miiphy_read(const char *devname, unsigned char addr,
 	return 0;
 }
 
+
+void get_88x3310_phy_version(u32 *val_version)
+{
+	const char *devname;
+	uint32_t dev_addr = 0, reg = 0;
+	uint16_t val;
+
+
+#if defined(CONFIG_MII_INIT)
+	mii_init ();
+#endif
+
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return;
+	}
+
+	dev_addr = 1;
+	reg = 0x1;
+
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS1);
+
+	// Phase #1 according to datasheet p93, pp3.11.1.1
+	val = (0 << 14) | (dev_addr & 0x1f);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 13, val);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 14, reg);
+
+	// Phase #2
+	val = (1 << 14) | (dev_addr & 0x1f);
+	_miiphy_write(devname, PHY_88x3310_DEV_ADDR, 13, val);
+	if (_miiphy_read(devname, PHY_88x3310_DEV_ADDR, 14, &val) != 0) {
+		printf("  ERROR read PHY\n");
+		return;
+	}
+
+	*val_version = val;
+//	printf("  [0x%04X]\n", *val_version);
+}
+
+
+void get_TLK10031_version(u32 *val_version)
+{
+	int ret;
+	const char *devname;
+	uint32_t dev_addr = 0, reg = 0;
+	uint16_t addr_data;
+
+#if defined(CONFIG_MII_INIT)
+	mii_init ();
+#endif
+
+	/* use current device */
+	devname = miiphy_get_current_dev();
+	if (!devname) {
+		printf("No available MDIO Controller!\n");
+		return;
+	}
+
+	dev_addr = 1;
+	reg = 0x3;
+
+	siklu_mdio_bus_connect(SIKLU_MDIO_BUS1);
+
+	addr_data = reg; // preset reg address
+	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_ADDR, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return;
+	}
+	// on next operation addr_data will hold reg value
+	ret = fec_mdio_op_clause45(enet1_eth, CLAUSE45_OP_READ, TI10031_DEV_ADDR, dev_addr, &addr_data);
+	if (ret != 0) {
+		printf(" Error on line %d\n", __LINE__);
+		return;
+	}
+
+	*val_version = addr_data;
+//	printf("  [0x%04X]\n", addr_data);
+}
+
 /*
  *
  */
