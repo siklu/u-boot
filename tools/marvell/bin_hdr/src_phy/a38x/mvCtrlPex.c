@@ -167,6 +167,17 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 	MV_U32 pexIdx, tmp, next_busno, first_busno, tempPexReg, tempReg, addr, devId, ctrlMode;
 	SERDES_TYPE serdesType;
 	MV_U32 serdesIdx, maxLaneNum;
+	int active_pci_bus = 0; /* by default WIGIG modem located on PCIe-0 bus, but newest boards
+		have connected PCI-e #1 bus. In this case Modem#0 GPIO#44 should be in reset, and
+		 Modem#1 GPIO#47 should be released
+		 See table below:
+
+		 PCI bus Num		|		SERDES Num			|	CPU GPIO PCI Reset		|	Extender Modem Reset
+		 0								0							44							IO3
+		 1								4							47							IO4
+
+
+	*/
 
 	DEBUG_INIT_FULL_S("\n### mvHwsPexConfig ###\n");
 
@@ -283,6 +294,33 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 		        volatile int a = 0;   a++; a++;
 		    }
 		}
+		// add initialization PCIe-1
+		if (serdesIdx == 4) {  // PCIe port 1 uses SERDES#4
+		    volatile unsigned long long count;
+		    MV_U32 reg_val;
+            /*
+             * Special commentary: Code below release from reset WIGIG Modem connected
+             * to PCIe bus 1. The modem controlled by GPIO44 pin.
+             * For this purpose we write to GPIO_32_59 Data out register (0x18140)
+             * and GPIO_32_59 Data out enable register (0x18144) siklu_remarkM40
+             */
+
+            // putstring("Release reset on GPIO#44 and wait modem UP ....\n");
+
+            reg_val = MV_REG_READ(0x18144);
+            reg_val &= ~(1<<(47-32));
+            MV_REG_WRITE(0x18144, reg_val);  // equiv to MV_REG_WRITE(0x18144, 0xfd06ff1);
+
+            reg_val = MV_REG_READ(0x18140);
+            reg_val |= (1<<(47-32));
+            MV_REG_WRITE(0x18140, reg_val);  // equiv to MV_REG_WRITE(0x18140, 0x2f9000);
+
+ 		    for (count =0;count<1000000;count++) // stupid delay, wait for modem starts
+		    {
+		        volatile int a = 0;   a++; a++;
+		    }
+		}
+
 #endif //  defined(MV_SIKLU_WIGIG_BOARD)
 
 		tmp = MV_REG_READ(PEX_DBG_STATUS_REG(pexIdx));
