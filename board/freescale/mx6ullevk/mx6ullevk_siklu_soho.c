@@ -39,6 +39,7 @@
 
 #include "siklu_def.h"
 #include "siklu_api.h"
+#include "cpld_reg.h"
 
 /*
  * SOHO Access
@@ -194,6 +195,90 @@ static int soho_write_register(u8 port, u8 reg, u16 val) {
 /*
  *
  */
+int siklu_soho_power_up_init(void) {
+	int rc = 0; //, count;
+	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS reset_reg;
+
+	// Put SOHO to reset
+	rc = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL, &reset_reg.uint8);
+	if (rc != 0) {
+		printf("%s() ERROR, line %d\n", __func__, __LINE__);
+		return rc;
+	}
+	reset_reg.s.cfg_switch_rst_n = 0;
+	siklu_cpld_write(R_CPLD_LOGIC_MODEM_LEDS_CTRL, reset_reg.uint8);
+	if (rc != 0) {
+		printf("%s() ERROR, line %d\n", __func__, __LINE__);
+		return rc;
+	}
+
+	return rc;
+}
+
+/*
+ *  enable/disable network connection between 1G rj45 management port and cpu
+ */
+int siklu_cpu_netw_cntrl(int is_ena) {
+	int rc = 0, count;
+	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS reset_reg;
+
+	// 1. un-reset SOHO chip
+	rc = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL, &reset_reg.uint8);
+	if (rc != 0) {
+		printf("%s() ERROR, line %d\n", __func__, __LINE__);
+		return rc;
+	}
+	reset_reg.s.cfg_switch_rst_n = 1;
+	siklu_cpld_write(R_CPLD_LOGIC_MODEM_LEDS_CTRL, reset_reg.uint8);
+	if (rc != 0) {
+		printf("%s() ERROR, line %d\n", __func__, __LINE__);
+		return rc;
+	}
+
+	// 2. wait Xms
+	udelay(50000); // 50msec?
+
+	// 3. enable port0 (CPU) and port 5 (1G management)
+	// 		disable all other ports
+#define SOHO_FIRST_PORT			0
+#define SOHO_LAST_PORT  		0xA
+#define SOHO_HOST_CPU_PORT  	0x0
+#define SOHO_MNGM_PORT  		0x5
+#define SOHO_PORT_CONTROL_REG	4
+
+	for (count = SOHO_FIRST_PORT; count <= SOHO_LAST_PORT; count++) {
+		rc = siklu_88e639x_reg_write(count, SOHO_PORT_CONTROL_REG, 0x7C);
+		if (rc != 0) {
+			printf("%s() Disable SOHO port#%d FAIL\n", __func__, count);
+			break;
+		}
+	}
+
+	siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
+	siklu_88e639x_reg_write(SOHO_MNGM_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
+
+	return rc;
+}
+
+/*
+ *
+ */
+static int do_siklu_mngmnt_netw_ena_cntrl(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_FAILURE, ret;
+	int is_ena = simple_strtoul(argv[1], NULL, 10);
+
+	ret = siklu_cpu_netw_cntrl(!!is_ena);
+	if (ret==0)
+		rc = CMD_RET_SUCCESS;
+	return rc;
+}
+
+
+
+/*
+ *
+ */
 static int do_siklu_soho_access(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -251,9 +336,16 @@ static int do_siklu_soho_ver_read(cmd_tbl_t * cmdtp, int flag, int argc,
 	return rc;
 }
 
+
 U_BOOT_CMD(sohoa, 5, 1, do_siklu_soho_access, "Read/write SOHO",
 		" [port] [reg*] [val*] Read/write SOHO");
 
 U_BOOT_CMD(sohov, 1, 1, do_siklu_soho_ver_read,
 		"Read SOHO Product Number & revision",
 		" Read SOHO Product Number & revision");
+
+
+U_BOOT_CMD(snetw_ena, 5, 1, do_siklu_mngmnt_netw_ena_cntrl,
+		"Network Management Enable control",
+		" [is_ena 0/1] Network Management Enable control");
+

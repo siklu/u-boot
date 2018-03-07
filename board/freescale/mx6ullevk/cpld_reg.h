@@ -167,7 +167,7 @@ typedef union
 		u8 cfg_10g_board:1;
 		u8 padding1:1;
 		u8 cfg_tlk_rst_n:1;		// Active low reset to 10G SERDES
-		u8 cfg_switch_rst_n:1;	// Active low reset to L2 Switch
+		u8 cfg_switch_rst_n:1;	// Active low reset to L2 Switch   MSB
 	} s;
 } T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS;
 

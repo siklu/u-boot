@@ -410,6 +410,13 @@ int siklu_board_late_init_hw(void) {
 	//		Enable SOHO Port#0 - connection to NXP SoC, configure strict 100FD
 	siklu_mdio_bus_connect(SIKLU_MDIO_BUS0); // by default connect SOHO Switch
 
+	// init SOHO switch
+	rc = siklu_soho_power_up_init();
+	if (rc != 0) {
+		printf(" Init SOHO Fail\n");
+		goto _err_hndlr;
+	}
+
 	// extract board MAC address and init environment variable
 	rc = siklu_syseeprom_init();
 	if (rc != 0) {
@@ -422,8 +429,8 @@ int siklu_board_late_init_hw(void) {
 		printf(" Read MAC from SYSEEPROM Fail\n");
 		goto _err_hndlr;
 	}
-
 	env_set("ethaddr", val);
+
 
 
 

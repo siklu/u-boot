@@ -209,8 +209,7 @@ static int do_siklu_rfic_write(cmd_tbl_t * cmdtp, int flag, int argc,
  *
  */
 
-int get_siklu_cpld_version(u32 spi_mode, u32 *val)
-{
+int get_siklu_cpld_version(u32 spi_mode, u32 *val) {
 	int rc = CMD_RET_FAILURE;
 
 	const u32 bus = CONFIG_CPLD_DEFAULT_BUS;
@@ -278,9 +277,11 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
+	int ret;
 
 	u8 addr;
 	u8 rx_buf[10];
+	u8 val;
 
 	if (argc > 1) {
 		addr = simple_strtoul(argv[1], NULL, 16);
@@ -290,8 +291,16 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 	}
 
 	memset(rx_buf, 0, sizeof(rx_buf));
+	ret = siklu_cpld_read(addr, rx_buf);
+	if (ret == 0) {
+		val = rx_buf[3];
+		printf(" reg 0x%x, val 0x%02x\n", addr, val);
+	}
+	else {
+		printf(" Error read, rc %d\n", rc);
+	}
 
-	return siklu_cpld_read(addr, rx_buf);
+	return 0;
 
 }
 
@@ -312,7 +321,6 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 	return siklu_cpld_write(addr, data);
 }
 
-
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -321,14 +329,13 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
 	memset(rx_buf, 0, sizeof(rx_buf));
 
 	rc = siklu_cpld_read(CONFIG_CPLD_DIP_MODE_REG_ADDR, rx_buf);
-	if (rc != CMD_RET_SUCCESS)
-	{
+	if (rc != CMD_RET_SUCCESS) {
 		printf("\ncpld read failed\n");
 		return rc;
 	}
 
-	poe_pair1_exist = rx_buf[3] & 1<<4 ;
-	poe_pair2_exist = rx_buf[3] & 1<<5 ;
+	poe_pair1_exist = rx_buf[3] & 1 << 4;
+	poe_pair2_exist = rx_buf[3] & 1 << 5;
 
 	if (poe_pair1_exist && poe_pair2_exist)
 		printf("\n 4-pairs\n");
@@ -363,6 +370,6 @@ U_BOOT_CMD(srficr, 5, 0, do_siklu_rfic_read, "Read RFIC register",
 U_BOOT_CMD(srficw, 5, 0, do_siklu_rfic_write, "Write RFIC register",
 		"[module: 70/80] [reg] [val]");
 
-U_BOOT_CMD(spoe, 5, 0, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
-
+U_BOOT_CMD(spoe, 5, 0, do_siklu_poe_num_pairs_show,
+		"Show POE number pairs Status", "Show POE number pairs Status");
 
