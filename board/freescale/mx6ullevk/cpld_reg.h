@@ -37,14 +37,12 @@
 #define R_CPLD_LOGIC_MISC_2                 0x24
 #define R_CPLD_LOGIC_SER_EEPROM_IF          0x27
 
+#define LAST_CPLD_REG (R_CPLD_LOGIC_SER_EEPROM_IF)
 
 //****************************************
 //   Registers Fields of CPLD
 //   General width  8
 //****************************************
-
-
-
 typedef union
 {
 	u8 uint8;

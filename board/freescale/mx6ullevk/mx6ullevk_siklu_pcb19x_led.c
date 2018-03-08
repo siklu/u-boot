@@ -27,17 +27,9 @@
 int siklu_set_led_modem(SKL_BOARD_LED_MODE_E mode)
 {
 	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS modem_leds;
-	u8 rx_buf[10];
 	int rc;
-	memset(rx_buf, 0, sizeof(rx_buf));
 
-	rc = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL, rx_buf);
-	if (rc != CMD_RET_SUCCESS)
-	{
-		printf("\ncpld read failed\n");
-		return rc;
-	}
-	modem_leds = (T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS) rx_buf[3];
+	modem_leds.uint8 = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL);
 
 	switch (mode)
 	{
@@ -66,17 +58,9 @@ int siklu_set_led_modem(SKL_BOARD_LED_MODE_E mode)
 int siklu_set_led_power(SKL_BOARD_LED_MODE_E mode)
 {
 	T_CPLD_LOGIC_POWER_LEDS_CTRL_REGS pwoer_leds;
-	u8 rx_buf[10];
 	int rc;
-	memset(rx_buf, 0, sizeof(rx_buf));
 
-	rc = siklu_cpld_read(R_CPLD_LOGIC_POWER_LEDS_CTRL, rx_buf);
-	if (rc != CMD_RET_SUCCESS)
-	{
-		printf("\ncpld read failed\n");
-		return rc;
-	}
-	pwoer_leds = (T_CPLD_LOGIC_POWER_LEDS_CTRL_REGS) rx_buf[3];
+	pwoer_leds.uint8 = siklu_cpld_read(R_CPLD_LOGIC_POWER_LEDS_CTRL);
 
 	switch (mode)
 	{
@@ -108,22 +92,15 @@ int siklu_set_led_power(SKL_BOARD_LED_MODE_E mode)
 int siklu_set_cpld_eth_led_color(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 {
 	T_CPLD_LOGIC_ETHERNET_LEDS_CTRL_REGS eth_leds;
-	u8 rx_buf[10], val;
+	u8 val;
 	int rc;
-	memset(rx_buf, 0, sizeof(rx_buf));
 
 	if (mode == SKL_LED_MODE_GREEN_BLINK || mode == SKL_LED_MODE_GREEN)
 		val = 0;
 	else
 		val = 1;
 
-	rc = siklu_cpld_read(R_CPLD_LOGIC_ETHERNET_LEDS_CTRL, rx_buf);
-	if (rc != CMD_RET_SUCCESS)
-	{
-		printf("\ncpld read failed\n");
-		return rc;
-	}
-	eth_leds = (T_CPLD_LOGIC_ETHERNET_LEDS_CTRL_REGS) rx_buf[3];
+	eth_leds.uint8 = siklu_cpld_read(R_CPLD_LOGIC_ETHERNET_LEDS_CTRL);
 
 	if (led == SKL_LED_ETH1)
 	{

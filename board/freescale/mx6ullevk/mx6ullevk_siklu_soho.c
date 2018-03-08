@@ -196,11 +196,11 @@ static int soho_write_register(u8 port, u8 reg, u16 val) {
  *
  */
 int siklu_soho_power_up_init(void) {
-	int rc = 0; //, count;
+	int rc = 0;
 	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS reset_reg;
 
 	// Put SOHO to reset
-	rc = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL, &reset_reg.uint8);
+	reset_reg.uint8 = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL);
 	if (rc != 0) {
 		printf("%s() ERROR, line %d\n", __func__, __LINE__);
 		return rc;
@@ -211,7 +211,6 @@ int siklu_soho_power_up_init(void) {
 		printf("%s() ERROR, line %d\n", __func__, __LINE__);
 		return rc;
 	}
-
 	return rc;
 }
 
@@ -223,17 +222,9 @@ int siklu_cpu_netw_cntrl(int is_ena) {
 	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS reset_reg;
 
 	// 1. un-reset SOHO chip
-	rc = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL, &reset_reg.uint8);
-	if (rc != 0) {
-		printf("%s() ERROR, line %d\n", __func__, __LINE__);
-		return rc;
-	}
+	reset_reg.uint8 = siklu_cpld_read(R_CPLD_LOGIC_MODEM_LEDS_CTRL);
 	reset_reg.s.cfg_switch_rst_n = 1;
 	siklu_cpld_write(R_CPLD_LOGIC_MODEM_LEDS_CTRL, reset_reg.uint8);
-	if (rc != 0) {
-		printf("%s() ERROR, line %d\n", __func__, __LINE__);
-		return rc;
-	}
 
 	// 2. wait Xms
 	udelay(50000); // 50msec?

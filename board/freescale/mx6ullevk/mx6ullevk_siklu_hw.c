@@ -292,9 +292,9 @@ int siklu_rfic_module_write(MODULE_RFIC_E module, u8 reg, u8 data) {
 }
 
 /*
- *
+ * returns result in data[3]
  */
-int siklu_cpld_read(u8 reg, u8* data) {
+static int _siklu_cpld_read(u8 reg, u8* data) {
 
 	int rc = CMD_RET_FAILURE;
 
@@ -341,6 +341,16 @@ int siklu_cpld_read(u8 reg, u8* data) {
 	err_claim_bus: //
 	spi_free_slave(spi);
 	return CMD_RET_FAILURE;
+}
+
+u8 siklu_cpld_read(u8 reg)
+{
+	u8 rx_buf[10];
+	int rc = _siklu_cpld_read(reg, rx_buf);
+	if (rc==0)
+		return rx_buf[3];
+	else
+		return 0xFF;
 }
 
 int siklu_cpld_write(u8 reg, u8 data) {
@@ -462,7 +472,7 @@ static int get_cpld_hw_ver(int * cpld_hw_ver)
 	u8 rx_buf[10];
 	memset(rx_buf, 0, sizeof(rx_buf));
 
-	rc = siklu_cpld_read(R_CPLD_LOGIC_HW_ASM_VER, rx_buf);
+	rc = _siklu_cpld_read(R_CPLD_LOGIC_HW_ASM_VER, rx_buf);
 	if (rc != CMD_RET_SUCCESS)
 	{
 		printf("\ncpld read failed\n");

@@ -17,6 +17,7 @@
 #include "siklu_def.h"
 #include "siklu_api.h"
 #include <spi.h>
+#include "cpld_reg.h"
 
 /*
  *
@@ -277,10 +278,7 @@ static int do_siklu_cpld_version_read(cmd_tbl_t * cmdtp, int flag, int argc,
 static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
-	int ret;
-
 	u8 addr;
-	u8 rx_buf[10];
 	u8 val;
 
 	if (argc > 1) {
@@ -290,16 +288,8 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 		return rc;
 	}
 
-	memset(rx_buf, 0, sizeof(rx_buf));
-	ret = siklu_cpld_read(addr, rx_buf);
-	if (ret == 0) {
-		val = rx_buf[3];
-		printf(" reg 0x%x, val 0x%02x\n", addr, val);
-	}
-	else {
-		printf(" Error read, rc %d\n", rc);
-	}
-
+	val = siklu_cpld_read(addr);
+	printf(" reg 0x%x, val 0x%02x\n", addr, val);
 	return 0;
 
 }
@@ -321,21 +311,75 @@ static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 	return siklu_cpld_write(addr, data);
 }
 
+static int do_siklu_cpld_access(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_SUCCESS;
+
+	uint32_t val = 0;
+	uint32_t reg = 0;
+
+	uint8_t cpld_regs[] = { //
+			R_CPLD_LOGIC_MAJOR, //
+					R_CPLD_LOGIC_MINOR_BOARDTYPE,
+					R_CPLD_LOGIC_RESET_CONTROL, //
+					R_CPLD_LOGIC_RESET_CAUSE,
+					R_CPLD_LOGIC_MISC_STATUS, //
+					R_CPLD_LOGIC_WD_RW, //
+					R_CPLD_LOGIC_SFP_MODE,
+					R_CPLD_LOGIC_DIP_MODE, //
+					R_CPLD_LOGIC_MODEM_LEDS_CTRL,
+					R_CPLD_LOGIC_ETHERNET_LEDS_CTRL, //
+					R_CPLD_LOGIC_POWER_LEDS_CTRL,
+					R_CPLD_LOGIC_POWER_STATUS, //
+					R_CPLD_LOGIC_INT_HNDLR_0,
+					R_CPLD_LOGIC_INT_HNDLR_1, //
+					R_CPLD_LOGIC_INT_HNDLR_0_MASK, //
+					R_CPLD_LOGIC_INT_HNDLR_1_MASK, //
+					R_CPLD_LOGIC_CPLD_INT_CAUSE_RO,
+					R_CPLD_LOGIC_MISC_0, //
+					R_CPLD_LOGIC_MISC_1, //
+					R_CPLD_LOGIC_GPIO, //
+					R_CPLD_LOGIC_CFG_SEL_MISC, //
+					R_CPLD_LOGIC_HW_ASM_VER,
+					R_CPLD_LOGIC_MISC_2, //
+					R_CPLD_LOGIC_SER_EEPROM_IF, //
+			};
+
+	if (argc == 1) { // no arguments display all registers
+		int i;
+		for (i=0;i<sizeof(cpld_regs);i++) {
+			printf(" 0x%02x, val 0x%02x\n", cpld_regs[i], siklu_cpld_read(cpld_regs[i]));
+		}
+	} //
+	else if (argc == 2) {
+		// read
+		reg = simple_strtoul(argv[1], NULL, 16);
+		printf(" Reg 0x%04x, val 0x%02x\n", reg, siklu_cpld_read(reg));
+	} //
+	else if (argc == 3) {
+		// write
+		reg = simple_strtoul(argv[1], NULL, 16);
+		val = simple_strtoul(argv[2], NULL, 16);
+		siklu_cpld_write(reg, val);
+	} else {
+		// wrong
+		printf("Wrong parameters\n");
+		return 1;
+	}
+	return rc;
+
+}
+
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
-	int rc = CMD_RET_FAILURE;
-	u8 rx_buf[10];
+	int rc = CMD_RET_SUCCESS;
+	T_CPLD_LOGIC_DIP_MODE_REGS reg;
 	u8 poe_pair1_exist, poe_pair2_exist;
-	memset(rx_buf, 0, sizeof(rx_buf));
 
-	rc = siklu_cpld_read(CONFIG_CPLD_DIP_MODE_REG_ADDR, rx_buf);
-	if (rc != CMD_RET_SUCCESS) {
-		printf("\ncpld read failed\n");
-		return rc;
-	}
+	reg.uint8 = siklu_cpld_read(CONFIG_CPLD_DIP_MODE_REG_ADDR);
 
-	poe_pair1_exist = rx_buf[3] & 1 << 4;
-	poe_pair2_exist = rx_buf[3] & 1 << 5;
+	poe_pair1_exist = reg.s.cfg_poe_pair1_exist;
+	poe_pair2_exist = reg.s.cfg_poe_pair2_exist;
 
 	if (poe_pair1_exist && poe_pair2_exist)
 		printf("\n 4-pairs\n");
@@ -356,6 +400,9 @@ U_BOOT_CMD(scpldr, 5, 0, do_siklu_cpld_read, "Read Siklu CPLD register",
 
 U_BOOT_CMD(scpldw, 5, 0, do_siklu_cpld_write, "Write Siklu CPLD register",
 		"[cpld write addr] [val]");
+
+U_BOOT_CMD(scpld, 5, 1, do_siklu_cpld_access, "Siklu. Access CPLD Device",
+		"<reg> <val *>   - access specified register\n");
 
 U_BOOT_CMD(snor_jdec, 5, 0, do_siklu_snor_jedec_read,
 		"Read serial-NOR JEDEC data",
