@@ -382,11 +382,11 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
 	poe_pair2_exist = reg.s.cfg_poe_pair2_exist;
 
 	if (poe_pair1_exist && poe_pair2_exist)
-		printf("\n 4-pairs\n");
+		printf("\n No pairs\n");
 	else if (poe_pair1_exist || poe_pair2_exist)
 		printf("\n 2-pairs\n");
 	else
-		printf("\n No pairs\n");
+		printf("\n 4-pairs\n");
 
 	return rc;
 }
