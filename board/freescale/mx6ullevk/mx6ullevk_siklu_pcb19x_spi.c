@@ -294,6 +294,34 @@ static int do_siklu_cpld_read(cmd_tbl_t * cmdtp, int flag, int argc,
 
 }
 
+static int do_siklu_cpld_test(cmd_tbl_t * cmdtp, int flag, int argc,
+		char * const argv[]) {
+	int rc = CMD_RET_FAILURE;
+	u8 val, data;
+#define CPLD_READ_INVERT_WRITE_REG 0x15
+
+	data = 0xAA;
+	siklu_cpld_write(CPLD_READ_INVERT_WRITE_REG, data);
+	val = siklu_cpld_read(CPLD_READ_INVERT_WRITE_REG);
+	if (val != 0x55)
+	{
+		printf("%s: Cpld test Failed\n", __func__);
+		return rc;
+	}
+
+	data = 0x55;
+	siklu_cpld_write(CPLD_READ_INVERT_WRITE_REG, data);
+	val = siklu_cpld_read(CPLD_READ_INVERT_WRITE_REG);
+	if (val != 0xAA)
+	{
+		printf("%s: Cpld test Failed\n", __func__);
+		return rc;
+	}
+
+	printf("\n Cpld test OK\n");
+	return CMD_RET_SUCCESS;
+}
+
 static int do_siklu_cpld_write(cmd_tbl_t * cmdtp, int flag, int argc,
 		char * const argv[]) {
 	int rc = CMD_RET_FAILURE;
@@ -394,6 +422,9 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc,
 U_BOOT_CMD(scpldv, 5, 0, do_siklu_cpld_version_read,
 		"Read Siklu CPLD version register",
 		" [spi_mode 0..3*] Read Siklu CPLD version register");
+
+U_BOOT_CMD(scpldt, 5, 0, do_siklu_cpld_test, "Test Siklu CPLD",
+		" ");
 
 U_BOOT_CMD(scpldr, 5, 0, do_siklu_cpld_read, "Read Siklu CPLD register",
 		"[cpld read addr]");
