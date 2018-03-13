@@ -65,6 +65,14 @@ void main_loop(void)
 
 	autoboot_command(s);
 
+#ifdef CONFIG_SIKLU_BOARD
+	// printf("##############  Autoboot disabled ############\n"); //
+	// before go to CLI we should enable CPU network connection
+	run_command("snetw_ena 1",0);
+#endif //
+
+
+
 	cli_loop();
 	panic("No CLI available");
 }
