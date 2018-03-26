@@ -103,31 +103,14 @@ int sf_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 
 	printf("\t[Done]\n");
-	printf("Override Env parameters to default? [y/N]");
+	printf("Erasing SPI flash 0x%x - 0x%x: ", 0, CONFIG_SNOR_SIZE - CONFIG_ENV_SIZE);
 
-	if (confirm_yesno()) {
-
-		printf("Erasing SPI flash 0x%x - 0x%x:",0, CONFIG_SNOR_SIZE);
-
-		rc = spi_flash_erase(siklu_get_env_flash(), 0, CONFIG_SNOR_SIZE);
-		if (rc) {
-			printf("BUBT SF area erase error rc %d\n", rc);
-			return rc;
-		}
-		printf("\t[Done]\n");
+	rc = spi_flash_erase(siklu_get_env_flash(), 0, CONFIG_SNOR_SIZE - CONFIG_ENV_SIZE);
+	if (rc) {
+		printf("BUBT SF area erase error rc %d\n", rc);
+		return rc;
 	}
-	else
-	{
-
-		printf("Erasing SPI flash 0x%x - 0x%x: ", 0, CONFIG_SNOR_SIZE - CONFIG_ENV_SIZE);
-
-		rc = spi_flash_erase(siklu_get_env_flash(), 0, CONFIG_SNOR_SIZE - CONFIG_ENV_SIZE);
-		if (rc) {
-			printf("BUBT SF area erase error rc %d\n", rc);
-			return rc;
-		}
-		printf("\t[Done]\n");
-	}
+	printf("\t[Done]\n");
 	printf("Writing image to SNOR:");
 
 	rc = spi_flash_write(siklu_get_env_flash(), 0, filesize,
