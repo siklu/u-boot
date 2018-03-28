@@ -46,7 +46,6 @@ int siklu_set_led_modem(SKL_BOARD_LED_MODE_E mode)
 		modem_leds.s.cfg_modem_led = 3;
         break;
     default:
-    	printf("Invalid modem led mode");
         return -1; // invalid mode
         break;
 	}
@@ -80,7 +79,6 @@ int siklu_set_led_power(SKL_BOARD_LED_MODE_E mode)
 		pwoer_leds.s.cfg_power_led = 4;
         break;
     default:
-    	printf("Invalid modem led mode");
         return -1; // invalid mode
         break;
 	}
@@ -263,6 +261,13 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
     case SKL_LED_MODEM:
     	rc = siklu_set_led_modem(mode);
     	break;
+    case SKL_LED_ALL:
+		rc = siklu_set_eth1_led(mode);
+		rc = siklu_set_eth2_led(SKL_LED_ETH2_0, mode);
+		rc = siklu_set_eth2_led(SKL_LED_ETH2_1, mode);
+		rc = siklu_set_led_power(mode);
+		rc = siklu_set_led_modem(mode);
+		break;
     default:
         return -1; // no handler!
         break;
@@ -286,7 +291,7 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     else
     {
         printf("sled [led] [state]\n");
-        printf(" led:   eth1/eth2_0/eth2_1/modem/power\n");
+        printf(" led:   eth1/eth2_0/eth2_1/modem/power/all\n");
         printf(" state: \n\to - off\n\tg - green\n\ty - yellow\n\tgb - green blink\n\tyb - yellow blink\n");
         return rc;
     }
@@ -312,6 +317,10 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     {
         _led = SKL_LED_POWER;
     }
+    else if (strcmp(led, "all") == 0)
+	{
+    	_led = SKL_LED_ALL;
+	}
     else
     {
         printf("Wrong LED type\n");
