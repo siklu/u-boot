@@ -102,6 +102,21 @@ int sf_burn_uboot_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 0;
 	}
 
+	if (1) {  // check image footer. See sdk_nxp/host-scripts/create_target_uboot.sh  add_footer4spi_nor_boot() function
+		uint32_t footer_offs = load_addr + filesize - 100;
+		char* footer=(char*)footer_offs;
+		//printf(" Load address %lu, filesize %u, footer_offs %u\n", load_addr, filesize, footer_offs);
+		//printf(" New uboot footer string %s\n", (char*)footer_offs);
+
+		char* last_byte = (char*)(load_addr + filesize);
+		*last_byte = 0; // protect from oversize
+
+		if (!strstr(footer, "PCB19x UBOOT")) {
+			printf("UBOOT image is wrong. No right footer\n");
+			return 0;
+		}
+	}
+
 	printf("\t[Done]\n");
 	printf("Erasing SPI flash 0x%x - 0x%x: ", 0, CONFIG_SNOR_SIZE - CONFIG_ENV_SIZE);
 
