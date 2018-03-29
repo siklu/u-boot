@@ -58,7 +58,7 @@ si5344_revd_register_t const si5344_revd_registers[SI5344_REVD_REG_CONFIG_NUM_RE
 	{ 0x0006, 0x00 },
 	{ 0x0007, 0x00 },
 	{ 0x0008, 0x00 },
-
+	{ 0x000B, 0x58 },
 	{ 0x0016, 0x02 },
 	{ 0x0017, 0xDC },
 	{ 0x0018, 0xFF },
@@ -510,7 +510,7 @@ si5344_revd_register_t const si5344_revd_registers[SI5344_REVD_REG_CONFIG_NUM_RE
 	{ 0x0B57, 0x03 },
 	{ 0x0B58, 0x01 },
 	/* End configuration registers */
-	{ 0x000B, 0x58 }, //
+
 	/* Start configuration postamble */
 	{ 0x0514, 0x01 },
 	{ 0x001C, 0x01 },

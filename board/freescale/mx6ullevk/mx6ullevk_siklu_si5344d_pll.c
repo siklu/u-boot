@@ -195,7 +195,7 @@ int siklu_si5344d_pll_reg_burn()
     u8 page = 0;
 	u8 val;
 
-//	printf("Configure PLL. Device addr: 0x%02x\n", current_pll_addr);
+	printf("Configure PLL. Device addr: 0x%02x\n", current_pll_addr);
 
 	int old_bus = i2c_get_bus_num();
 	i2c_set_bus_num(CONFIG_SYS_PLL_BUS_NUM);
@@ -215,17 +215,23 @@ int siklu_si5344d_pll_reg_burn()
 		{
 			udelay(300000); //Wait 300 ms
 		}
+
+		if (reg == 0xB && page == 0) // I2C Address
+		{
+			rc = i2c_probe(CONFIG_SYS_I2C_BURNED_PLL_ADDR);
+
+			if (rc == 0)
+			{
+				current_pll_addr = CONFIG_SYS_I2C_BURNED_PLL_ADDR;
+			}
+			else
+			{
+				printf("Error: Expected PLL device addr 0x%02x was not found\n", CONFIG_SYS_I2C_BURNED_PLL_ADDR);
+			}
+		}
 	}
 
-	rc = i2c_probe(CONFIG_SYS_I2C_BURNED_PLL_ADDR);
-
-	if (rc == 0) {
-		current_pll_addr = CONFIG_SYS_I2C_BURNED_PLL_ADDR;
-		printf("PLL is ready. Device addr: 0x%02x\n", current_pll_addr);
-	}
-	else {
-		printf("Error: Expected PLL device addr 0x%02x was not found\n", CONFIG_SYS_I2C_BURNED_PLL_ADDR);
-	}
+	printf("PLL is ready. Device addr: 0x%02x\n", current_pll_addr);
 
 	i2c_set_bus_num(old_bus);
 
