@@ -524,6 +524,14 @@ int arch_early_init_r(void)
     siklu_set_led_cpu_mpp(SKL_LED_WLAN, SKL_LED_MODE_OFF);
     siklu_control_sfp_led(0);
 
+
+    if (1) { // on demand Ziv   15.03.2018
+    	// printf("Set CPU core power limit to 1.15V\n");
+		MV_REG_WRITE(0xe4130, 0x10023225); // Set CPU core power limit to 1.15V (AVS) See data-sheet
+		// table 2479
+	}
+
+
     udelay(10000);
 
     return 0;
