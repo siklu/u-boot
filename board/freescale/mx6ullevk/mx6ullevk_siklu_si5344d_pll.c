@@ -195,7 +195,7 @@ int siklu_si5344d_pll_reg_burn()
     u8 page = 0;
 	u8 val;
 
-	printf("Configure PLL. Device addr: 0x%02x\n", current_pll_addr);
+//	printf("Configure PLL. Device addr: 0x%02x\n", current_pll_addr);
 
 	int old_bus = i2c_get_bus_num();
 	i2c_set_bus_num(CONFIG_SYS_PLL_BUS_NUM);
@@ -231,7 +231,7 @@ int siklu_si5344d_pll_reg_burn()
 		}
 	}
 
-	printf("PLL is ready. Device addr: 0x%02x\n", current_pll_addr);
+//	printf("PLL is ready. Device addr: 0x%02x\n", current_pll_addr);
 
 	i2c_set_bus_num(old_bus);
 
