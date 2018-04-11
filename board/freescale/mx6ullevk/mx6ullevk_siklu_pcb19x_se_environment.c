@@ -53,11 +53,11 @@ static sf_env_siklu_se_t* p_sf_env_siklu_se = &sf_env_siklu_se;
 static int syseeprom_access_init = 0;
 
 static const char siklu_default_environment_se[] = { //
-		"SE_product_name=EH8010" ";" //
+		"SE_product_name=8010FX" ";" //
 						"SE_mac=00:24:a4:00:de:ad" ";"//
 						"SE_board_serial=F123456789" ";"//
 						"SE_system_serial=0" ";"//
-						"SE_port_map=c---" ";" "\0" //
+						"SE_port_map=cd--" ";" "\0" //
 		};
 
 /*
