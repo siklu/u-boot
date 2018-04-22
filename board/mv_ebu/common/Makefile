@@ -68,7 +68,7 @@ BOARD_OBJS-$(CONFIG_ARMADA_38X) += $(BOARD_ENV_DIR)/mvBoardSikluMemTest.o  \
   $(BOARD_ENV_DIR)/mvBoardSikluHw.o $(BOARD_ENV_DIR)/mvBoardSikluFlashBoot.o \
   $(BOARD_ENV_DIR)/mvBoardSikluMutualEnvCntrl.o  $(BOARD_ENV_DIR)/mvBoardSikluSystem.o \
   $(BOARD_ENV_DIR)/mvBoardSikluSysEepromCommon.o  $(BOARD_ENV_DIR)/mvBoardSikluSysEepromApi.o \
-  $(BOARD_ENV_DIR)/mvBoardSikluPhyBle.o
+  $(BOARD_ENV_DIR)/mvBoardSikluPhyBle.o   $(BOARD_ENV_DIR)/mvBoardSikluNandTest.o
       
 
 # SEE README.arm-unaligned-accesses

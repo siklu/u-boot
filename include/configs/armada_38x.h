@@ -59,6 +59,9 @@
 # define MTDIDS_DEFAULT		"nand0=armada-nand" //      SPI  ;spi1=spi_flash
 # define MTDPARTS_DEFAULT   "mtdparts=armada-nand:128k(env_ro),128k(env_var0),128k(env_var1),128k(hdr0),40M(uimage0),"  \
     "128k(hdr1),40M(uimage1)," "16M(conf),-(log)"
+
+# define CONFIG_RAND
+
 #endif //
 
 
