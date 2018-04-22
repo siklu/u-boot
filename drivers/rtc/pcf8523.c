@@ -204,9 +204,19 @@ int rtc_set(struct rtc_time *tmp)
     //battery low detection function is disabled
 #else
     (void)pcf8523_set_pm; // prevent warning
-    rtc_write( REG_CONTROL3, 0xA0);  // siklu_remark008
-    /* rtc_write( REG_CONTROL3, 0x80); Baruch decides do not set PM mode=0b100 in uboot,
-    only in linux  */
+
+
+
+	/*
+		30 jan 2018. Value 0b100 required to solve problem with batteries V > 3.5V (overcharged)
+		Write the same value as in CVMX UBOOT. See
+			main_cvmx/sdk_310n/bootloader/u-boot_PCB15x_stage3_SDK310/drivers/rtc/pcf8523.c
+			in http://pax/software/main_cvmx
+
+	*/
+    rtc_write( REG_CONTROL3, 0x80);
+
+
 #endif
 
     pcf8523_start_rtc();
