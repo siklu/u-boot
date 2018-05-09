@@ -44,10 +44,17 @@ static int do_siklu_nand_test(cmd_tbl_t *cmdtp, int flag, int argc,
 
 	int ret = 0, count;
 	int is_error = 0;
-#define NAND_TEST_EXEC_TIMES	100
+#define NAND_TEST_EXEC_TIMES	100000
+	uint32_t num_tests = NAND_TEST_EXEC_TIMES;
+
+
+    if (argc == 2) // show register value
+    {
+    	num_tests = simple_strtoul(argv[1], NULL, 10);
+    }
 
 	// Execute N times write-read-compare
-	for (count = 0; count < NAND_TEST_EXEC_TIMES; count++) {
+	for (count = 0; count < num_tests; count++) {
 		char cmd[100];
 
 		if (ctrlc())
@@ -112,4 +119,4 @@ static int do_siklu_nand_test(cmd_tbl_t *cmdtp, int flag, int argc,
 }
 
 U_BOOT_CMD(snandt, 3, 1, do_siklu_nand_test, "Board NAND Test",
-		"[test_num 0,1,2...]* - Board NAND Test");
+		"[num_loops]* - Board NAND Test");
