@@ -204,18 +204,13 @@ int rtc_set(struct rtc_time *tmp)
     //battery low detection function is disabled
 #else
     (void)pcf8523_set_pm; // prevent warning
-
-
-
 	/*
 		30 jan 2018. Value 0b100 required to solve problem with batteries V > 3.5V (overcharged)
 		Write the same value as in CVMX UBOOT. See
 			main_cvmx/sdk_310n/bootloader/u-boot_PCB15x_stage3_SDK310/drivers/rtc/pcf8523.c
 			in http://pax/software/main_cvmx
-
 	*/
     rtc_write( REG_CONTROL3, 0x80);
-
 
 #endif
 
@@ -281,5 +276,23 @@ void pcf8523_write(uchar reg, uchar val)
 {
     return rtc_write(reg, val);
 }
+
+static int do_siklu_rtc_display_regs(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+
+
+    printf( " 0x%2x - 0x%2x\n", 0, pcf8523_read(0));
+    printf( " 0x%2x - 0x%2x\n", 1, pcf8523_read(1));
+    printf( " 0x%2x - 0x%2x\n", 2, pcf8523_read(2));
+
+    return rc;
+}
+
+
+U_BOOT_CMD(srtcrr, 5, 1, do_siklu_rtc_display_regs, "Display PCF8523 Control Regs", " Display PCF8523 Control Regs");
+
+
+
 
 #endif
