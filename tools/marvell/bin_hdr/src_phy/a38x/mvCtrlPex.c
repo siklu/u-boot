@@ -269,7 +269,7 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
 
 #if defined(MV_SIKLU_WIGIG_BOARD)
 
-		if (serdesIdx == 0) {  // PCIe port 0 uses SERDES#0
+		if (serdesIdx == 0) {  // PCIe port 0 uses SERDES#0    siklu_remarkM45
 		    volatile unsigned long long count;
 		    MV_U32 reg_val;
             /*
@@ -289,13 +289,13 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
             reg_val |= (1<<(44-32));
             MV_REG_WRITE(0x18140, reg_val);  // equiv to MV_REG_WRITE(0x18140, 0x2f9000);
 
- 		    for (count =0;count<1000000;count++) // stupid delay, wait for modem starts
+ 		    for (count =0;count<1000000;count++) // stupid delay
 		    {
 		        volatile int a = 0;   a++; a++;
 		    }
 		}
 		// add initialization PCIe-1
-		if (serdesIdx == 4) {  // PCIe port 1 uses SERDES#4
+		if (serdesIdx == 4) {  // Siklu PCIe port 1 uses SERDES#4     siklu_remarkM45
 		    volatile unsigned long long count;
 		    MV_U32 reg_val;
             /*
@@ -315,7 +315,7 @@ MV_STATUS mvHwsPexConfig(SERDES_MAP *serdesMap)
             reg_val |= (1<<(47-32));
             MV_REG_WRITE(0x18140, reg_val);  // equiv to MV_REG_WRITE(0x18140, 0x2f9000);
 
- 		    for (count =0;count<1000000;count++) // stupid delay, wait for modem starts
+ 		    for (count =0;count<1000000;count++) // stupid delay
 		    {
 		        volatile int a = 0;   a++; a++;
 		    }
