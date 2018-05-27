@@ -64,15 +64,12 @@ int fetch_bubt_cmd_args(int argc, char * const argv[], u32 *loadfrom)
 int fetch_uboot_file (int loadfrom)
 {
 	int filesize = 0;
-	printf("%s %d\n", __FILE__, __LINE__);
 	filesize = net_loop(TFTPGET);
-	printf("Checking file size:");
 	if (filesize == -1)
 	{
-		printf("\t[Fail]\n");
+		printf("Received file is wrong (file size error)\n");
 		return 0;
 	}
-	printf("%s %d filesize:%d\n", __FILE__, __LINE__, filesize);
 	return filesize;
 }
 
