@@ -68,7 +68,7 @@
 
 /* follow define means that SW images stored over NAND commands, no UBI
   11.02.2018 after solve a problem we return to store uimage in UBI */
-#define SW_PARTS_IS_PURE_NAND_PARTITIONS 1
+/* #define SW_PARTS_IS_PURE_NAND_PARTITIONS 1 */
 
 #ifndef SW_PARTS_IS_PURE_NAND_PARTITIONS
 	/* #define CONFIG_SYS_USE_UBI */
