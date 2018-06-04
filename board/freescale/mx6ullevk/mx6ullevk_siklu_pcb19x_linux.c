@@ -453,12 +453,13 @@ static int run_linux_code(int is_system_in_bist) {
 	i += sprintf(buf + i, "board=siklu ");
 #endif //     CONFIG_SIKLU_BOARD
 
-
+/*
 #ifdef SW_PARTS_IS_PURE_NAND_PARTITIONS
 	i += sprintf(buf + i, "sw_image=nand ");
 #else
 	i += sprintf(buf + i, "sw_image=ubi ");
 #endif //     SW_PARTS_IS_PURE_NAND_PARTITIONS
+*/
 
 	if (siklu_is_restore2fact_default()) {
 		i += sprintf(buf + i, "rfd=on "); // mean ResetFactoryDefault=ON
