@@ -485,20 +485,26 @@ static int get_cpld_hw_ver(int * cpld_hw_ver)
 }
 
 
-/*
- * unconditional HW reset via CPLD
- */
-static int do_siklu_board_hw_reboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int siklu_board_hw_reboot(void)
 {
     int rc = CMD_RET_SUCCESS;
     while (1) {
-		siklu_cpld_write(R_CPLD_LOGIC_MODEM_LEDS_CTRL, 0);
-		siklu_cpld_write(R_CPLD_LOGIC_RESET_CONTROL, 0);
+        siklu_cpld_write(R_CPLD_LOGIC_MODEM_LEDS_CTRL, 0);
+        siklu_cpld_write(R_CPLD_LOGIC_RESET_CONTROL, 0);
     }
-
     return rc;
 }
 
+
+/*
+ * unconditional HW reset via CPLD
+ * call regular "reset" command instead it
+
+static int do_siklu_board_hw_reboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    return siklu_board_hw_reboot();
+}
+ */
 
 
 static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -653,4 +659,4 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
 U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " Display Board HW info");
 U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
 
-U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
+// U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
