@@ -30,13 +30,6 @@ __weak void reset_misc(void)
 int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 
-#ifdef CONFIG_SIKLU_BOARD
-    extern int siklu_board_hw_reboot(void);
-	// Siklu board executes reset via CPLD chip
-    puts ("resetting ....\n");
-	siklu_board_hw_reboot();
-
-#else
     puts ("resetting ...\n");
 	udelay (50000);				/* wait 50 ms */
 
@@ -44,7 +37,6 @@ int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	reset_misc();
 	reset_cpu(0);
-#endif
 	/*NOTREACHED*/
 	return 0;
 }

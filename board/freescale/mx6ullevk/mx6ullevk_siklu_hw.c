@@ -498,13 +498,13 @@ int siklu_board_hw_reboot(void)
 
 /*
  * unconditional HW reset via CPLD
- * call regular "reset" command instead it
-
+ * This is only one command for restart a board. Regular "reset" command disabled!
+ */
 static int do_siklu_board_hw_reboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     return siklu_board_hw_reboot();
 }
- */
+
 
 
 static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -659,4 +659,4 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
 U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " Display Board HW info");
 U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
 
-// U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
+U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
