@@ -356,8 +356,8 @@ extern unsigned int mvUartPortGet(void);
 	#endif                  //#if defined(MV_SPI_BOOT)
 #endif                          //#if defined(MV_SPI)
 
-#define CONFIG_SYS_NAND_MAX_CHIPS 1     /* pass compilation for non NAND board configuration */
-
+#define CONFIG_SYS_NAND_MAX_CHIPS 		1     /* pass compilation for non NAND board configuration */
+#define CONFIG_SYS_NAND_QUIET          	1
 /* NAND-FLASH stuff     */
 /************************/
 #ifdef MV_NAND
