@@ -45,7 +45,7 @@ static int do_version(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 
 #ifdef MV_SIKLU_WIGIG_BOARD
-    printf("Siklu version:  %s.%d.%d.%s\n", _VER_MAJOR, _VER_MINOR, _VER_BUILD, U_BOOT_SVNVERSION_STR);
+    printf("Siklu version:  %s.%d.%d%s\n", _VER_MAJOR, _VER_MINOR, _VER_BUILD, U_BOOT_SVNVERSION_STR);
 #endif
 
 	return 0;

@@ -60,12 +60,12 @@ PLATFORM_CPPFLAGS =
 PLATFORM_LDFLAGS =
 
 #####################   SIKLU Additions  ####################
-SVNVERSION_STR=$(shell svnversion)
+# == use  'last changed revision' instead 'Revision' ==
+# SVNVERSION_STR=$(shell svnversion $(ARMADA_UBOOT_DIR))
+SVNVERSION_STR=$(shell $(TOPDIR)/tools/setlocalversion $(TOPDIR))
+
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
 SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=$(MAJOR) -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
-
-
-
 
 #########################################################################
 
