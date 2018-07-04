@@ -331,9 +331,6 @@ static int run_linux_code(int is_system_in_bist)
         i += sprintf(buf + i, "%s ", skl_additional_kernel_cmd);
     }
 
-    // i += sprintf(buf + i, "maxcpus=1 ");  dangerous: run linux only on 1 core
-    // i += sprintf(buf + i, "nosmp ");      dangerous: run linux only on 1 core
-
     // run the command line for preset boot environment
     rc = _run_command(buf, 0);
     if (rc != 0)
