@@ -854,7 +854,7 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
     if (argc == 1) // show current mode
     {
         char *bist_state;
-        bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
+        bist_state = siklu_mutable_env_get(SIKLU_BIST_MUT_ENVIRONMENT_NAME);//  getenv(SIKLU_BIST_ENVIRONMENT_NAME);
 
         if (bist_state == NULL)
         {
@@ -876,8 +876,9 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
                 break;
             default:
                 printf("Wrong BIST mode! Disable BIST for future runs\n");
-                setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
-                saveenv();
+                siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
+                // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+                // saveenv();
                 break;
             }
         }
@@ -892,19 +893,23 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
         {
         case BIST_MODE_DISABLED:
             printf("Disable BIST mode\n");
-            setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
             break;
         case BIST_MODE_ON:
             printf("Set System in BIST mode\n");
-            setenv(SIKLU_BIST_ENVIRONMENT_NAME, "1");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, "1");
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, "1",1);
             break;
         case BIST_MODE_AND_MONITORING:
             printf("System in BIST mode with Monitoring\n");
-            setenv(SIKLU_BIST_ENVIRONMENT_NAME, "2");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, "2");
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, "2",1);
             break;
         default:
             printf("Wrong BIST mode! Disable BIST for future runs\n");
-            setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
             break;
         }
         saveenv();

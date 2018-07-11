@@ -8,10 +8,7 @@
 #ifndef INCLUDE_SIKLU_API_H_
 #define INCLUDE_SIKLU_API_H_
 
-
-#define SIKLU_BIST_ENVIRONMENT_NAME "bist"
 #define SIKLU_BIST_MUT_ENVIRONMENT_NAME "SK_bist" // siklu_remark002
-
 
 typedef enum {
 	SKL_WIGIG0_RF_RESET,  //  mean RF output?

@@ -823,7 +823,7 @@ void misc_init_r_env(void)
 	env = getenv("eeeEnable");
 	if (!env)
 		setenv("eeeEnable", "no");
-
+/*
 	env = getenv("lcd0_enable");
 	if (!env)
 		setenv("lcd0_enable", "0");
@@ -835,7 +835,7 @@ void misc_init_r_env(void)
 	env = getenv("lcd_panel");
 	if (!env)
 		setenv("lcd_panel", "0");
-
+*/
 	return;
 }
 

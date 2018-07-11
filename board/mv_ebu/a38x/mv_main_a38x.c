@@ -490,23 +490,27 @@ void misc_init_r_env(void)
 	if (!env)
 		setenv("script_addr_r", "3000000");
 	env = getenv("bootargs_dflt");
-	if (!env)
+	if (!env) {
 #if defined(CONFIG_ARMADA_39X)
 		setenv("bootargs_dflt", "$console $nandEcc $mtdparts $bootargs_root nfsroot=$serverip:$rootpath "
 			   "ip=$ipaddr:$serverip$bootargs_end $mvNetConfig video=dovefb:lcd0:$lcd0_params "
 			   "clcd.lcd0_enable=$lcd0_enable clcd.lcd_panel=$lcd_panel $nss_emac_map");
 #else
-		setenv("bootargs_dflt", "$console $nandEcc $mtdparts $bootargs_root nfsroot=$serverip:$rootpath "
-			   "ip=$ipaddr:$serverip$bootargs_end $mvNetConfig video=dovefb:lcd0:$lcd0_params "
-			   "clcd.lcd0_enable=$lcd0_enable clcd.lcd_panel=$lcd_panel");
+		//setenv("bootargs_dflt", "$console $nandEcc $mtdparts $bootargs_root nfsroot=$serverip:$rootpath "
+		//	   "ip=$ipaddr:$serverip$bootargs_end $mvNetConfig video=dovefb:lcd0:$lcd0_params "
+		//	   "clcd.lcd0_enable=$lcd0_enable clcd.lcd_panel=$lcd_panel");
 #endif
+	}
 	env = getenv("bootcmd_auto");
 	if (!env)
 		setenv("bootcmd_auto", "stage_boot $boot_order");
+	/*
 	env = getenv("bootcmd_lgcy");
 	if (!env)
 		setenv("bootcmd_lgcy", "tftpboot 0x2000000 $image_name; setenv bootargs $bootargs_dflt; bootm 0x2000000; ");
+		*/
 #endif
+	/*
 	env = getenv("pxe_files_load");
 	if (!env)
 		setenv("pxe_files_load", ":default.arm-armadaxp-db:default.arm-armadaxp:default.arm");
@@ -516,8 +520,10 @@ void misc_init_r_env(void)
 	env = getenv("initrd_name");
 	if (!env)
 		setenv("initrd_name", "uInitrd");
-
+	*/
+#if 0
 	/* netbsd boot arguments */
+
 	env = getenv("netbsd_en");
 	if ( !env || ( ((strcmp(env, "no") == 0) || (strcmp(env, "No") == 0) )))
 		setenv("netbsd_en", "no");
@@ -575,7 +581,7 @@ void misc_init_r_env(void)
 		if (!env)
 			setenv("netbsd_bootcmd", "run netbsd_get ; run netbsd_set_args ; run netbsd_boot");
 	}
-
+#endif 0
 	/* vxWorks boot arguments */
 	env = getenv("vxworks_en");
 	if ( !env || ( ((strcmp(env, "no") == 0) || (strcmp(env, "No") == 0) )))
@@ -885,6 +891,7 @@ void misc_init_r_env(void)
 #endif
 
 #ifndef MV_SIKLU_WIGIG_BOARD
+	/*
 	env = getenv("lcd0_enable");
 	if (!env)
 		setenv("lcd0_enable", "0");
@@ -896,6 +903,7 @@ void misc_init_r_env(void)
 	env = getenv("lcd_panel");
 	if (!env)
 		setenv("lcd_panel", "0");
+		*/
 #endif
 	return;
 }

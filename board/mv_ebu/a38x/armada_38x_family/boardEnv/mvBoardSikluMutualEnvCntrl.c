@@ -386,45 +386,17 @@ static int siklu_boot_process_control(void)
         }
     }
 
-    const char* mut_bist = siklu_mutable_env_get(SIKLU_BIST_MUT_ENVIRONMENT_NAME); // string presences in mutual environment
-    const char *uboot_bist = getenv(SIKLU_BIST_ENVIRONMENT_NAME);// string presences in regular uboot environment
-
-# if 0
-    /* check presence "SK_bist" mutual environment variable
-      * if it presence with value '1' or '2'  configure sbist mode
-      */
-
-    if ((mut_bist)&&(!uboot_bist) && ( ((strcmp (mut_bist, "1") == 0)) || (strcmp (mut_bist, "2") == 0))) {
-        // we fall here if bist mode set in mutual environment but doesn't set un regular environment
-    	// this occurs only in the case that bist mode configured via hwtest utility!
-        char cmd[100];
-    	printf("The System enters BIST mode due to SW demand\n"); // siklu_remark002
-        sprintf(cmd, "sbist %s", mut_bist);
-        rc = run_command(cmd, 0);
-        // now we should remove BIST flag from mutual environment
-        siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
-    }
-#else
-    // if mutual bist presents, it should overwrite uboot environment value
+    const char* mut_bist = siklu_mutable_env_get(SIKLU_BIST_MUT_ENVIRONMENT_NAME);
 	if (mut_bist) {
 		char cmd[100];
 		if ((strcmp(mut_bist, "1") == 0) || (strcmp(mut_bist, "2") == 0)) {
-			printf("The SW System enters BIST mode due to SW demand\n"); // siklu_remark002
-			sprintf(cmd, "sbist %s", mut_bist);
-			printf("%s()   execute command: %s\n", __func__, cmd); // edikk remove
-			rc = run_command(cmd, 0);
+			// do nothing
 		}
 		else {
 			// all other case - remove mut_bist from mutual environment
-			printf("%s()  Current mutual bist env - %s, remove it from uboot env\n", __func__, mut_bist); // edikk remove
-			sprintf(cmd, "sbist 0");
-			rc = run_command(cmd, 0);
+			siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
 		}
-	    // now we should remove BIST flag from mutual environment
-	    siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
 	}
-#endif
-
 
     // check presents an value of "SK_try_count" variable
     const char *try_count = siklu_mutable_env_get("SK_try_count");

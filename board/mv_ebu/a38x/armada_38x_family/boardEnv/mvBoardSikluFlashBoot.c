@@ -284,7 +284,7 @@ extern int seeprom_get_assembly_type_v1(char* assembly);
 /*
  * The function doesn't return!
  */
-static int run_linux_code(int is_system_in_bist)
+static int run_linux_code(void)
 {
     int rc = 0;
     char buf[600];
@@ -310,12 +310,6 @@ static int run_linux_code(int is_system_in_bist)
             sprintf(buf + i,
                     "env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
                     nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-
-    if (is_system_in_bist)
-    { // add string to command line says about BIST mode
-        const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);
-        i += sprintf(buf + i, "bist=%s ", bist_state);
-    }
 
     if (siklu_is_restore2fact_default())
     {
@@ -362,13 +356,7 @@ static int execute_siklu_boot(int forced_image)
 {
     int rc = 0;
     int img2load = 0; // set by default
-    const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);   //
-    int is_system_in_bist;
 
-    if (bist_state)
-        is_system_in_bist = 1;
-    else
-        is_system_in_bist = 0;
 
     if (forced_image != BOOT_FROM_IMAGE_IN_ENV)
         img2load = forced_image;
@@ -418,7 +406,7 @@ static int execute_siklu_boot(int forced_image)
         return -1;
     }
 
-    rc = run_linux_code(is_system_in_bist); // the function doesn't return, jump to linux here!
+    rc = run_linux_code(); // the function doesn't return, jump to linux here!
     if (rc != 0)
     {
         printf(" ERROR, exit\n");
@@ -432,16 +420,7 @@ static int execute_siklu_boot_from_ram(ulong img_addr)
 {
     int rc = 0;
 
-    const char *bist_state = getenv(SIKLU_BIST_ENVIRONMENT_NAME);   //
-    int is_system_in_bist;
-    // char buf[512];
-
-    if (bist_state)
-        is_system_in_bist = 1;
-    else
-        is_system_in_bist = 0;
-
-    printf("\nTrying load uimage from address 0x%x... \n", (uint) img_addr);
+     printf("\nTrying load uimage from address 0x%x... \n", (uint) img_addr);
 
     rc = unpack_uimage(img_addr);
     if (rc != 0)
@@ -450,7 +429,7 @@ static int execute_siklu_boot_from_ram(ulong img_addr)
         return -1;
     }
 
-    rc = run_linux_code(is_system_in_bist); // the function doesn't return, jump to linux here!
+    rc = run_linux_code(); // the function doesn't return, jump to linux here!
     if (rc != 0)
     {
         printf(" ERROR, exit\n");
