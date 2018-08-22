@@ -92,6 +92,42 @@ static void setup_iomux_siklu_cpld(void) {
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
 }
 
+SKL_BOARD_TYPE_E siklu_get_board_type(void)
+{
+	static u8 is_ready = 0;
+	static SKL_BOARD_TYPE_E board_type;
+
+	if (!is_ready)
+	{
+		uint32_t reg_val;
+		ulong reg_addr = 0x20A0000;
+		u8 val;
+
+		reg_val = readl((uint32_t*)reg_addr);
+		printf("reg_val - 0x%x\n",reg_val);
+
+		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0)) + ((reg_val & 1<<20)?(4):(0)) + ((reg_val & 1<<21)?(8):(0));
+		printf("board_id - 0x%x\n",val);
+
+		switch (val)
+		{
+		case 0:
+			board_type = SKL_BOARD_TYPE_PCB195;
+			break;
+		case 1:
+			board_type = SKL_BOARD_TYPE_PCB213;
+			break;
+		default:
+			board_type = SKL_BOARD_TYPE_UNKNOWN;
+			break;
+		}
+
+		is_ready = 1;
+	}
+
+	return board_type;
+}
+
 static void setup_iomux_siklu_board_id(void) {
 	imx_iomux_v3_setup_multiple_pads(board_id_pads, ARRAY_SIZE(board_id_pads));
 }

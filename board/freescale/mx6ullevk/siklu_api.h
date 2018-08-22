@@ -69,6 +69,14 @@ typedef enum {
     SKL_LED_MODE_YELLOW_BLINK,
 }  SKL_BOARD_LED_MODE_E;
 
+
+typedef enum {
+	SKL_BOARD_TYPE_UNKNOWN,
+	SKL_BOARD_TYPE_PCB195,
+	SKL_BOARD_TYPE_PCB213,
+}  SKL_BOARD_TYPE_E;
+
+
 extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
 
 extern int siklu_sf_sys_eeprom_read(const char* buf, int size);
@@ -86,6 +94,6 @@ extern int siklu_syseeprom_udate(void);
 extern int siklu_soho_power_up_init(void);
 // enable/disable network connection between 1G rj45 management port and cpu
 extern int siklu_cpu_netw_cntrl(int is_ena);
-
+extern SKL_BOARD_TYPE_E siklu_get_board_type(void);
 
 #endif /* SIKLU_API_H_ */

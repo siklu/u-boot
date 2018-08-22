@@ -23,6 +23,7 @@
 #include "siklu_api.h"
 
 #include "Si5344D-Dxxx-GM-V1-Registers.h"
+#include "Si5344D-Dxxx-GM-V2-Registers.h"
 
 
 #define ACTIVE_NVM_BANK		0x00E2
@@ -197,10 +198,29 @@ int siklu_si5344d_pll_reg_burn()
 
 //	printf("Configure PLL. Device addr: 0x%02x\n", current_pll_addr);
 
+	const si5344_revd_register_t * si5344_revd_registers;
+	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+	int si5344_revd_register_config_num;
+	if (board_type == SKL_BOARD_TYPE_PCB195)
+	{
+		si5344_revd_registers = si5344_v1_revd_registers;
+		si5344_revd_register_config_num = SI5344_V1_REVD_REG_CONFIG_NUM_REGS;
+	}
+	else if (board_type == SKL_BOARD_TYPE_PCB213)
+	{
+		si5344_revd_registers = si5344_v2_revd_registers;
+		si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
+	}
+	else
+	{
+		printf("Error: Unknown board type 0x%x !!!\n", board_type);
+		return CMD_RET_FAILURE;
+	}
+
 	int old_bus = i2c_get_bus_num();
 	i2c_set_bus_num(CONFIG_SYS_PLL_BUS_NUM);
 
-	for (i=0 ; i<SI5344_REVD_REG_CONFIG_NUM_REGS ; i++)
+	for (i=0 ; i<si5344_revd_register_config_num ; i++)
 	{
 		val  = si5344_revd_registers[i].value;
 		page = si5344_revd_registers[i].address >> 8;

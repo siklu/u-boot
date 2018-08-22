@@ -1,12 +1,12 @@
 /*
- * Si5344D-Dxxx-GM-V1-Registers.h
+ * Si5344D-Dxxx-GM-V2-Registers.h
  *
- *  Created on: Feb 28, 2018
+ *  Created on: Aug 20, 2018
  *      Author: noama
  */
 
-#ifndef SI5344D_DXXX_GM_V1_REGISTERS_H_
-#define SI5344D_DXXX_GM_V1_REGISTERS_H_
+#ifndef BOARD_FREESCALE_MX6ULLEVK_SI5344D_DXXX_GM_V2_REGISTERS_H_
+#define BOARD_FREESCALE_MX6ULLEVK_SI5344D_DXXX_GM_V2_REGISTERS_H_
 
 
 /*
@@ -18,27 +18,21 @@
  * export tool.
  *
  * Part:		                                       Si5344 Rev D
- * Design ID:                                          V1
+ * Design ID:                                          PCB213_1
  * Includes Pre/Post Download Control Register Writes: Yes
  * Created By:                                         ClockBuilder Pro v2.19.3 [2017-09-25]
- * Timestamp:                                          2018-02-28 10:30:16 GMT+02:00
+ * Timestamp:                                          2018-07-09 17:30:43 GMT+03:00
  *
  * A complete design report corresponding to this export is included at the end
  * of this header file.
  *
  */
 
+#define SI5344_V2_REVD_REG_CONFIG_NUM_REGS				462
 
-#define SI5344_V1_REVD_REG_CONFIG_NUM_REGS				462
 
-typedef struct
-{
-	unsigned int address; /* 16-bit register address */
-	unsigned char value; /* 8-bit register data */
 
-} si5344_revd_register_t;
-
-si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_NUM_REGS] =
+si5344_revd_register_t const si5344_v2_revd_registers[SI5344_V2_REVD_REG_CONFIG_NUM_REGS] =
 {
 
 	/* Start configuration preamble */
@@ -151,16 +145,16 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
 	{ 0x0115, 0x08 },
 	{ 0x0117, 0x02 },
 	{ 0x0118, 0x09 },
-	{ 0x0119, 0x6B },
+	{ 0x0119, 0x33 },
 	{ 0x011A, 0x08 },
 	{ 0x0126, 0x02 },
 	{ 0x0127, 0x09 },
-	{ 0x0128, 0x3B },
-	{ 0x0129, 0x28 },
+	{ 0x0128, 0x6B },
+	{ 0x0129, 0x08 },
 	{ 0x012B, 0x02 },
-	{ 0x012C, 0xCC },
-	{ 0x012D, 0x00 },
-	{ 0x012E, 0x68 },
+	{ 0x012C, 0x09 },
+	{ 0x012D, 0x33 },
+	{ 0x012E, 0x08 },
 	{ 0x013F, 0x00 },
 	{ 0x0140, 0x00 },
 	{ 0x0141, 0x40 },
@@ -223,7 +217,7 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
 	{ 0x0250, 0x03 },
 	{ 0x0251, 0x00 },
 	{ 0x0252, 0x00 },
-	{ 0x0253, 0x03 },
+	{ 0x0253, 0x18 },
 	{ 0x0254, 0x00 },
 	{ 0x0255, 0x00 },
 	{ 0x025C, 0x03 },
@@ -232,14 +226,14 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
 	{ 0x025F, 0x18 },
 	{ 0x0260, 0x00 },
 	{ 0x0261, 0x00 },
-	{ 0x026B, 0x56 },
-	{ 0x026C, 0x31 },
-	{ 0x026D, 0x00 },
-	{ 0x026E, 0x00 },
-	{ 0x026F, 0x00 },
-	{ 0x0270, 0x00 },
-	{ 0x0271, 0x00 },
-	{ 0x0272, 0x00 },
+	{ 0x026B, 0x50 },
+	{ 0x026C, 0x43 },
+	{ 0x026D, 0x42 },
+	{ 0x026E, 0x32 },
+	{ 0x026F, 0x31 },
+	{ 0x0270, 0x33 },
+	{ 0x0271, 0x5F },
+	{ 0x0272, 0x31 },
 	{ 0x028A, 0x00 },
 	{ 0x028B, 0x00 },
 	{ 0x028C, 0x00 },
@@ -525,10 +519,10 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * Overview
  * ========
  * Part:         Si5344 Rev D
- * Project File: P:\Hardware\10G\Data-Sheets\SiLabs\Si5344\Si5344D-Dxxx-GM-V1-Project.slabtimeproj
- * Design ID:    V1
+ * Project File: P:\Hardware\10G\Data-Sheets\SiLabs\Si5344\Si5344D-Dxxx-GM-V2-PCB213-PCB213_1.slabtimeproj
+ * Design ID:    PCB213_1
  * Created By:   ClockBuilder Pro v2.19.3 [2017-09-25]
- * Timestamp:    2018-02-28 10:30:16 GMT+02:00
+ * Timestamp:    2018-07-09 17:30:43 GMT+03:00
  *
  * Design Rule Check
  * =================
@@ -536,7 +530,7 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * - No errors
  *
  * Warnings:
- * - You have selected CMOS output. Please review AN862 "Optimizing Si534x Jitter Performance in Next Generation Internet Infrastructure Systems" to ensure your configuration meets your jitter requirements [Marked Ignore]
+ * - No warnings
  *
  * Device Grade
  * ============
@@ -572,12 +566,12 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * Outputs:
  *    OUT0: 156.25 MHz [ 156 + 1/4 MHz ] (Free Run)
  *          Enabled, LVPECL 3.3 V
- *    OUT1: 156.25 MHz [ 156 + 1/4 MHz ] (Free Run)
- *          Enabled, LVPECL 3.3 V
+ *    OUT1: 25 MHz (Free Run)
+ *          Enabled, LVDS 3.3 V
  *    OUT2: 156.25 MHz [ 156 + 1/4 MHz ] (Free Run)
- *          Enabled, LVDS 2.5 V
+ *          Enabled, LVPECL 3.3 V
  *    OUT3: 25 MHz (Free Run)
- *          Enabled, LVCMOS Comp 2.5 V 24 ?
+ *          Enabled, LVDS 3.3 V
  *
  * Frequency Plan
  * ==============
@@ -601,7 +595,7 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  *       Value: 11
  *       Skew:  0.000 s
  *       OUT0: 156.25 MHz [ 156 + 1/4 MHz ]
- *       OUT1: 156.25 MHz [ 156 + 1/4 MHz ]
+ *       OUT1: 25 MHz
  *       OUT2: 156.25 MHz [ 156 + 1/4 MHz ]
  *       OUT3: 25 MHz
  *    N1:
@@ -613,7 +607,7 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  *
  * R dividers:
  *    R0 = 8
- *    R1 = 8
+ *    R1 = 50
  *    R2 = 8
  *    R3 = 50
  *
@@ -645,18 +639,18 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * Ta:       70 C
  * Airflow:  None
  *
- * Total Power: 775 mW, On Chip Power: 734 mW, Tj: 86 C
+ * Total Power: 798 mW, On Chip Power: 751 mW, Tj: 87 C
  *
- *          Frequency  Format          Voltage   Current     Power
- *         ----------  -------------  --------  --------  --------
- * VDD                                   1.8 V   89.3 mA    161 mW
- * VDDA                                  3.3 V  117.4 mA    387 mW
- * VDDO0   156.25 MHz  LVPECL            3.3 V   22.8 mA     75 mW
- * VDDO1   156.25 MHz  LVPECL            3.3 V   22.8 mA     75 mW
- * VDDO2   156.25 MHz  LVDS              2.5 V   15.9 mA     40 mW
- * VDDO3       25 MHz  LVCMOS (comp)     2.5 V   14.6 mA     36 mW
- *                                              --------  --------
- *                                       Total  282.8 mA    775 mW
+ *          Frequency  Format   Voltage   Current     Power
+ *         ----------  ------  --------  --------  --------
+ * VDD                            1.8 V   89.1 mA    160 mW
+ * VDDA                           3.3 V  117.4 mA    387 mW
+ * VDDO0   156.25 MHz  LVPECL     3.3 V   22.8 mA     75 mW
+ * VDDO1       25 MHz  LVDS       3.3 V   15.1 mA     50 mW
+ * VDDO2   156.25 MHz  LVPECL     3.3 V   22.8 mA     75 mW
+ * VDDO3       25 MHz  LVDS       3.3 V   15.1 mA     50 mW
+ *                                       --------  --------
+ *                                Total  282.2 mA    798 mW
  *
  * Note:
  *
@@ -769,8 +763,8 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * 0x0118[3]     OUT1_SYNC_EN           1                  0x1
  * 0x0118[5:4]   OUT1_DIS_STATE         0                  0x0
  * 0x0118[7:6]   OUT1_CMOS_DRV          0                  0x0
- * 0x0119[3:0]   OUT1_CM                11                 0xB
- * 0x0119[6:4]   OUT1_AMPL              6                  0x6
+ * 0x0119[3:0]   OUT1_CM                3                  0x3
+ * 0x0119[6:4]   OUT1_AMPL              3                  0x3
  * 0x011A[2:0]   OUT1_MUX_SEL           0                  0x0
  * 0x011A[5:4]   OUT1_VDD_SEL           0                  0x0
  * 0x011A[3]     OUT1_VDD_SEL_EN        1                  0x1
@@ -783,24 +777,24 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * 0x0127[5:4]   OUT2_DIS_STATE         0                  0x0
  * 0x0127[7:6]   OUT2_CMOS_DRV          0                  0x0
  * 0x0128[3:0]   OUT2_CM                11                 0xB
- * 0x0128[6:4]   OUT2_AMPL              3                  0x3
+ * 0x0128[6:4]   OUT2_AMPL              6                  0x6
  * 0x0129[2:0]   OUT2_MUX_SEL           0                  0x0
- * 0x0129[5:4]   OUT2_VDD_SEL           2                  0x2
+ * 0x0129[5:4]   OUT2_VDD_SEL           0                  0x0
  * 0x0129[3]     OUT2_VDD_SEL_EN        1                  0x1
  * 0x0129[7:6]   OUT2_INV               0                  0x0
  * 0x012B[0]     OUT3_PDN               0                  0x0
  * 0x012B[1]     OUT3_OE                1                  0x1
  * 0x012B[2]     OUT3_RDIV_FORCE2       0                  0x0
- * 0x012C[2:0]   OUT3_FORMAT            4                  0x4
+ * 0x012C[2:0]   OUT3_FORMAT            1                  0x1
  * 0x012C[3]     OUT3_SYNC_EN           1                  0x1
  * 0x012C[5:4]   OUT3_DIS_STATE         0                  0x0
- * 0x012C[7:6]   OUT3_CMOS_DRV          3                  0x3
- * 0x012D[3:0]   OUT3_CM                0                  0x0
- * 0x012D[6:4]   OUT3_AMPL              0                  0x0
+ * 0x012C[7:6]   OUT3_CMOS_DRV          0                  0x0
+ * 0x012D[3:0]   OUT3_CM                3                  0x3
+ * 0x012D[6:4]   OUT3_AMPL              3                  0x3
  * 0x012E[2:0]   OUT3_MUX_SEL           0                  0x0
- * 0x012E[5:4]   OUT3_VDD_SEL           2                  0x2
+ * 0x012E[5:4]   OUT3_VDD_SEL           0                  0x0
  * 0x012E[3]     OUT3_VDD_SEL_EN        1                  0x1
- * 0x012E[7:6]   OUT3_INV               1                  0x1
+ * 0x012E[7:6]   OUT3_INV               0                  0x0
  * 0x013F[11:0]  OUTX_ALWAYS_ON         0                  0x000
  * 0x0141[1]     OUT_DIS_MSK            0                  0x0
  * 0x0141[5]     OUT_DIS_LOL_MSK        0                  0x0
@@ -828,17 +822,17 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  * 0x0235[43:0]  MXAXB_NUM              590558003200       0x08980000000
  * 0x023B[31:0]  MXAXB_DEN              2147483648         0x80000000
  * 0x0250[23:0]  R0_REG                 3                  0x000003
- * 0x0253[23:0]  R1_REG                 3                  0x000003
+ * 0x0253[23:0]  R1_REG                 24                 0x000018
  * 0x025C[23:0]  R2_REG                 3                  0x000003
  * 0x025F[23:0]  R3_REG                 24                 0x000018
- * 0x026B[7:0]   DESIGN_ID0             86                 0x56
- * 0x026C[7:0]   DESIGN_ID1             49                 0x31
- * 0x026D[7:0]   DESIGN_ID2             0                  0x00
- * 0x026E[7:0]   DESIGN_ID3             0                  0x00
- * 0x026F[7:0]   DESIGN_ID4             0                  0x00
- * 0x0270[7:0]   DESIGN_ID5             0                  0x00
- * 0x0271[7:0]   DESIGN_ID6             0                  0x00
- * 0x0272[7:0]   DESIGN_ID7             0                  0x00
+ * 0x026B[7:0]   DESIGN_ID0             80                 0x50
+ * 0x026C[7:0]   DESIGN_ID1             67                 0x43
+ * 0x026D[7:0]   DESIGN_ID2             66                 0x42
+ * 0x026E[7:0]   DESIGN_ID3             50                 0x32
+ * 0x026F[7:0]   DESIGN_ID4             49                 0x31
+ * 0x0270[7:0]   DESIGN_ID5             51                 0x33
+ * 0x0271[7:0]   DESIGN_ID6             95                 0x5F
+ * 0x0272[7:0]   DESIGN_ID7             49                 0x31
  * 0x028A[4:0]   OOF0_TRG_THR_EXT       0                  0x00
  * 0x028B[4:0]   OOF1_TRG_THR_EXT       0                  0x00
  * 0x028C[4:0]   OOF2_TRG_THR_EXT       0                  0x00
@@ -1025,4 +1019,4 @@ si5344_revd_register_t const si5344_v1_revd_registers[SI5344_V1_REVD_REG_CONFIG_
  */
 
 
-#endif /* SI5344D_DXXX_GM_V1_REGISTERS_H_ */
+#endif /* BOARD_FREESCALE_MX6ULLEVK_SI5344D_DXXX_GM_V2_REGISTERS_H_ */
