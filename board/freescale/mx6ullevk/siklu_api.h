@@ -95,5 +95,6 @@ extern int siklu_soho_power_up_init(void);
 // enable/disable network connection between 1G rj45 management port and cpu
 extern int siklu_cpu_netw_cntrl(int is_ena);
 extern SKL_BOARD_TYPE_E siklu_get_board_type(void);
+extern int siklu_set_led_modem(SKL_BOARD_LED_MODE_E mode);
 
 #endif /* SIKLU_API_H_ */

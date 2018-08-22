@@ -477,6 +477,7 @@ int siklu_board_late_init_hw(void) {
 	}
 	env_set("ethaddr", val);
 
+	siklu_set_led_modem(SKL_LED_MODE_OFF);
 
 
 
