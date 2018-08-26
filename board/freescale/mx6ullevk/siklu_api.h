@@ -71,9 +71,9 @@ typedef enum {
 
 
 typedef enum {
-	SKL_BOARD_TYPE_UNKNOWN,
-	SKL_BOARD_TYPE_PCB195,
-	SKL_BOARD_TYPE_PCB213,
+	SKL_BOARD_TYPE_UNKNOWN = 0,
+	SKL_BOARD_TYPE_PCB195 = 1,
+	SKL_BOARD_TYPE_PCB213 = 2,
 }  SKL_BOARD_TYPE_E;
 
 
@@ -92,6 +92,7 @@ extern int siklu_syseeprom_set_val(const char* name, const char* val);
 extern int siklu_syseeprom_udate(void);
 
 extern int siklu_soho_power_up_init(void);
+
 // enable/disable network connection between 1G rj45 management port and cpu
 extern int siklu_cpu_netw_cntrl(int is_ena);
 extern SKL_BOARD_TYPE_E siklu_get_board_type(void);

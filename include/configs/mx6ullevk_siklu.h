@@ -64,6 +64,8 @@
 #define CONFIG_SYS_MONITOR_LEN          0x20000           /* Reserve 512 kB for Monitor */
 
 
+/* #define  CONFIG_LAST_STAGE_INIT */
+
 /**************      NAND and NAND file-system related declarations     ***************/
 
 /* follow define means that SW images stored over NAND commands, no UBI

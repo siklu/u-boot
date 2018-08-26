@@ -104,10 +104,10 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		u8 val;
 
 		reg_val = readl((uint32_t*)reg_addr);
-		printf("reg_val - 0x%x\n",reg_val);
+		//printf("reg_val - 0x%x\n",reg_val);
 
 		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0)) + ((reg_val & 1<<20)?(4):(0)) + ((reg_val & 1<<21)?(8):(0));
-		printf("board_id - 0x%x\n",val);
+		//printf("board_id - 0x%x\n",val);
 
 		switch (val)
 		{
@@ -479,8 +479,6 @@ int siklu_board_late_init_hw(void) {
 
 	siklu_set_led_modem(SKL_LED_MODE_OFF);
 
-
-
 	return 0;
 
 _err_hndlr:
@@ -502,6 +500,18 @@ int siklu_board_init(void) {
 
 	return rc;
 }
+
+/*
+ * do not confused with function board_late_init()!!!!
+ * The function called after network init
+ */
+int last_stage_init(void)
+{
+	int rc = 0;
+
+	return rc;
+}
+
 
 static int get_cpld_hw_ver(int * cpld_hw_ver)
 {
