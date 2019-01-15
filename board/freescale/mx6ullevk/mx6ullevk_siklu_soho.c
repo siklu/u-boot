@@ -251,7 +251,7 @@ int siklu_cpu_netw_cntrl(int is_ena) {
 	siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 	siklu_88e639x_reg_write(SOHO_MNGM_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 
-	if (siklu_get_board_type() == SKL_BOARD_TYPE_PCB213) {
+	if (siklu_get_board_type() != SKL_BOARD_TYPE_PCB195) {
 		// follow setup required only for SOHO on PCB1213
 		rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, 0, 0xD05);
 	}

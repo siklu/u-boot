@@ -117,8 +117,12 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		case 1:
 			board_type = SKL_BOARD_TYPE_PCB213;
 			break;
+		case 2:
+			board_type = SKL_BOARD_TYPE_PCB217;
+			break;
 		default:
 			board_type = SKL_BOARD_TYPE_UNKNOWN;
+			printf("Error: Unknown board type 0x%x !!!\n", val);
 			break;
 		}
 

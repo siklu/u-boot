@@ -206,14 +206,16 @@ int siklu_si5344d_pll_reg_burn()
 		si5344_revd_registers = si5344_v1_revd_registers;
 		si5344_revd_register_config_num = SI5344_V1_REVD_REG_CONFIG_NUM_REGS;
 	}
-	else if (board_type == SKL_BOARD_TYPE_PCB213)
+	else if (board_type == SKL_BOARD_TYPE_PCB213 || board_type == SKL_BOARD_TYPE_PCB217)
 	{
 		si5344_revd_registers = si5344_v2_revd_registers;
 		si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
 	}
 	else
 	{
-		printf("Error: Unknown board type 0x%x !!!\n", board_type);
+		printf("Error: Unknown board type 0x%x. Burn latest registers set\n", board_type);
+		si5344_revd_registers = si5344_v2_revd_registers;
+		si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
 		return CMD_RET_FAILURE;
 	}
 
