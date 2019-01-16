@@ -18,8 +18,9 @@
 #define SIKLU_BIST_MUT_ENVIRONMENT_NAME "SK_bist" // siklu_remark002
 
 
-#define PHY_88x3310_DEV_ADDR 	2
-#define TI10031_DEV_ADDR 		4
+#define PHY_AES_88x3310_DEV_ADDR 	6
+#define PHY_88x3310_DEV_ADDR 		2
+#define TI10031_DEV_ADDR 			4
 
 #define CONFIG_CPLD_DEFAULT_BUS		1
 #define CONFIG_CPLD_DEFAULT_CS		1

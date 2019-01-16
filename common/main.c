@@ -69,6 +69,7 @@ void main_loop(void)
 	// printf("##############  Autoboot disabled ############\n"); //
 	// before go to CLI we should enable CPU network connection
 	run_command("snetw_ena 1",0);
+	run_command("phy_aes_ena 1",0);
 #endif //
 
 

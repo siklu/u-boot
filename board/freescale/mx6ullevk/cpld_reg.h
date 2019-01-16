@@ -161,7 +161,8 @@ typedef union
 	struct
 	{
 		u8 cfg_modem_led:2;	// Modem led control , 0 - Green , 1 - Blinking green , 2 - Yellow , 3 - Off
-		u8 padding0:2;
+		u8 padding0:1;
+		u8 cfg_aes_phy_rst_n:1;	// Active low reset to AES 10G PHY (MACSec)
 		u8 cfg_10g_board:1;
 		u8 padding1:1;
 		u8 cfg_tlk_rst_n:1;		// Active low reset to 10G SERDES
