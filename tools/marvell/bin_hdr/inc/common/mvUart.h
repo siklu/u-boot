@@ -172,7 +172,8 @@ void putdataDec (u32 dec_num,u32 length);
 #define DEBUG_INIT_D_10(d, l)
 #endif
 
-#ifdef MV_DEBUG_INIT_FULL
+//#ifdef MV_DEBUG_INIT_FULL Hananya
+#if 1
 #define DEBUG_INIT_FULL_S(s)		putstring(s)
 #define DEBUG_INIT_FULL_D(d, l)		putdata(d, l)
 #define DEBUG_INIT_FULL_D_10(d, l)	putdataDec(d, l)
