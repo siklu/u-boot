@@ -1235,8 +1235,7 @@ MV_STATUS mvHwsPowerUpSerdesLanes(SERDES_MAP  *serdesConfigMap)
 						 refClock));
 
 		/* RX Polarity config */
-		//if(serdesRxPolaritySwap)
-		if(1)
+		if(serdesRxPolaritySwap)
 			CHECK_STATUS(mvSerdesPolarityConfig(serdesLaneNum, MV_TRUE));
 
 		/* TX Polarity config */
