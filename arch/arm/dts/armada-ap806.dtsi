@@ -175,6 +175,7 @@
 				ngpios = <20>;
 				gpio-controller;
 				#gpio-cells = <2>;
+				gpio-bank-name = "ap_gpio0";
 			};
 
 			xor@400000 {

@@ -171,6 +171,7 @@
 				gpiobase = <20>;
 				gpio-controller;
 				#gpio-cells = <2>;
+				gpio-bank-name = "cpm_gpio0";
 			};
 
 			cpm_gpio1: gpio@440140 {
@@ -180,6 +181,7 @@
 				gpiobase = <52>;
 				gpio-controller;
 				#gpio-cells = <2>;
+				gpio-bank-name = "cpm_gpio1";
 			};
 
 			cpm_sata0: sata@540000 {
