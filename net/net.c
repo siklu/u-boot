@@ -220,9 +220,6 @@ int __maybe_unused net_busy_flag;
 static int on_ipaddr(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_ip = string_to_ip(value);
 
 	return 0;
@@ -232,9 +229,6 @@ U_BOOT_ENV_CALLBACK(ipaddr, on_ipaddr);
 static int on_gatewayip(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_gateway = string_to_ip(value);
 
 	return 0;
@@ -244,9 +238,6 @@ U_BOOT_ENV_CALLBACK(gatewayip, on_gatewayip);
 static int on_netmask(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_netmask = string_to_ip(value);
 
 	return 0;
@@ -256,9 +247,6 @@ U_BOOT_ENV_CALLBACK(netmask, on_netmask);
 static int on_serverip(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_server_ip = string_to_ip(value);
 
 	return 0;
@@ -268,9 +256,6 @@ U_BOOT_ENV_CALLBACK(serverip, on_serverip);
 static int on_nvlan(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_native_vlan = string_to_vlan(value);
 
 	return 0;
@@ -280,9 +265,6 @@ U_BOOT_ENV_CALLBACK(nvlan, on_nvlan);
 static int on_vlan(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_our_vlan = string_to_vlan(value);
 
 	return 0;
@@ -293,9 +275,6 @@ U_BOOT_ENV_CALLBACK(vlan, on_vlan);
 static int on_dnsip(const char *name, const char *value, enum env_op op,
 	int flags)
 {
-	if (flags & H_PROGRAMMATIC)
-		return 0;
-
 	net_dns_server = string_to_ip(value);
 
 	return 0;
