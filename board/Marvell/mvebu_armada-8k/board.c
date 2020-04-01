@@ -11,6 +11,8 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
 
+#include <siklu_load_device_configurations.h>
+
 DECLARE_GLOBAL_DATA_PTR;
 
 /*
@@ -158,5 +160,9 @@ int board_late_init(void)
 	/* Pre-configure the USB ports (overcurrent, VBus) */
 	board_xhci_config();
 
+	if (load_siklu_device_configurations() < 0) {
+		printf("Siklu: ERROR: Could not load device configurations.\n");
+	}
+		
 	return 0;
 }
