@@ -64,7 +64,7 @@
 
 sinclude $(TOPDIR)/include/autoconf.mk
 
-CFLAGS =
+CFLAGS =-DMV_DDR
 
 # LIBNAME and SILNAME may be overriden in SoC cases bellow
 BOARDNAME = $(BOARD)
