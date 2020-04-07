@@ -93,6 +93,10 @@ config TARGET_CLEARFOG
 	select 88F6820
 	select BOARD_LATE_INIT
 
+config TARGET_TG_TU
+	bool "Support TG-TU"
+	select 88F6820
+
 config TARGET_HELIOS4
 	bool "Support Helios4"
 	select 88F6820
@@ -173,6 +177,7 @@ endchoice
 
 config SYS_BOARD
 	default "clearfog" if TARGET_CLEARFOG
+	default "tg-tu" if TARGET_TG_TU
 	default "helios4" if TARGET_HELIOS4
 	default "mvebu_armada-37xx" if TARGET_MVEBU_ARMADA_37XX
 	default "db-88f6720" if TARGET_DB_88F6720
@@ -192,6 +197,7 @@ config SYS_BOARD
 
 config SYS_CONFIG_NAME
 	default "clearfog" if TARGET_CLEARFOG
+	default "tg-tu" if TARGET_TG_TU
 	default "helios4" if TARGET_HELIOS4
 	default "mvebu_armada-37xx" if TARGET_MVEBU_ARMADA_37XX
 	default "db-88f6720" if TARGET_DB_88F6720
@@ -219,6 +225,7 @@ config SYS_VENDOR
 	default "Marvell" if TARGET_DB_XC3_24G4XG
 	default "Marvell" if TARGET_MVEBU_DB_88F7040
 	default "solidrun" if TARGET_CLEARFOG
+	default "siklu" if TARGET_TG_TU
 	default "kobol" if TARGET_HELIOS4
 	default "Synology" if TARGET_DS414
 	default "CZ.NIC" if TARGET_TURRIS_OMNIA
