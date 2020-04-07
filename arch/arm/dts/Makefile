@@ -190,6 +190,7 @@ dtb-$(CONFIG_ARCH_MVEBU) +=			\
 	armada-3720-uDPU.dtb			\
 	armada-375-db.dtb			\
 	armada-388-clearfog.dtb			\
+	armada-385-tg-tu.dtb			\
 	armada-388-gp.dtb			\
 	armada-388-helios4.dtb			\
 	armada-385-db-88f6820-amc.dtb		\

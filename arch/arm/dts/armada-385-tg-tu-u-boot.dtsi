@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+/ {
+	aliases {
+		spi1 = &spi1;
+	};
+};
+
+&uart0 {
+	u-boot,dm-pre-reloc;
+};
+
+&spi1 {
+	u-boot,dm-spl;
+
+	spi-flash@0 {
+		u-boot,dm-spl;
+	};
+};
+
+&eth0 {
+	/* No comphy driver in U-Boot */
+	/delete-property/ phys;
+};
+
+&eth1 {
+	/* No generic PHY reset in U-Boot. Use mvneta specific property. */
+	phy-reset-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
+	phy = <&native_mdio_phy_1g>;
+	/delete-property/ phys;
+};
+
+&eth2 {
+	/delete-property/ phys;
+};
+
+/* U-Boot does not support bit-bang mdio.
+ * Enable the native mdio.
+ */
+&mdio {
+	status = "okay";
+
+	/* Only 1Gb PHY works with the native mdio */
+	native_mdio_phy_1g: ethernet-phy@1 {
+		reg = <1>;
+	};
+};
+
+&nand_controller {
+	/* The kernel always enables arbiter. U-Boot needs this. */
+	nand-enable-arbiter;
+	/* U-Boot does not support the new nand binding */
+	nand-ecc-strength = <8>;
+	nand-ecc-step-size = <512>;
+};

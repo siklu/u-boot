@@ -1,0 +1,250 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ *  Copyright (C) 2015 Russell King
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/gpio/gpio.h>
+#include "armada-385.dtsi"
+
+/ {
+	aliases {
+		/* So that mvebu u-boot can update the MAC addresses */
+		ethernet1 = &eth0;
+		ethernet2 = &eth1;
+		ethernet3 = &eth2;
+		mdio-gpio0 = &gpio_mdio;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x10000000>; /* 256 MB */
+	};
+
+	soc {
+		ranges = <MBUS_ID(0xf0, 0x01) 0 0xf1000000 0x100000
+			  MBUS_ID(0x01, 0x1d) 0 0xfff00000 0x100000
+			  MBUS_ID(0x09, 0x19) 0 0xf1100000 0x10000
+			  MBUS_ID(0x09, 0x15) 0 0xf1110000 0x10000
+			  MBUS_ID(0x0c, 0x04) 0 0xf1200000 0x100000>;
+
+	};
+
+	reg_3p3v: regulator-3p3v {
+		compatible = "regulator-fixed";
+		regulator-name = "3P3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	sfp: sfp {
+		compatible = "sff,sfp";
+		i2c-bus = <&i2c1>;
+		los-gpio = <&gpio1 11 GPIO_ACTIVE_HIGH>;
+		mod-def0-gpio = <&gpio1 22 GPIO_ACTIVE_LOW>;
+		tx-disable-gpio = <&expander0 1 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpio = <&gpio1 23 GPIO_ACTIVE_HIGH>;
+	};
+
+	gpio_mdio: gpio-mdio {
+		compatible = "virtual,mdio-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pinctrl-0 = <&gpio_mdio_pins &phy_clk_pins>;
+		pinctrl-names = "default";
+		gpios = <&gpio0 4 0 &gpio0 5 0>;
+
+		phy_2_5g: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c45";
+			reg = <2>;
+			pinctrl-0 = <&phy_2_5g_reset>;
+			pinctrl-names = "default";
+			reset-gpios = <&gpio1 21 GPIO_ACTIVE_LOW>;
+			reset-assert-us = <10000>;
+			reset-deassert-us = <10000>;
+		};
+
+		phy_1g: ethernet-phy@1 {
+			reg = <1>;
+			pinctrl-0 = <&phy_1g_reset>;
+			pinctrl-names = "default";
+			reset-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
+
+&pciec {
+	status = "okay";
+};
+
+&pcie1 {
+	reset-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&pcie2 {
+	reset-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&pcie3 {
+	reset-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+
+&bm {
+	status = "okay";
+};
+
+&bm_bppi {
+	status = "okay";
+};
+
+&eth0 {
+	/* ethernet@70000 */
+	phy = <&phy_2_5g>;
+	phy-mode = "sgmii";
+	phys = <&comphy1 0>;
+	buffer-manager = <&bm>;
+	bm,pool-long = <0>;
+	bm,pool-short = <1>;
+	status = "okay";
+};
+
+&eth1 {
+	/* ethernet@30000 */
+	bm,pool-long = <2>;
+	bm,pool-short = <1>;
+	buffer-manager = <&bm>;
+	phys = <&comphy2 1>;
+	phy = <&phy_1g>;
+	phy-mode = "sgmii";
+	status = "okay";
+};
+
+&eth2 {
+	/* ethernet@34000 */
+	bm,pool-long = <3>;
+	bm,pool-short = <1>;
+	buffer-manager = <&bm>;
+	managed = "in-band-status";
+	phys = <&comphy3 2>;
+	phy-mode = "sgmii";
+	sfp = <&sfp>;
+	status = "okay";
+};
+
+&mdio {
+	/* The native MDIO bus does not support clause 45 framing that the
+	 * 2.5Gb PHY requires.
+	 */
+	status = "disabled";
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+	pinctrl-0 = <&i2c0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	temperature-sensor@4c {
+		compatible = "ti,tmp421";
+		reg = <0x4c>;
+	};
+};
+
+&pinctrl {
+	phy_clk_pins: phy-clk-pins {
+		marvell,pins = "mpp45", "mpp46";
+		marvell,function = "ref";
+	};
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	w25q32: spi-flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "gd25q16", "jedec,spi-nor";
+		reg = <0>; /* Chip select 0 */
+		spi-max-frequency = <3000000>;
+	};
+};
+
+&uart0 {
+	pinctrl-0 = <&uart0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&i2c1 {
+	clock-frequency = <100000>;
+	pinctrl-0 = <&tg_tu_i2c1_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	expander0: gpio-expander@18 {
+		compatible = "nxp,pca9557";
+		gpio-controller;
+		#gpio-cells = <2>;
+		reg = <0x18>;
+	};
+};
+
+&pinctrl {
+	tg_tu_i2c1_pins: i2c1-pins {
+		marvell,pins = "mpp26", "mpp27";
+		marvell,function = "i2c1";
+	};
+
+	phy_2_5g_reset: phy-2-5g-reset {
+		marvell,pins = "mpp53";
+		marvell,function = "gpio";
+	};
+
+	phy_1g_reset: phy-1g-reset {
+		marvell,pins = "mpp6";
+		marvell,function = "gpio";
+	};
+
+	gpio_mdio_pins: gp-mdio-pins {
+		marvell,pins = "mpp4", "mpp5";
+		marvell,function = "gpio";
+	};
+};
+
+&uart1 {
+	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&nand_controller {
+	pinctrl-0 = <&nand_pins &nand_rb>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+		label = "main-storage";
+		nand-rb = <0>;
+		nand-on-flash-bbt;
+		nand-ecc-strength = <8>;
+		nand-ecc-step-size = <512>;
+	};
+};
