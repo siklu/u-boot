@@ -528,7 +528,8 @@ static int eth_post_probe(struct udevice *dev)
 	}
 
 	eth_env_get_enetaddr_by_index("eth", dev->seq, env_enetaddr);
-	if (!is_zero_ethaddr(env_enetaddr)) {
+	if (!is_zero_ethaddr(env_enetaddr) 
+		&& strcmp("r8152_eth", dev->name) != 0) {
 		if (!is_zero_ethaddr(pdata->enetaddr) &&
 		    memcmp(pdata->enetaddr, env_enetaddr, ARP_HLEN)) {
 			printf("\nWarning: %s MAC addresses don't match:\n",
