@@ -271,7 +271,7 @@
 			};
 			
 			cps_nand: nand@720000 {
-				compatible = "marvell,mvebu-pxa3xx-nand";
+				compatible = "marvell,armada-8k-nand";
 				reg = <0x720000 0x100>;
 				#address-cells = <1>;
 				
@@ -281,6 +281,7 @@
 				nand-ecc-strength = <4>;
 				nand-ecc-step-size = <512>;
 				status = "disabled";
+				marvell,system-controller = <&cps_syscon0>;
 			};
 		};
 
