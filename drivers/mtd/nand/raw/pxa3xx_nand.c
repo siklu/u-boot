@@ -19,6 +19,8 @@
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/rawnand.h>
 #include <linux/types.h>
+#include <syscon.h>
+#include <regmap.h>
 #include <dm/uclass.h>
 
 #include "pxa3xx_nand.h"
@@ -115,6 +117,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define EXT_CMD_TYPE_LAST_RW	1 /* Last naked read/write */
 #define EXT_CMD_TYPE_MONO	0 /* Monolithic read/write */
 
+/* System control register and bit to enable NAND on some SoCs */
+#define GENCONF_SOC_DEVICE_MUX	0x208
+#define GENCONF_SOC_DEVICE_MUX_NFC_EN BIT(0)
+
 /*
  * This should be large enough to read 'ONFI' and 'JEDEC'.
  * Let's use 7 bytes, which is the maximum ID count supported
@@ -155,6 +161,7 @@ enum {
 enum pxa3xx_nand_variant {
 	PXA3XX_NAND_VARIANT_PXA,
 	PXA3XX_NAND_VARIANT_ARMADA370,
+	PXA3XX_NAND_VARIANT_ARMADA_8K,
 };
 
 struct pxa3xx_nand_host {
@@ -420,13 +427,16 @@ static const struct udevice_id pxa3xx_nand_dt_ids[] = {
 				.compatible = "marvell,mvebu-pxa3xx-nand",
 				.data       = PXA3XX_NAND_VARIANT_ARMADA370,
 		},
+		{
+				.compatible = "marvell,armada-8k-nand",
+				.data       = PXA3XX_NAND_VARIANT_ARMADA_8K,
+		},
 		{}
 };
 
-static enum pxa3xx_nand_variant pxa3xx_nand_get_variant(void)
+static enum pxa3xx_nand_variant pxa3xx_nand_get_variant(struct udevice *dev)
 {
-	/* We only support the Armada 370/XP/38x for now */
-	return PXA3XX_NAND_VARIANT_ARMADA370;
+	return dev_get_driver_data(dev);
 }
 
 static void pxa3xx_nand_set_timing(struct pxa3xx_nand_host *host,
@@ -703,7 +713,8 @@ static irqreturn_t pxa3xx_nand_irq(struct pxa3xx_nand_info *info)
 		info->retcode = ERR_UNCORERR;
 	if (status & NDSR_CORERR) {
 		info->retcode = ERR_CORERR;
-		if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370 &&
+		if ((info->variant == PXA3XX_NAND_VARIANT_ARMADA370 ||
+			 info->variant == PXA3XX_NAND_VARIANT_ARMADA_8K) &&
 		    info->ecc_bch)
 			info->ecc_err_cnt = NDSR_ERR_CNT(status);
 		else
@@ -758,7 +769,8 @@ static irqreturn_t pxa3xx_nand_irq(struct pxa3xx_nand_info *info)
 		nand_writel(info, NDCB0, info->ndcb2);
 
 		/* NDCB3 register is available in NFCv2 (Armada 370/XP SoC) */
-		if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370)
+		if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370 ||
+			info->variant == PXA3XX_NAND_VARIANT_ARMADA_8K)
 			nand_writel(info, NDCB0, info->ndcb3);
 	}
 
@@ -1673,7 +1685,8 @@ static int pxa3xx_nand_scan(struct mtd_info *mtd)
 	}
 
 	/* Device detection must be done with ECC disabled */
-	if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370)
+	if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370 ||
+		info->variant == PXA3XX_NAND_VARIANT_ARMADA_8K)
 		nand_writel(info, NDECCCTRL, 0x0);
 
 	if (nand_scan_ident(mtd, 1, NULL))
@@ -1723,7 +1736,8 @@ static int pxa3xx_nand_scan(struct mtd_info *mtd)
 	 * (aka split) command handling,
 	 */
 	if (mtd->writesize > info->chunk_size) {
-		if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370) {
+		if (info->variant == PXA3XX_NAND_VARIANT_ARMADA370 ||
+			info->variant == PXA3XX_NAND_VARIANT_ARMADA_8K) {
 			chip->cmdfunc = nand_cmdfunc_extended;
 		} else {
 			dev_err(&info->pdev->dev,
@@ -1759,7 +1773,7 @@ static int pxa3xx_nand_scan(struct mtd_info *mtd)
 	return nand_scan_tail(mtd);
 }
 
-static int alloc_nand_resource(struct pxa3xx_nand_info *info)
+static int alloc_nand_resource(struct udevice *dev, struct pxa3xx_nand_info *info)
 {
 	struct pxa3xx_nand_platform_data *pdata;
 	struct pxa3xx_nand_host *host;
@@ -1771,7 +1785,7 @@ static int alloc_nand_resource(struct pxa3xx_nand_info *info)
 	if (pdata->num_cs <= 0)
 		return -ENODEV;
 
-	info->variant = pxa3xx_nand_get_variant();
+	info->variant = pxa3xx_nand_get_variant(dev);
 	for (cs = 0; cs < pdata->num_cs; cs++) {
 		chip = (struct nand_chip *)
 			((u8 *)&info[1] + sizeof(*host) * cs);
@@ -1808,6 +1822,24 @@ static int alloc_nand_resource(struct pxa3xx_nand_info *info)
 
 	/* initialize all interrupts to be disabled */
 	disable_int(info, NDSR_MASK);
+
+	/*
+	 * Some SoCs like A7k/A8k need to enable manually the NAND
+	 * controller to avoid being bootloader dependent. This is done
+	 * through the use of a single bit in the System Functions registers.
+	 */
+	if (pxa3xx_nand_get_variant(dev) == PXA3XX_NAND_VARIANT_ARMADA_8K) {
+		struct regmap *sysctrl_base = syscon_regmap_lookup_by_phandle(
+				dev, "marvell,system-controller");
+		u32 reg;
+
+		if (IS_ERR(sysctrl_base))
+			return PTR_ERR(sysctrl_base);
+
+		regmap_read(sysctrl_base, GENCONF_SOC_DEVICE_MUX, &reg);
+		reg |= GENCONF_SOC_DEVICE_MUX_NFC_EN;
+		regmap_write(sysctrl_base, GENCONF_SOC_DEVICE_MUX, reg);
+	}
 
 	return 0;
 
