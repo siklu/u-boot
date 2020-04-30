@@ -1,0 +1,277 @@
+/*
+ * Copyright (C) 2016 Marvell International Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
+ * https://spdx.org/licenses
+ */
+
+#include "armada-8040.dtsi" /* include SoC device tree */
+
+/ {
+	model = "Siklu N366";
+	compatible = "marvell,armada8040";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+	
+	aliases {
+		i2c0 = &cpm_i2c0;
+		i2c1 = &cpm_i2c1;
+		spi0 = &spi0;
+		gpio0 = &ap_gpio0;
+		gpio1 = &cpm_gpio0;
+		gpio2 = &cpm_gpio1;
+	};
+
+
+	memory@00000000 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
+
+	simple-bus {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		reg_usb3h0_vbus: usb3-vbus0 {
+			compatible = "regulator-fixed";
+			pinctrl-names = "default";
+			pinctrl-0 = <&cpm_xhci_vbus_pins>;
+			regulator-name = "reg-usb3h0-vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			startup-delay-us = <500000>;
+			enable-active-high;
+			regulator-always-on;
+			regulator-boot-on;
+			gpio = <&cpm_gpio1 23 GPIO_ACTIVE_HIGH>; /* GPIO[54] */
+		};
+	};
+};
+
+&ap_pinctl {
+	pin-func = <0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 
+				0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff>;
+
+	ap_spi_pins: ap-spi-pins {
+		marvell,pins		= <0 1 2 3>;
+		marvell,function	= <3>;
+	};
+};
+
+&spi0 {
+	pinctrl-0 = <&ap_spi_pins>;
+	pinctrl-names = "default";
+
+	status = "okay";
+	
+	spi-flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		reg = <0>; /* Chip select 0 */
+		spi-max-frequency = <10000000>;
+	};
+};
+
+&i2c0 {
+	pinctrl-0 = <&ap_i2c0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+
+&cpm_pinctl {
+	pin-func = <0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff>;
+
+	cpm_xhci_vbus_pins: cpm-xhci-vbus-pins {
+		marvell,pins = <54>;
+		marvell,function = <0>;
+	};
+
+	cpm_phy_reset_pins: cpm-1512-reset-pins {
+		marvell,pins = <41>;
+		marvell,function = <0>;
+	};
+
+	cpm_pcie1_pins: cpm-pcie1-pins {
+		marvell,pins = <33>;
+		marvell,function = <0>;
+	};
+
+	cpm_pcie0_pins: cpm-pcie0-pins {
+		marvell,pins = <32>;
+		marvell,function = <0>;
+	};
+};
+
+&cpm_comphy {
+	phy0 {
+		phy-type = <PHY_TYPE_PEX0>;
+	};
+	phy1 {
+		phy-type = <PHY_TYPE_PEX0>;
+	};
+	phy2 {
+		phy-type = <PHY_TYPE_UNCONNECTED>;
+	};
+	phy3 {
+		phy-type = <PHY_TYPE_SGMII1>;
+		phy-speed = <PHY_SPEED_1_25G>;
+	};
+	phy4 {
+		phy-type = <PHY_TYPE_PEX1>;
+	};
+};
+
+&cpm_usb3_1 {
+	vbus-supply = <&reg_usb3h0_vbus>;
+	status = "okay";
+};
+
+&cpm_utmi1 {
+	status = "okay";
+};
+
+&cpm_i2c0 {
+	pinctrl-0 = <&cpm_i2c0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&cpm_ethernet {
+	status = "okay";
+};
+
+&cpm_pcie0 {
+	pinctrl-0 = <&cpm_pcie0_pins>;
+	pinctrl-names = "default";
+	num-lanes = <2>;
+	status = "okay";
+	marvell,reset-gpio = <&cpm_gpio1 0 GPIO_ACTIVE_LOW>;
+};
+
+&cpm_pcie1 {
+	pinctrl-0 = <&cpm_pcie1_pins>;
+	pinctrl-names = "default";
+	num-lanes = <1>;
+	marvell,reset-gpio = <&cpm_gpio1 1 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&cpm_eth1 {
+	pinctrl-0 = <&cpm_phy_reset_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&cps_ge_phy0>;
+	phy-reset-gpios = <&cpm_gpio1 9 GPIO_ACTIVE_LOW>;
+};
+
+&cps_pinctl {
+	pin-func = <0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+                0xff 0xff 0xff>;
+
+	cps_pcie1_pins: cps-pcie1-pins {
+		marvell,pins = <28>;
+		marvell,function = <0>;
+	};
+
+	cps_pcie0_pins: cps-pcie0-pins {
+		marvell,pins = <29>;
+		marvell,function = <0>;
+	};
+	
+	cps_nand_pins: cps-nand-pins {
+		marvell,pins = <13>;
+		marvell,function = <2>;
+	};
+	
+	cps_dev_nand_pins: cps-dev-nand-pins {
+		marvell,pins =  <15 16 17 18 19 20 21 22 23 24 25 26 27>;
+		marvell,function = <1>;
+	};
+	
+	cps_mdio_pins: cps-mdio-pins {
+		marvell,pins = <4 5>;
+		marvell,function = <0x0a>;
+	};
+	
+	cps_uart0_pins: cps-uart0-pins {
+		marvell,pins = <0 1>;
+		marvell,function = <8>;
+	};
+};
+
+&cps_comphy {
+	phy0 {
+		phy-type = <PHY_TYPE_PEX0>;
+	};
+	phy1 {
+		phy-type = <PHY_TYPE_PEX0>;
+	};
+	phy2 {
+		phy-type = <PHY_TYPE_UNCONNECTED>;
+	};
+	phy3 {
+		phy-type = <PHY_TYPE_UNCONNECTED>;
+
+	};
+	phy4 {
+		phy-type = <PHY_TYPE_PEX1>;
+	};
+};
+
+&cps_mdio {
+	pinctrl-0 = <&cps_mdio_pins>;
+	pinctrl-names = "default";
+
+	status = "okay";
+	cps_ge_phy0: ethernet-phy@0 {
+		reg = <0>;
+	};
+};
+
+/* NOT supported by uboot
+&cps_uart0 {
+	pinctrl-0 = <&cps_uart_pins>;
+	pinctrl-names = "default";
+};*/
+
+&cps_nand {
+	pinctrl-0 = <&cps_nand_pins &cps_dev_nand_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+	nand-ecc-step-size = <512>;
+	nand-ecc-strength = <8>;
+};
+
+&cps_pcie0 {
+	pinctrl-0 = <&cps_pcie0_pins>;
+	pinctrl-names = "default";
+	num-lanes = <2>;
+	status = "okay";
+	marvell,reset-gpio = <&cps_gpio0 29 GPIO_ACTIVE_LOW>;
+
+};
+
+&cps_pcie1 {
+	pinctrl-0 = <&cps_pcie1_pins>;
+	pinctrl-names = "default";
+	num-lanes = <1>;
+	status = "okay";
+	marvell,reset-gpio = <&cps_gpio0 28 GPIO_ACTIVE_LOW>;
+};
