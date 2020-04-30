@@ -269,6 +269,19 @@
 				utmi-port = <UTMI_PHY_TO_USB3_HOST0>;
 				status = "disabled";
 			};
+			
+			cps_nand: nand@720000 {
+				compatible = "marvell,mvebu-pxa3xx-nand";
+				reg = <0x720000 0x100>;
+				#address-cells = <1>;
+				
+				clocks = <&cps_syscon0 1 2>;
+				nand-enable-arbiter;
+				num-cs = <1>;
+				nand-ecc-strength = <4>;
+				nand-ecc-step-size = <512>;
+				status = "disabled";
+			};
 		};
 
 		cps_pcie0: pcie@f4600000 {
