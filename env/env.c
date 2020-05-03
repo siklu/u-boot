@@ -50,6 +50,9 @@ static struct env_driver *_env_driver_lookup(enum env_location loc)
 }
 
 static enum env_location env_locations[] = {
+#ifdef CONFIG_SIKLU_ENV_IS_IN_MTD_NOR
+	ENVL_SIKLU_NOR_MTD,
+#endif
 #ifdef CONFIG_ENV_IS_IN_EEPROM
 	ENVL_EEPROM,
 #endif

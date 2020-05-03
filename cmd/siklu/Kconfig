@@ -10,9 +10,18 @@ config SIKLU_CONFIG_MTD_PART
 config SIKLU_BANK_MGMT_MTD_PART
 	string "Siklu device management partition"
 	default "device_mgmt"
-	
-config SIKLU_ENV_OFFSET
-	hex "SPI NOR environment offset"
+
+config SIKLU_ENV_IS_IN_MTD_NOR
+	bool "Adds MTDPARTS-based environment location"
+
+if SIKLU_ENV_IS_IN_MTD_NOR
+menu "Siklu Environment Settings"
+
+config SIKLU_ENV_PART
+	string "SPI NOR environment MTD partition"
+
+endmenu
+endif
 
 config SIKLU_ROOTFS_KERNEL_DTB_PATH
 	string "Kernel FTD path on the rootfs"
