@@ -45,17 +45,15 @@ static int load_from_ubifs(void) {
 	u32 kernel_addr = simple_strtoul(kernel_load_address(), NULL, 16);
 	u32 dtb_addr = simple_strtoul(dtb_load_address(), NULL, 16);
 	
-	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH, kernel_addr, 0);
+	ret = ubifs_load(kernel_path(), kernel_addr, 0);
 	if (ret) {
-		printk(KERN_ERR "Failed to load %s\n",
-			   CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH);
+		printk(KERN_ERR "Failed to load %s\n", kernel_path());
 		return ret;
 	}
 
-	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH, dtb_addr, 0);
+	ret = ubifs_load(dtb_path(), dtb_addr, 0);
 	if (ret) {
-		printk(KERN_ERR "Failed to load %s\n",
-			   CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH);
+		printk(KERN_ERR "Failed to load %s\n", dtb_path());
 		return ret;
 	}
 	

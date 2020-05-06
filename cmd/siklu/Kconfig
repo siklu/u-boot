@@ -23,12 +23,6 @@ config SIKLU_ENV_PART
 endmenu
 endif
 
-config SIKLU_ROOTFS_KERNEL_DTB_PATH
-	string "Kernel FTD path on the rootfs"
-
-config SIKLU_ROOTFS_KERNEL_IMAGE_PATH
-	string "Kernel Image path on the rootfs"
-
 menu "NAND boot Options"
 
 config SIKLU_ROOTFS_VOLUME_NANE

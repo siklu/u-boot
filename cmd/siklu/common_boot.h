@@ -20,9 +20,21 @@ void setup_bootargs(const char *bootargs);
 char *kernel_load_address(void);
 
 /**
+ * Kernel file path
+ * @return path to kernel image location on filesystem
+ */
+char *kernel_path(void);
+
+/**
  * Device tree load address
  * @return hex string of DT load address
  */
 char *dtb_load_address(void);
+
+/**
+ * Device tree file path
+ * @return path to dtb file location on filesystem
+ */
+char *dtb_path(void);
 
 #endif

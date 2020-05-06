@@ -52,17 +52,15 @@ static int
 load_images(const char *rootpath) {
 	int ret;
 	
-	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH,
-			dtb_load_address());
+	ret = nfs_get_file(rootpath, dtb_path(), dtb_load_address());
 	if (ret) {
-		SK_LOG_NFS("Failed to get " CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH " from the server\n");
+		SK_LOG_NFS("Failed to get %s from the server\n", dtb_path());
 		return CMD_RET_FAILURE;
 	}
 
-	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH,
-			kernel_load_address());
+	ret = nfs_get_file(rootpath, kernel_path(), kernel_load_address());
 	if (ret) {
-		SK_LOG_NFS("Failed to get " CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH " from the server\n");
+		SK_LOG_NFS("Failed to get %s from the server\n", kernel_path());
 		return CMD_RET_FAILURE;
 	}
 	

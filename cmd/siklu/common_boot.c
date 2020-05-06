@@ -2,6 +2,8 @@
 
 #include "common_boot.h"
 
+#define BOOT_DIR "/boot"
+
 void setup_bootargs(const char *bootargs) {
 	char formatted_bootargs[1024];
 	const char *mtdparts;
@@ -21,9 +23,26 @@ char *kernel_load_address(void)
 	return env_get("kernel_addr_r");
 }
 
+char *kernel_path(void)
+{
+	if (IS_ENABLED(CONFIG_ARM64))
+		return BOOT_DIR "/Image";
+	else
+		return BOOT_DIR "/zImage";
+}
+
 char *dtb_load_address(void)
 {
 	return env_get("fdt_addr_r");
+}
+
+char *dtb_path(void)
+{
+	static char dtpath[128];
+
+	snprintf(dtpath, sizeof(dtpath), BOOT_DIR "/%s", env_get("fdtfile"));
+
+	return dtpath;
 }
 
 static char *boot_command(void)
