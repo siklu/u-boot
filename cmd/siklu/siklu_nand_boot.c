@@ -70,10 +70,9 @@ static void set_bootargs_for_bank(struct software_bank_t *bank) {
 	char bootargs[1024];
 	
 	snprintf(bootargs, sizeof(bootargs),
-			 "ubi.mtd=%s root=ubi0:%s rootfstype=ubifs %s",
+			 "ubi.mtd=%s root=ubi0:%s rootfstype=ubifs",
 			 bank->bank_label,
-			 CONFIG_SIKLU_ROOTFS_VOLUME_NANE,
-			 env_get("mtdparts"));
+			 CONFIG_SIKLU_ROOTFS_VOLUME_NANE);
 
 	setup_bootargs(bootargs);
 } 
