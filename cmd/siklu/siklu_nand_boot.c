@@ -42,15 +42,17 @@ static int init_and_mount_ubifs_bank(struct software_bank_t *bank) {
  */
 static int load_from_ubifs(void) {
 	int ret;
+	u32 kernel_addr = simple_strtoul(kernel_load_address(), NULL, 16);
+	u32 dtb_addr = simple_strtoul(dtb_load_address(), NULL, 16);
 	
-	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH, CONFIG_SIKLU_KERNEL_IMAGE_ADDRESS, 0);
+	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH, kernel_addr, 0);
 	if (ret) {
 		printk(KERN_ERR "Failed to load %s\n",
 			   CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH);
 		return ret;
 	}
 
-	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH, CONFIG_SIKLU_DTB_ADDRESS, 0);
+	ret = ubifs_load(CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH, dtb_addr, 0);
 	if (ret) {
 		printk(KERN_ERR "Failed to load %s\n",
 			   CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH);
@@ -97,7 +99,7 @@ static int do_nand_boot(cmd_tbl_t *cmdtp, int flag, int argc,
 	
 	set_bootargs_for_bank(bank);
 	
-	ret = load_kernel_image(CONFIG_SIKLU_KERNEL_IMAGE_ADDRESS, CONFIG_SIKLU_DTB_ADDRESS);
+	ret = load_kernel_image();
 	if (ret) {
 		printk(KERN_ERR "Failed to load kernel image from bank \"%s\"", 
 				bank->bank_label);

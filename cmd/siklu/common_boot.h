@@ -3,16 +3,26 @@
 
 /**
  * Like booti <image_address> - <dtb_address>
- * @param image_address 
- * @param dtb_address 
  * @return < 0 on failure, should not return on success.
  */
-int load_kernel_image(uintptr_t image_address, uintptr_t dtb_address);
+int load_kernel_image(void);
 
 /**
  * Configure boot arguments for the next boot.
  * @param bootargs boot arguments string.
  */
 void setup_bootargs(const char *bootargs);
+
+/**
+ * Kernel load address
+ * @return hex string of kernel load address
+ */
+char *kernel_load_address(void);
+
+/**
+ * Device tree load address
+ * @return hex string of DT load address
+ */
+char *dtb_load_address(void);
 
 #endif

@@ -28,12 +28,6 @@ config SIKLU_ROOTFS_KERNEL_DTB_PATH
 
 config SIKLU_ROOTFS_KERNEL_IMAGE_PATH
 	string "Kernel Image path on the rootfs"
-	
-config SIKLU_KERNEL_IMAGE_ADDRESS
-	hex "Address to load the kernel Image to"
-	
-config SIKLU_DTB_ADDRESS
-	hex "Address to load the FDT image to"
 
 menu "NAND boot Options"
 

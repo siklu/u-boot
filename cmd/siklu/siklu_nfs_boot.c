@@ -12,11 +12,11 @@
  */
 #define SK_LOG_NFS(...) printf("Siklu NFS: " __VA_ARGS__)
 
-static int nfs_get_file(const char *path, const char *file, uintptr_t address) {
+static int nfs_get_file(const char *path, const char *file, char *address) {
 	char cmd[1024];
 	
 	snprintf(cmd, sizeof(cmd), 
-			"nfs \"%p\" \"%s:%s/%s\"", (void *)address, env_get(ENV_NFS_SERVERIP), path, file);
+			"nfs \"%s\" \"%s:%s/%s\"", address, env_get(ENV_NFS_SERVERIP), path, file);
 	
 	return run_command(cmd, 0);
 }
@@ -52,13 +52,15 @@ static int
 load_images(const char *rootpath) {
 	int ret;
 	
-	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH, CONFIG_SIKLU_DTB_ADDRESS);
+	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH,
+			dtb_load_address());
 	if (ret) {
 		SK_LOG_NFS("Failed to get " CONFIG_SIKLU_ROOTFS_KERNEL_DTB_PATH " from the server\n");
 		return CMD_RET_FAILURE;
 	}
 
-	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH, CONFIG_SIKLU_KERNEL_IMAGE_ADDRESS);
+	ret = nfs_get_file(rootpath, CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH,
+			kernel_load_address());
 	if (ret) {
 		SK_LOG_NFS("Failed to get " CONFIG_SIKLU_ROOTFS_KERNEL_IMAGE_PATH " from the server\n");
 		return CMD_RET_FAILURE;
@@ -221,7 +223,7 @@ do_nfs_boot(cmd_tbl_t *cmdtp, int flag, int argc,
 
 	setup_nfs_bootargs(rootpath, usb);
 	
-	load_kernel_image(CONFIG_SIKLU_KERNEL_IMAGE_ADDRESS, CONFIG_SIKLU_DTB_ADDRESS);
+	load_kernel_image();
 	
 	return CMD_RET_FAILURE;
 }

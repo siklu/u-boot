@@ -16,6 +16,16 @@ void setup_bootargs(const char *bootargs) {
 	env_set("bootargs", formatted_bootargs);
 }
 
+char *kernel_load_address(void)
+{
+	return env_get("kernel_addr_r");
+}
+
+char *dtb_load_address(void)
+{
+	return env_get("fdt_addr_r");
+}
+
 static char *boot_command(void)
 {
 	if (IS_ENABLED(CONFIG_ARM64))
@@ -24,12 +34,12 @@ static char *boot_command(void)
 		return "bootz";
 }
 
-int load_kernel_image(uintptr_t image_address, uintptr_t dtb_address) {
+int load_kernel_image(void) {
 	char buff[256];
 	int ret;
 	
-	snprintf(buff, sizeof(buff), "%s %p - %p", boot_command(),
-			(void*)image_address, (void*)dtb_address);
+	snprintf(buff, sizeof(buff), "%s %s - %s", boot_command(),
+			kernel_load_address(), dtb_load_address());
 	
 	ret = run_command(buff, 0);
 	
