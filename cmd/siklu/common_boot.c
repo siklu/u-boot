@@ -16,11 +16,20 @@ void setup_bootargs(const char *bootargs) {
 	env_set("bootargs", formatted_bootargs);
 }
 
+static char *boot_command(void)
+{
+	if (IS_ENABLED(CONFIG_ARM64))
+		return "booti";
+	else
+		return "bootz";
+}
+
 int load_kernel_image(uintptr_t image_address, uintptr_t dtb_address) {
 	char buff[256];
 	int ret;
 	
-	snprintf(buff, sizeof(buff), "booti %p - %p", (void*)image_address, (void*)dtb_address);
+	snprintf(buff, sizeof(buff), "%s %p - %p", boot_command(),
+			(void*)image_address, (void*)dtb_address);
 	
 	ret = run_command(buff, 0);
 	
