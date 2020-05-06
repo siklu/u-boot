@@ -5,14 +5,14 @@
 void setup_bootargs(const char *bootargs) {
 	char formatted_bootargs[1024];
 	const char *mtdparts;
+	const char *old_bootargs;
 
+	old_bootargs = env_get("bootargs");
 	mtdparts = env_get("mtdparts");
-	if (! mtdparts)
-		mtdparts = "";
 
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs),
-			 "%s %s %s", CONFIG_BOOTARGS, bootargs, mtdparts);
-
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s",
+			bootargs, old_bootargs ? old_bootargs : "",
+			mtdparts ? mtdparts : "");
 	env_set("bootargs", formatted_bootargs);
 }
 
