@@ -10,6 +10,7 @@
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
+#include <siklu_load_device_configurations.h>
 
 #include "../drivers/ddr/marvell/a38x/ddr3_init.h"
 #include <../serdes/a38x/high_speed_env_spec.h>
@@ -130,4 +131,12 @@ int board_eth_init(bd_t *bis)
 {
 	cpu_eth_init(bis); /* Built in controller(s) come first */
 	return pci_eth_init(bis);
+}
+
+int board_late_init(void)
+{
+	if (load_siklu_device_configurations() < 0)
+		printf("Siklu: ERROR: Could not load device configurations.\n");
+
+	return 0;
 }
