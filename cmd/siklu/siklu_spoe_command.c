@@ -2,7 +2,7 @@
 #include <command.h>
 #include <asm-generic/gpio.h>
 
-const char SPOE_NAME = "cpm_gpio18";
+const char SPOE_NAME[] = "cpm_gpio18";
 
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
