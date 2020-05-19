@@ -8,15 +8,25 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, ch
 {
     unsigned gpio_no;
     unsigned need_release = 0;
+    const char * failure = NULL;
     if(gpio_lookup_name("cpm_gpio18", NULL, NULL, &gpio_no))
+    {
+	failure = "gpio_lookup_name";
 	goto Error;
+    }
 
     if(gpio_request(gpio_no, "spoe"))
+    {
+	failure = "gpio_request";
 	goto Error;
+    }
     need_release = 1;
 
     if(gpio_direction_input(gpio_no))
+    {
+	failure = "gpio_direction_input";
 	goto Error;
+    }
 
     int pairs = gpio_get_value(gpio_no);
     gpio_free(gpio_no);
@@ -26,14 +36,17 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, ch
     else if(pairs == 1)
 	printf("4-pairs\n");
     else //Expected -1
+    {
+	failure = "gpio_get_value";
 	goto Error;
+    }
 
     return CMD_RET_SUCCESS;
 
 Error:
     if(need_release)
 	gpio_free(gpio_no);
-    printf("Failed");
+    printf("Failed on %s", failure);
     return CMD_RET_FAILURE;
 }
 
