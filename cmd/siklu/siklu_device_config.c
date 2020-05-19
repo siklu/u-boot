@@ -89,6 +89,6 @@ U_BOOT_CMD(
 		0,
 		do_siklu_device_config,
 		"siklu_device_config set <path> <prop> <value>\n"
-  		"siklu_device_config get <prop> <path>",
+		"siklu_device_config get <path> <prop>",
 		"Set or get values from the Siklu config storage\n"
 );

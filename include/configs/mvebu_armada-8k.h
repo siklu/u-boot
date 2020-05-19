@@ -90,6 +90,6 @@
 	"fdt_addr_r=0x4f00000\0"	\
 	"kernel_addr_r=0x5000000\0"	\
 	"ramdisk_addr_r=0x8000000\0"	\
-	"fdtfile=marvell/" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" 
+	"fdtfile=" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" 
 
 #endif /* _CONFIG_MVEBU_ARMADA_8K_H */

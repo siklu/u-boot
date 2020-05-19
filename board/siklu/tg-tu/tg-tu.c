@@ -10,6 +10,7 @@
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
+#include <siklu_load_device_configurations.h>
 
 #include "../drivers/ddr/marvell/a38x/ddr3_init.h"
 #include <../serdes/a38x/high_speed_env_spec.h>
@@ -60,7 +61,7 @@ static struct mv_ddr_topology_map board_topology_map = {
 	      {0x1, 0, 0, 0} },
 	    SPEED_BIN_DDR_1866M,	/* speed_bin */
 	    MV_DDR_DEV_WIDTH_16BIT,	/* memory_width */
-	    MV_DDR_DIE_CAP_2GBIT,	/* mem_size */
+	    MV_DDR_DIE_CAP_4GBIT,	/* mem_size */
 	    MV_DDR_FREQ_800,		/* frequency */
 	    0, 0,			/* cas_wl cas_l */
 	    MV_DDR_TEMP_LOW,		/* temperature */
@@ -130,4 +131,12 @@ int board_eth_init(bd_t *bis)
 {
 	cpu_eth_init(bis); /* Built in controller(s) come first */
 	return pci_eth_init(bis);
+}
+
+int board_late_init(void)
+{
+	if (load_siklu_device_configurations() < 0)
+		printf("Siklu: ERROR: Could not load device configurations.\n");
+
+	return 0;
 }
