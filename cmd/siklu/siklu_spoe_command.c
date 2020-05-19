@@ -2,14 +2,15 @@
 #include <command.h>
 #include <asm-generic/gpio.h>
 
-#include "common_boot.h"
+const char SPOE_NAME = "cpm_gpio18";
 
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
     unsigned gpio_no;
     unsigned need_release = 0;
     const char * failure = NULL;
-    if(gpio_lookup_name("cpm_gpio18", NULL, NULL, &gpio_no))
+    int pairs;
+    if(gpio_lookup_name(SPOE_NAME, NULL, NULL, &gpio_no))
     {
 	failure = "gpio_lookup_name";
 	goto Error;
@@ -28,14 +29,14 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, ch
 	goto Error;
     }
 
-    int pairs = gpio_get_value(gpio_no);
+    pairs = gpio_get_value(gpio_no);
     gpio_free(gpio_no);
 
     if (pairs == 0)
 	printf("2-pairs\n");
     else if(pairs == 1)
 	printf("4-pairs\n");
-    else //Expected -1
+    else /*Expected -1 */
     {
 	failure = "gpio_get_value";
 	goto Error;
