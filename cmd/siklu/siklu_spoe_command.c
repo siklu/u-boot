@@ -1,6 +1,6 @@
 #include <common.h>
 #include <command.h>
-#include <asm-generic/gpio.h>
+#include <asm/gpio.h>
 
 const char SPOE_NAME[] = "cpm_gpio18";
 
