@@ -1,8 +1,6 @@
-//#include <common.h>
-//#include <command.h>
 #include <asm/gpio.h>
 
-#include "../../siklu_spoe_command.h"
+#include <siklu/cmd/siklu_spoe_command.h>
 
 const char N366_SPOE_NAME[] = "cpm_gpio18";
 

@@ -1,7 +1,7 @@
 #include <common.h>
 #include <command.h>
 
-#include "siklu_spoe_command.h"
+#include <siklu/cmd/siklu_spoe_command.h>
 
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
