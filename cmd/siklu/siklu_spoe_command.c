@@ -5,7 +5,7 @@
 
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
-	enum PoE_PAIRS pairs = poe_num_pairs();
+	enum PoE_PAIRS pairs = siklu_poe_num_pairs();
 
 	if (pairs == TWO_PAIRS)
 		printf("2-pairs\n");

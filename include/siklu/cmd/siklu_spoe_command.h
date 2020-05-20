@@ -6,4 +6,4 @@ enum PoE_PAIRS
 	FOUR_PAIRS
 };
 
-enum PoE_PAIRS poe_num_pairs();
+enum PoE_PAIRS siklu_poe_num_pairs();
