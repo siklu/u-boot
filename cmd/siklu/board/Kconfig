@@ -1,0 +1,12 @@
+choice
+	prompt "Siklu Board selection"
+
+config SIKLU_BOARD_N366
+	bool "Siklu TG N366"
+	depends on TARGET_MVEBU_ARMADA_8K
+
+config SIKLU_BOARD_TG_TU
+	bool "Siklu TG-TU"
+	depends on TARGET_TG_TU
+
+endchoice
