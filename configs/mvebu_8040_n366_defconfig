@@ -40,7 +40,7 @@ CONFIG_CMD_MVEBU_BUBT=y
 CONFIG_CMD_REGULATOR=y
 CONFIG_CMD_MTDPARTS=y
 CONFIG_MTDIDS_DEFAULT="nand0=f4720000.nand,nor0=spi0.0"
-CONFIG_MTDPARTS_DEFAULT="mtdparts=f4720000.nand:256m(first_bank),-(second_bank);spi0.0:1792k(uboot),64k(uboot_env),64k(device_config),64k(device_mgmt)"
+CONFIG_MTDPARTS_DEFAULT="mtdparts=f4720000.nand:240m(first_bank),240m(second_bank),-(log);spi0.0:1792k(uboot),64k(uboot_env),64k(device_config),64k(device_mgmt)"
 CONFIG_CMD_UBI=y
 CONFIG_SIKLU=y
 CONFIG_SIKLU_ENV_IS_IN_MTD_NOR=y

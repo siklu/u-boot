@@ -43,7 +43,7 @@ CONFIG_CMD_CACHE=y
 CONFIG_CMD_TIME=y
 CONFIG_CMD_MTDPARTS=y
 CONFIG_MTDIDS_DEFAULT="nand0=main-storage,nor0=spi1.0"
-CONFIG_MTDPARTS_DEFAULT="mtdparts=main-storage:256m(first_bank),-(second_bank);spi1.0:1792k(uboot),64k(uboot_env),64k(device_config),64k(device_mgmt)"
+CONFIG_MTDPARTS_DEFAULT="mtdparts=main-storage:240m(first_bank),240m(second_bank),-(log);spi1.0:1792k(uboot),64k(uboot_env),64k(device_config),64k(device_mgmt)"
 CONFIG_CMD_UBI=y
 CONFIG_SIKLU=y
 CONFIG_SIKLU_ENV_IS_IN_MTD_NOR=y
