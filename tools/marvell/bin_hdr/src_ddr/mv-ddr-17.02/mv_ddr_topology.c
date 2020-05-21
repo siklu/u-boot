@@ -123,6 +123,26 @@ struct dram_config *mv_ddr_dram_config_update(void)
 }
 #endif /* MV_DDR_ATF */
 
+
+// Get HW ID MPP input pins 15-18  siklu_remarkM50
+enum
+{
+	HW_ID_SIKLU_BOARD_MH_PCB180_DDR_SPEED_1600  = 0,
+	HW_ID_SIKLU_BOARD_MH_PCB180A_DDR_SPEED_1600 = 1,
+	HW_ID_SIKLU_BOARD_CTU_PCB200_DDR_SPEED_1600 = 2,
+	HW_ID_SIKLU_BOARD_MH_PCB180A_DDR_SPEED_1866 = 3,
+	HW_ID_SIKLU_BOARD_CTU_PCB200_DDR_SPEED_1866 = 4,
+	
+	HW_ID_SIKLU_MAX_BOARD,
+	HW_ID_SIKLU_BOARD_UNKNOWN = 0xFF
+};
+
+static u8 siklu_board_hw_id = HW_ID_SIKLU_BOARD_UNKNOWN;
+
+static u8 siklu_board_hw_id_get(void);
+static enum hws_speed_bin siklu_hw_id_to_speed_bin_index(u8 hw_id);
+
+
 unsigned int mv_ddr_cl_calc(unsigned int taa_min, unsigned int tclk)
 {
 	unsigned int cl = ceil_div(taa_min, tclk);
@@ -158,6 +178,15 @@ struct mv_ddr_topology_map *mv_ddr_topology_map_update(void)
 	unsigned int tclk;
 	unsigned char val = 0;
 	int i;
+
+	// Get HW ID MPP input pins 15-18  siklu_remarkM50
+	if (siklu_board_hw_id == HW_ID_SIKLU_BOARD_UNKNOWN)
+	{
+		siklu_board_hw_id = siklu_board_hw_id_get();
+		
+		tm->interface_params[0].speed_bin_index = siklu_hw_id_to_speed_bin_index(siklu_board_hw_id);
+	}
+	printf("mv_ddr: HW ID = %d\n", siklu_board_hw_id);
 
 #ifdef CONFIG_APN806
 	int rev_id = apn806_rev_id_get();
@@ -328,4 +357,53 @@ unsigned int mv_ddr_if_bus_width_get(void)
 	}
 
 	return bus_width;
+}
+
+// Get HW ID MPP input pins 15-18  siklu_remarkM50
+static u8 siklu_board_hw_id_get(void)
+{
+	u32 reg   = 0;
+	u32 gpio  = 0; // default
+	u8  hw_id = HW_ID_SIKLU_BOARD_UNKNOWN;
+
+	/* Initialize MPP for GPIO (set MPP = 0x0) */
+	reg = reg_read(MPP_CONTROL_REG(MPP_REG_NUM(gpio)));
+	/* reset MPP21 to 0x0, keep rest of MPP settings*/
+	reg &= ~MPP_MASK(gpio);
+	reg_write(MPP_CONTROL_REG(MPP_REG_NUM(gpio)), reg);
+
+	/* Initialize GPIO as input */
+	reg = reg_read(GPP_DATA_OUT_EN_REG(GPP_REG_NUM(gpio)));
+	reg |= GPP_MASK(gpio);
+	reg_write(GPP_DATA_OUT_EN_REG(GPP_REG_NUM(gpio)), reg);
+
+	/* Read input GPPs */
+	reg = reg_read(GPP_DATA_IN_REG(GPP_REG_NUM(gpio)));
+	
+	// HW ID is in bits 15..18
+	hw_id = (u8) ((reg >> 15) & 0x0F);
+	
+	return hw_id;
+}
+
+static enum hws_speed_bin siklu_hw_id_to_speed_bin_index(u8 hw_id)
+{
+	enum hws_speed_bin speed_bin_index = SPEED_BIN_DDR_1866L; // default value, see SPEED_BIN_DDR_DB_68XX in file ~\mv-ddr-17.02\a38x\mv_ddr_a38x_brd.c
+	
+	switch (hw_id)
+	{
+		case HW_ID_SIKLU_BOARD_MH_PCB180_DDR_SPEED_1600:
+		case HW_ID_SIKLU_BOARD_MH_PCB180A_DDR_SPEED_1600:
+		case HW_ID_SIKLU_BOARD_CTU_PCB200_DDR_SPEED_1600:
+			speed_bin_index = SPEED_BIN_DDR_1600K;
+		break;
+		case HW_ID_SIKLU_BOARD_MH_PCB180A_DDR_SPEED_1866:
+		case HW_ID_SIKLU_BOARD_CTU_PCB200_DDR_SPEED_1866:
+			speed_bin_index = SPEED_BIN_DDR_1866M;
+		break;
+		default:
+		break;
+	};
+	
+	return speed_bin_index;
 }
