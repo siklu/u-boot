@@ -6,7 +6,7 @@ int siklu_get_hw_revision (unsigned int *hw_revision);
 /**
  * Get HW revision. This is a board specific function.
  * @param out: hw_revision 
- * @return FDT blob, on success; NULL on error.
+ * @return CMD_RET_SUCCESS on success, otherwise on error.
  */
 int 
 siklu_get_hw_revision (unsigned int *hw_revision);

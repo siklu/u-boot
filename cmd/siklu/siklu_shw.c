@@ -197,9 +197,8 @@ static void show_cpu_info (void)
 }
 
 
-// main siklu show command function
-static int do_siklu_shw(cmd_tbl_t *cmdtp, int flag, int argc,
-						char *const argv[])
+// main shw command function
+static int do_shw(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
 	show_hw_revision();
 	show_board_model();
@@ -214,10 +213,10 @@ static int do_siklu_shw(cmd_tbl_t *cmdtp, int flag, int argc,
 
 
 U_BOOT_CMD(
-	siklu_shw,		//name
-	1,			//max params
-	0,			//rep
-	do_siklu_shw,		//func
-	"dispaly HW info",	//help
-	"" 			//usage
+	shw,					//name
+	1,					//max params
+	0,					//rep
+	do_shw,					//func
+	"dispaly HW info (siklu command)",	//help
+	"" 					//usage
 );
