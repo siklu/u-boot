@@ -19,6 +19,14 @@ __weak int siklu_get_cpu_config_register(int *config_reg)
 	return ENOSYS;
 }
 
+// This function should not be called unless no specific CPU name function exists
+// If you get here you should write one. e.g, in  arch/arm/mach-mvebu/armada8k/siklu_device_specific_information.c for the ARMADA 8040 
+__weak int siklu_get_cpu_name(const char **cpu_name)
+{
+	// not implemented
+	return ENOSYS;
+}
+
 
 
 // show HW revision
@@ -158,12 +166,22 @@ static void show_cpu_info (void)
 
 	printf("CPU: ");
 
-	const char *cpu_model = fdt_getprop(gd->fdt_blob, 0, "compatible", NULL);
-//	const char *cpu_model = fdt_getprop(gd->fdt_blob, 0, "machine_is_compatible", NULL);
-
+	//name 
 	printf("Name: ");
-	cpu_model ? printf("%s, ",cpu_model) : printf("Unknown, ");
 
+	const char *cpu_name = NULL;
+
+	ret = siklu_get_cpu_name(&cpu_name);
+	if (ret == CMD_RET_SUCCESS)
+	{
+		printf("%s, ",cpu_name);
+	}
+	else
+	{
+		ret == 	ENOSYS ? printf("Not implemented, ") : printf("Unknown, ");
+	}
+	
+	//config register
 	int config_reg = 0;
 	printf("Config register: ");	
 
@@ -176,7 +194,6 @@ static void show_cpu_info (void)
 	{
 		ret == 	ENOSYS ? printf("Not implemented\n") : printf("Unknown\n");
 	}
-
 }
 
 
