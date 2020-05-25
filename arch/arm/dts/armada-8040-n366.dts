@@ -9,7 +9,7 @@
 
 / {
 	model = "Siklu N366";
-	compatible = "marvell,armada8040";
+	compatible = "siklu,n366", "marvell,armada8040";
 
 	chosen {
 		stdout-path = "serial0:115200n8";
