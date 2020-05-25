@@ -1,8 +1,8 @@
 #include <common.h>
 #include <command.h>
+#include <dm/device.h>
 
 #include <siklu/cmd/siklu_spoe_command.h>
-#include <siklu_load_device_configurations.h>
 
 #include <asm/gpio.h>
 
@@ -16,6 +16,7 @@ enum PoE_PAIRS siklu_poe_num_pairs()
 	const char * failure = NULL;
 	int pairs;
 	const char * spoe_name = NULL;
+
 	if(of_machine_is_compatible("siklu,n366"))
 	{
 		spoe_name = N366_SPOE_NAME;
@@ -67,8 +68,6 @@ error:
 		printf("Failed on %s", failure);
 	return ret;
 }
-
-
 
 static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
