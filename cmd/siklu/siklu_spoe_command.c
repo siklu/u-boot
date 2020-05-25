@@ -7,7 +7,7 @@
 #include <asm/gpio.h>
 
 const char N366_SPOE_NAME[] = "cpm_gpio17";
-const char TG_TU_SPOE_NAME[] = "?????";
+const char TG_TU_SPOE_NAME[] = "gpio@18_0";
 
 enum PoE_PAIRS siklu_poe_num_pairs()
 {
