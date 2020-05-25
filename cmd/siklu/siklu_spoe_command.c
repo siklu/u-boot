@@ -9,7 +9,7 @@
 const char N366_SPOE_NAME[] = "cpm_gpio17";
 const char TG_TU_SPOE_NAME[] = "gpio@18_0";
 
-enum PoE_PAIRS siklu_poe_num_pairs()
+enum PoE_PAIRS siklu_poe_num_pairs(void)
 {
 	enum PoE_PAIRS ret = UNKNOWN_PAIRS;
 	unsigned gpio_no;
