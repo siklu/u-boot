@@ -2,7 +2,7 @@
 
 #include <siklu/cmd/siklu_spoe_command.h>
 
-const char N366_SPOE_NAME[] = "cpm_gpio18";
+const char N366_SPOE_NAME[] = "cpm_gpio17";
 
 enum PoE_PAIRS siklu_poe_num_pairs()
 {
