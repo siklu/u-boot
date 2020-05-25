@@ -7,6 +7,7 @@
 #include <asm/gpio.h>
 
 const char N366_SPOE_NAME[] = "cpm_gpio17";
+const char TG_TU_SPOE_NAME[] = "?????";
 
 enum PoE_PAIRS siklu_poe_num_pairs()
 {
@@ -14,12 +15,22 @@ enum PoE_PAIRS siklu_poe_num_pairs()
 	unsigned gpio_no;
 	const char * failure = NULL;
 	int pairs;
-	if(!of_machine_is_compatible("siklu,n366"))
+	const char * spoe_name = NULL;
+	if(of_machine_is_compatible("siklu,n366"))
 	{
-		failure = "non N366 board";
+		spoe_name = N366_SPOE_NAME;
+	}
+	else if (of_machine_is_compatible("siklu,tg-tu"))
+	{
+		spoe_name = TG_TU_SPOE_NAME;
+	}
+	else
+	{
+		failure = "non-suported board";
 		goto error;
 	}
-	if(gpio_lookup_name(N366_SPOE_NAME, NULL, NULL, &gpio_no))
+
+	if(gpio_lookup_name(spoe_name, NULL, NULL, &gpio_no))
 	{
 		failure = "gpio_lookup_name";
 		goto error;
