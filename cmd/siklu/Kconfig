@@ -63,6 +63,4 @@ config SIKLU_LINUX_NFS_VERSION
 
 endmenu
 
-source "cmd/siklu/board/Kconfig"
-
 endmenu

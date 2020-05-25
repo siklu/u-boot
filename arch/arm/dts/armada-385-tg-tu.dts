@@ -10,6 +10,11 @@
 #include "armada-385.dtsi"
 
 / {
+	model = "Siklu TG-TU";
+	compatible = "siklu,tg-tu", "marvell,armada388",
+   		"marvell,armada385", "marvell,armada380";
+
+
 	aliases {
 		/* So that mvebu u-boot can update the MAC addresses */
 		ethernet1 = &eth0;
