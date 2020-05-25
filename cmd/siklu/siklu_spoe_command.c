@@ -63,14 +63,20 @@ static int do_siklu_poe_num_pairs_show(cmd_tbl_t * cmdtp, int flag, int argc, ch
 {
 	enum PoE_PAIRS pairs = siklu_poe_num_pairs();
 
+	int ret = CMD_RET_FAILURE;
 	if (pairs == TWO_PAIRS)
+	{
 		printf("2-pairs\n");
+		ret = CMD_RET_SUCCESS;
+	}
 	else if(pairs == FOUR_PAIRS)
+	{
 		printf("4-pairs\n");
-	else if(pairs == UNKNOWN_PAIRS)
+		ret = CMD_RET_SUCCESS;
+	}
+	else
 		printf("Unknown\n");
-
-	return pairs != UNKNOWN_PAIRS ? CMD_RET_SUCCESS : CMD_RET_FAILURE;
+	return ret;
 }
 
 U_BOOT_CMD(spoe, 5, 0, do_siklu_poe_num_pairs_show,
