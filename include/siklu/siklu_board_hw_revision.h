@@ -12,4 +12,13 @@ int
 siklu_get_hw_revision (unsigned int *hw_revision);
 
 
+/**
+ * Get the save HW revision as it was calculated before th board init
+ * @param out: saved_hw_revision 
+ * @return CMD_RET_SUCCESS on success, otherwise on error.
+ */
+int 
+siklu_get_saved_hw_revision(int *saved_hw_revision);
+
+
 #endif

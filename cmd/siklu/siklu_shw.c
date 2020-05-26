@@ -3,31 +3,6 @@
 #include <siklu/siklu_device_specific_information.h>
 #include <siklu/siklu_board_hw_revision.h>
 
-// This function should not be called unless no specific board function with the same mame exists
-// If you get here you should write one. e.g, in  siklu/cmd/board/n366/siklu_board_hw_revision.c 
-__weak int siklu_get_hw_revision(unsigned int *hw_revision)
-{
-	// not implemented
-	return ENOSYS;
-}
-
-// This function should not be called unless no specific CPU function with the same mame exists
-// If you get here you should write one. e.g, in  arch/arm/mach-mvebu/armada8k/siklu_device_specific_information.c for the ARMADA 8040 
-__weak int siklu_get_cpu_config_register(int *config_reg)
-{
-	// not implemented
-	return ENOSYS;
-}
-
-// This function should not be called unless no specific CPU name function exists
-// If you get here you should write one. e.g, in  arch/arm/mach-mvebu/armada8k/siklu_device_specific_information.c for the ARMADA 8040 
-__weak int siklu_get_cpu_name(const char **cpu_name)
-{
-	// not implemented
-	return ENOSYS;
-}
-
-
 
 // show HW revision
 void show_hw_revision (void)
@@ -37,16 +12,9 @@ void show_hw_revision (void)
 
 	printf("HW revision: ");
 
-	ret = siklu_get_hw_revision (&hw_revision);
-	if (ret == CMD_RET_SUCCESS)
-	{
-		 printf("%u\n",hw_revision);
-	}
-	else
-	{
-		(ret == ENOSYS) ? printf("Not implemented\n") : printf("Unknown\n");
-	}
-
+	ret = siklu_get_saved_hw_revision (&hw_revision);
+	printf ("%u\n", ret == CMD_RET_SUCCESS ? hw_revision : "Unknown");
+	
 }
 
 // show board model
@@ -56,8 +24,7 @@ static void show_board_model (void)
 
 	model = fdt_getprop(gd->fdt_blob, 0, "model", NULL);
 
-	printf("Model: ");
-	model ? printf("%s\n", model) : printf("Unknown\n");
+	printf("Model: %s\n", model ? model : "Unknown");
 }
 
 
@@ -172,28 +139,16 @@ static void show_cpu_info (void)
 	const char *cpu_name = NULL;
 
 	ret = siklu_get_cpu_name(&cpu_name);
-	if (ret == CMD_RET_SUCCESS)
-	{
-		printf("%s, ",cpu_name);
-	}
-	else
-	{
-		ret == 	ENOSYS ? printf("Not implemented, ") : printf("Unknown, ");
-	}
+	printf("%s, ", ret == CMD_RET_SUCCESS ? cpu_name : "Unknown, ");
+
 	
 	//config register
 	int config_reg = 0;
-	printf("Config register: ");	
+	printf("config register: ");	
 
 	ret = siklu_get_cpu_config_register(&config_reg);
-	if (ret == CMD_RET_SUCCESS)
-	{	
-		printf("0x%x\n", config_reg);
-	}
-	else
-	{
-		ret == 	ENOSYS ? printf("Not implemented\n") : printf("Unknown\n");
-	}
+	printf("0x%x\n", ret == CMD_RET_SUCCESS ? config_reg : "Unknown, ");
+
 }
 
 

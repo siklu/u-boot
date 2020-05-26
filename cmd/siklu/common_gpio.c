@@ -12,9 +12,8 @@ int siklu_read_gpio(unsigned int gpio, int *val)
 
 	// grab the pin before we tweak it
 	ret = gpio_request(gpio, "cmd_gpio");
-	if (ret && ret != -EBUSY) {
-		printf("gpio: requesting pin %u failed\n", gpio);
-		return CMD_RET_FAILURE;
+	if (ret != CMD_RET_SUCCESS) {
+		return ret;
 	}
 
 	// read the gpio value
@@ -22,8 +21,7 @@ int siklu_read_gpio(unsigned int gpio, int *val)
 	*val = gpio_get_value(gpio);
 
 	// free pin
-	if (ret != -EBUSY)
-		gpio_free(gpio);
+	gpio_free(gpio);
 
 	return CMD_RET_SUCCESS;
 }
