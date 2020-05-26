@@ -31,20 +31,10 @@ int siklu_read_gpio_by_name(const char * str_gpio, int *val)
 	int ret = CMD_RET_SUCCESS;
 	int gpio_num = 0;
 
-#if defined(CONFIG_DM_GPIO)
 	ret = gpio_lookup_name(str_gpio, NULL, NULL, &gpio_num);
 	if (ret != CMD_RET_SUCCESS) {
 		return ret;
 	}
-#else
-	/* turn the gpio name into a gpio number */
-	gpio_num = name_to_gpio(str_gpio);
-
-	if (gpio_num < 0)
-	{
-		return CMD_RET_FAILURE);
-	}
-#endif
 
 	ret = siklu_read_gpio_by_number(gpio_num, val);
 	if (ret != CMD_RET_SUCCESS) {
