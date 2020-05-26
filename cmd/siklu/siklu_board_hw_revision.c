@@ -15,7 +15,7 @@ static const char *hw_rev_gpio_bits_array[NUM_OF_HW_REVISION_BITS]={
 	HW_REVISION_GPIO_NAME_BIT_3};
 
 // get the siklu board HW revision
-int siklu_get_hw_revision (unsigned int *hw_revision)
+int siklu_n366_get_hw_revision (unsigned int *hw_revision)
 {
 	int ret = CMD_RET_SUCCESS;
 	int val = 0;

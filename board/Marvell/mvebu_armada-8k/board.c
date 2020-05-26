@@ -171,7 +171,7 @@ static int calculate_and_save_siklu_hw_revision (void)
 	// siklu n366
 	if (of_machine_is_compatible("siklu,n366"))
 	{
-		ret = siklu_get_hw_revision (&siklu_saved_hw_revision);
+		ret = siklu_n366_get_hw_revision (&siklu_saved_hw_revision);
 		if (ret == CMD_RET_SUCCESS)
 		{
 			printf("Siklu board HW revision: %u\n", siklu_saved_hw_revision);
