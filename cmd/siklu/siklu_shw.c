@@ -13,8 +13,7 @@ void show_hw_revision (void)
 	printf("HW revision: ");
 
 	ret = siklu_get_saved_hw_revision (&hw_revision);
-	printf ("%u\n", ret == CMD_RET_SUCCESS ? hw_revision : "Unknown");
-	
+	ret == CMD_RET_SUCCESS ? printf ("%u\n",hw_revision) : printf("Unknown\n");
 }
 
 // show board model

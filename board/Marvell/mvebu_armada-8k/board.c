@@ -149,14 +149,15 @@ int board_early_init_f(void)
 }
 
 
-
+// Siklu HW revision
 static int siklu_saved_hw_revision = -1;
 
 // a getter for the calculated and saved HW revision
 int siklu_get_saved_hw_revision(int *saved_hw_revision)
 {
 	int ret = CMD_RET_SUCCESS;
-	(siklu_saved_hw_revision != -1) ? (*saved_hw_revision = siklu_saved_hw_revision) : (ret = CMD_RET_FAILURE) ;
+
+	(siklu_saved_hw_revision != -1) ? (*saved_hw_revision = siklu_saved_hw_revision) : (ret = CMD_RET_FAILURE);
 
 	return ret;
 }
@@ -167,6 +168,7 @@ static int calculate_and_save_siklu_hw_revision (void)
 {
 	int ret = CMD_RET_SUCCESS;
 	
+	// siklu n366
 	if (of_machine_is_compatible("siklu,n366"))
 	{
 		ret = siklu_get_hw_revision (&siklu_saved_hw_revision);
@@ -197,8 +199,8 @@ int board_init(void)
 
 	//  Calculate & save siklu HW revision
 	// ------------------------------------
-	//  This is important to do before the board init so that in the uboot we will be able to use the 
-	//  gpio's for their dedicated purpose (e.g, disable_wigig, reset_pci)
+	//  This is important to calculate the HW revision before the board init so that in the uboot we will 
+	//  be able to use the gpio bits for their dedicated purpose (e.g, disable_wigig, reset_pci)
 	
 	int ret = CMD_RET_SUCCESS;
 	

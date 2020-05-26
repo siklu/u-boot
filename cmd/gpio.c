@@ -189,9 +189,11 @@ static int do_gpio(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		printf("GPIO: '%s' not found\n", str_gpio);
 		return cmd_process_error(cmdtp, ret);
 	}
+
 #else
 	/* turn the gpio name into a gpio number */
 	gpio = name_to_gpio(str_gpio);
+
 	if (gpio < 0)
 		goto show_usage;
 #endif
