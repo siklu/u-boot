@@ -42,7 +42,7 @@ static void show_nand_info (void)
 		unsigned long save_flags = gd->flags;
 
 		// disable console to a ignore internal prints of nand_get_flash_type
-	    gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+		gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
 
 		type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, NULL);
 		
