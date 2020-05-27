@@ -14,11 +14,22 @@ int siklu_read_gpio_by_number(unsigned int gpio_num, int *val)
 	}
 
 	// read the gpio value
-	gpio_direction_input(gpio_num);
+	ret = gpio_direction_input(gpio_num);
+	if (ret != CMD_RET_SUCCESS)
+	{
+		gpio_free(gpio_num);
+		return ret;
+	}
+
 	*val = gpio_get_value(gpio_num);
 
 	// free pin
-	gpio_free(gpio_num);
+	ret = gpio_free(gpio_num);
+	if (ret != CMD_RET_SUCCESS)
+	{
+		return ret;
+	}
+
 
 	return CMD_RET_SUCCESS;
 }

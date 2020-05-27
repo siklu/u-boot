@@ -33,11 +33,17 @@ static void show_nand_info (void)
 	int nand_maf_id;
 	int nand_dev_id;
 
+	printf("NAND: ");
+
 	mtd = get_mtd_device(NULL, 0);
 	if (mtd)
 	{
 		chip = mtd_to_nand(mtd);
-	
+		if (chip == NULL)
+		{
+			goto ERROR_LABEL;
+		}
+
 		// save global data flags
 		unsigned long save_flags = gd->flags;
 
@@ -45,11 +51,14 @@ static void show_nand_info (void)
 		gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
 
 		type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, NULL);
-		
+		if (type == NULL)
+		{
+			goto ERROR_LABEL;
+		}
+
 		// restore previous flags
 		gd->flags = save_flags;
 
-		printf("NAND: ");
 
 		/* Try to identify manufacturer */
 		int maf_idx = 0;
@@ -86,12 +95,11 @@ static void show_nand_info (void)
 
 		// nand Chip ID		
 		printf("Chip ID: 0x%02x\n", nand_dev_id);
-	}
-	else
-	{	
-		printf("Unknown\n");
 		return;
 	}
+
+ERROR_LABEL:
+		printf("Unknown\n");
 }
 
 
@@ -106,13 +114,20 @@ static void show_dram_info (void)
 // show SF (NOR)
 static void show_sf_info (void)
 {
+	printf("SF: ");
+	
 	struct spi_nor *nor = get_mtd_device_nm("nor0")->priv; 
+	if (nor == NULL)
+	{
+		printf("Unknown\n");
+		return;
+	}
 
-	printf("SF: Detected %s with page size ", nor->name);
+	printf("%s with page size ", nor->name);
 	print_size(nor->page_size, ", erase size ");
 	print_size(nor->erase_size, ", total ");
 	print_size(nor->size, "");
-    	printf ("\n");
+	printf ("\n");
 }
 
 
@@ -130,16 +145,28 @@ static void show_cpu_info (void)
 	const char *cpu_name = NULL;
 
 	ret = siklu_get_cpu_name(&cpu_name);
-	printf("%s, ", ret == CMD_RET_SUCCESS ? cpu_name : "Unknown, ");
-
+	if ((ret == CMD_RET_SUCCESS) && cpu_name)
+	{
+		printf("%s, ",cpu_name);
+	}
+	else
+	{
+		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown, ");
+	}
 	
 	//config register
 	uint64_t config_reg = 0;
 	printf("config register: ");	
 
 	ret = siklu_get_cpu_config_register(&config_reg);
-	ret == CMD_RET_SUCCESS ? printf("0x%llx\n",config_reg) : printf("Unknown\n");
-
+	if (ret == CMD_RET_SUCCESS)
+	{
+		printf("0x%llx\n",config_reg);
+	}
+	else
+	{
+		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown, ");
+	}
 }
 
 

@@ -14,7 +14,7 @@
 
 /* Armada 7k/8k */
 #define SAR0_REG	(MVEBU_REGISTER(0x2400200))
-#define CPU_NAME  	"marvell,armada8040"
+#define CPU_NAME	"marvell,armada8040"
 
 static const char *hw_rev_gpio_bits_array[N366_NUM_OF_HW_REVISION_BITS]={
 	N366_HW_REVISION_GPIO_NAME_BIT_0, //LSB

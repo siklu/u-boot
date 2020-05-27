@@ -4,7 +4,7 @@
 #define ILLEGAL_HW_REVISION -1
 
 /**
- * Get the save HW revision as it was calculated before th board init
+ * Get the save HW revision as it was calculated before the board init
  * @return the saved HW revision.
  */
 int 

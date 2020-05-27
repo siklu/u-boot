@@ -37,7 +37,7 @@ int siklu_calculate_and_save_siklu_hw_revision (void)
 	else
 	{
 		printf ("no HW revision calculation is implemented for this board\n");
-		return CMD_RET_FAILURE;
+		return ENOSYS; // not implemented
 	}
 
 	return CMD_RET_SUCCESS;
@@ -60,7 +60,7 @@ int siklu_get_cpu_name (const char **cpu_name)
 	}
 	else
 	{
-		return CMD_RET_FAILURE;
+		return ENOSYS; // not implemented
 	}
 
 	return CMD_RET_SUCCESS;
@@ -83,8 +83,9 @@ int siklu_get_cpu_config_register(uint64_t *config_reg)
 	}
 	else
 	{
-		return CMD_RET_FAILURE;
+		return ENOSYS; // not implemented
 	}
+	
 
 	return CMD_RET_SUCCESS;
 }
