@@ -158,10 +158,10 @@ int board_init(void)
 	
 	int ret = CMD_RET_SUCCESS;
 	
-	ret  = calculate_and_save_siklu_hw_revision();
+	ret  = siklu_calculate_and_save_siklu_hw_revision();
 	if (ret != CMD_RET_SUCCESS)
 	{
-		printf ("calculate_and_save_siklu_hw_revision failed!\n");	
+		printf ("siklu_calculate_and_save_siklu_hw_revision failed!\n");	
 	}
 	
 	/* adress of boot parameters */

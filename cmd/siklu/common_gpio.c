@@ -7,7 +7,7 @@ int siklu_read_gpio_by_number(unsigned int gpio_num, int *val)
 	
 	int ret = CMD_RET_SUCCESS;
 
-	// grab the pin before we tweak it
+	// request the gpio pin
 	ret = gpio_request(gpio_num, "cmd_gpio");
 	if (ret != CMD_RET_SUCCESS) {
 		return ret;

@@ -1,19 +1,17 @@
 #include <common.h>
 #include <linux/mtd/rawnand.h>
-#include <siklu/siklu_device_specific_information.h>
-#include <siklu/siklu_board_hw_revision.h>
-
+#include <linux/mtd/spi-nor.h>
+#include <siklu/siklu_board_generic.h>
 
 // show HW revision
 void show_hw_revision (void)
 {
-	int ret = CMD_RET_SUCCESS;
 	unsigned int hw_revision = 0;
 
 	printf("HW revision: ");
 
-	ret = siklu_get_saved_hw_revision (&hw_revision);
-	ret == CMD_RET_SUCCESS ? printf ("%u\n",hw_revision) : printf("Unknown\n");
+	hw_revision = siklu_get_saved_hw_revision ();
+	hw_revision != ILLEGAL_HW_REVISION  ? printf ("%u\n",hw_revision) : printf("Unknown\n");
 }
 
 // show board model
@@ -26,42 +24,38 @@ static void show_board_model (void)
 	printf("Model: %s\n", model ? model : "Unknown");
 }
 
-
 // show nand
 static void show_nand_info (void)
 {
-	int ret = CMD_RET_SUCCESS;
+	struct nand_flash_dev *type;
 	struct mtd_info *mtd = NULL;
 	struct nand_chip *chip = NULL;
-	struct nand_flash_dev *type = NULL;
-	
-	printf("NAND: ");
+	int nand_maf_id;
+	int nand_dev_id;
 
 	mtd = get_mtd_device(NULL, 0);
 	if (mtd)
 	{
-		type = nand_flash_ids;
 		chip = mtd_to_nand(mtd);
+	
+		// save global data flags
+		unsigned long save_flags = gd->flags;
 
-		u8 id_data[8];
+		// disable console to a ignore internal prints of nand_get_flash_type
+	    gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
 
-		/* Send the command for reading device ID */
-		ret = nand_readid_op(chip, 0, id_data, 2);
-		if (ret)
-		{	
-			printf("Unknown\n");
-			return;
-		}
+		type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, NULL);
+		
+		// restore previous flags
+		gd->flags = save_flags;
 
-		/* Read manufacturer and device IDs */
-		u8 maf_id = id_data[0];
-		u8 dev_id = id_data[1];
+		printf("NAND: ");
 
 		/* Try to identify manufacturer */
 		int maf_idx = 0;
 
 		for (maf_idx = 0; nand_manuf_ids[maf_idx].id != 0x0; maf_idx++) {
-			if (nand_manuf_ids[maf_idx].id == maf_id)
+			if (nand_manuf_ids[maf_idx].id == nand_maf_id)
 				break;
 		}
 		
@@ -70,44 +64,36 @@ static void show_nand_info (void)
 		
 		// nand model
 
-#ifdef CONFIG_SYS_NAND_ONFI_DETECTION
-	
 		if (chip->onfi_version)
 		{
 			printf("%s, ",chip->onfi_params.model);
 		}
 		else if (chip->jedec_version)
-			{
+		{
 			printf("%s, ",chip->jedec_params.model);
-			}
+		}
 		else
-			{
+		{
 			printf("%s, ",type->name);
-			}
-#else
-		if (chip->jedec_version)
-			printf("%s, ",chip->jedec_params.model);
-		else
-			printf("%s, ",type->name);
-#endif
+		}
 
 		// nand size
 		printf("Size: ");
 	 	chip ? printf("%d MIB, ", (int)(chip->chipsize >> 20)) : printf("Unknown\n");
 
 		// nand Manufacturer ID 		
-		printf("Manufacturer ID: 0x%02x, ",maf_id);
+		printf("Manufacturer ID: 0x%02x, ",nand_maf_id);
 
 		// nand Chip ID		
-		printf("Chip ID: 0x%02x\n", dev_id);
+		printf("Chip ID: 0x%02x\n", nand_dev_id);
 	}
 	else
 	{	
 		printf("Unknown\n");
 		return;
 	}
-
 }
+
 
 // show DRAM (DDR)
 static void show_dram_info (void)
@@ -117,10 +103,16 @@ static void show_dram_info (void)
 }
 
 
-// show SF (SPI flash)
+// show SF (NOR)
 static void show_sf_info (void)
 {
-	run_command("sf probe", 0);
+	struct spi_nor *nor = get_mtd_device_nm("nor0")->priv; 
+
+	printf("SF: Detected %s with page size ", nor->name);
+	print_size(nor->page_size, ", erase size ");
+	print_size(nor->erase_size, ", total ");
+	print_size(nor->size, "");
+    	printf ("\n");
 }
 
 
@@ -142,11 +134,11 @@ static void show_cpu_info (void)
 
 	
 	//config register
-	int config_reg = 0;
+	uint64_t config_reg = 0;
 	printf("config register: ");	
 
 	ret = siklu_get_cpu_config_register(&config_reg);
-	printf("0x%x\n", ret == CMD_RET_SUCCESS ? config_reg : "Unknown, ");
+	ret == CMD_RET_SUCCESS ? printf("0x%llx\n",config_reg) : printf("Unknown\n");
 
 }
 
