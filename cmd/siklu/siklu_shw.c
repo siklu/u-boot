@@ -6,12 +6,20 @@
 // show HW revision
 void show_hw_revision (void)
 {
-	unsigned int hw_revision = 0;
+	int ret = CMD_RET_SUCCESS;
+	int hw_revision = 0;
 
 	printf("HW revision: ");
 
-	hw_revision = siklu_get_saved_hw_revision ();
-	hw_revision != ILLEGAL_HW_REVISION  ? printf ("%u\n",hw_revision) : printf("Unknown\n");
+	ret = siklu_get_hw_revision (&hw_revision);
+	if (ret == CMD_RET_SUCCESS)
+	{
+		printf ("%u\n",hw_revision);
+	}
+	else
+	{
+		printf("%s \n", ret == ENOSYS  ? "Not implemented" : "Unknown");
+	}
 }
 
 // show board model
@@ -99,7 +107,7 @@ static void show_nand_info (void)
 	}
 
 ERROR_LABEL:
-		printf("Unknown\n");
+	printf("Unknown\n");
 }
 
 

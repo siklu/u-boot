@@ -4,20 +4,13 @@
 #define ILLEGAL_HW_REVISION -1
 
 /**
- * Get the save HW revision as it was calculated before the board init
- * @return the saved HW revision.
- */
-int 
-siklu_get_saved_hw_revision(void);
-
-
-/**
- * calculate and save siklu hw revision. 
- * find the specific board, call the specific board HW revision calculation and save it in a static var
+ * Get the board HW revision
+ * @param out: HW revision 
  * @return CMD_RET_SUCCESS on success, otherwise on error.
  */
 int 
-siklu_calculate_and_save_siklu_hw_revision (void);
+siklu_get_hw_revision(int *hw_revsion);
+
 
 
 /**

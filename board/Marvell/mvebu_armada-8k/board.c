@@ -10,7 +10,7 @@
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
-
+#include <siklu/siklu_board_generic.h>
 #include <siklu_load_device_configurations.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -157,12 +157,19 @@ int board_init(void)
 	//  be able to use the gpio bits for their dedicated purpose (e.g, disable_wigig, reset_pci)
 	
 	int ret = CMD_RET_SUCCESS;
+	int hw_revision = 0;
 	
-	ret  = siklu_calculate_and_save_siklu_hw_revision();
-	if (ret != CMD_RET_SUCCESS)
+	ret  = siklu_get_hw_revision(&hw_revision);
+
+	printf ("HW revision: ");
+	if (ret == CMD_RET_SUCCESS)
 	{
-		printf ("siklu_calculate_and_save_siklu_hw_revision failed!\n");	
+		printf ("%d\n", hw_revision);
+	}
+	else
+	{
 		//don't return error in order not to fail the init - otherwise a new boot can be burned only by a flash programmer
+		printf("%s\n", ret == ENOSYS  ? "Not implemented" : "Unknown");
 	}
 	
 	/* adress of boot parameters */

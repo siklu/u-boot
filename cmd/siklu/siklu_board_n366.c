@@ -16,19 +16,22 @@
 #define SAR0_REG	(MVEBU_REGISTER(0x2400200))
 #define CPU_NAME	"marvell,armada8040"
 
+#define N366_HW_REVISION_NOT_INIT 	-1
+#define N366_HW_REVISION_FAILED 	-2
+
+// Siklu HW revision 
+static int siklu_saved_hw_revision = N366_HW_REVISION_NOT_INIT;
+
 static const char *hw_rev_gpio_bits_array[N366_NUM_OF_HW_REVISION_BITS]={
 	N366_HW_REVISION_GPIO_NAME_BIT_0, //LSB
 	N366_HW_REVISION_GPIO_NAME_BIT_1, 
 	N366_HW_REVISION_GPIO_NAME_BIT_2, 
 	N366_HW_REVISION_GPIO_NAME_BIT_3};
 
-// get the siklu board HW revision
-int siklu_n366_get_hw_revision (int *hw_revision)
+static int siklu_n366_get_hw_revision_by_gpio (int *hw_revision)
 {
 	int ret = CMD_RET_SUCCESS;
 	int val = 0;
-
-	*hw_revision = 0;
 
 	for (int i=0; i<N366_NUM_OF_HW_REVISION_BITS; i++)
 	{
@@ -40,9 +43,43 @@ int siklu_n366_get_hw_revision (int *hw_revision)
 		
 		*hw_revision += val << i;
 	}
-		
+
 	return CMD_RET_SUCCESS;
 }
+
+// get the siklu board HW revision
+int siklu_n366_get_hw_revision (int *hw_revision)
+{
+	int ret = CMD_RET_SUCCESS;
+
+	if (siklu_saved_hw_revision == N366_HW_REVISION_NOT_INIT)
+	{
+		// this is the first time this function is called (should be before board init)
+		ret = siklu_n366_get_hw_revision_by_gpio(hw_revision);
+		if (ret != CMD_RET_SUCCESS)
+		{
+			siklu_saved_hw_revision = N366_HW_REVISION_FAILED;
+			return ret;
+		}
+
+		siklu_saved_hw_revision = *hw_revision;
+	}
+	
+	else if (siklu_saved_hw_revision == N366_HW_REVISION_FAILED)
+	{
+		// first try failed
+		return CMD_RET_FAILURE;
+	}
+
+	else
+	{
+		// get it from the saved static var
+		*hw_revision = siklu_saved_hw_revision;	
+	}	
+
+	return CMD_RET_SUCCESS;
+}
+
 
 
 // get CPU config register
