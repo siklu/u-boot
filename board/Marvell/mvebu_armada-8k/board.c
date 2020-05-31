@@ -162,7 +162,7 @@ int board_init(void)
 	if (ret != CMD_RET_SUCCESS)
 	{
 		printf ("siklu_calculate_and_save_siklu_hw_revision failed!\n");	
-		return ret;
+		//don't return error in order not to fail the init - otherwise a new boot can be burned only by a flash programmer
 	}
 	
 	/* adress of boot parameters */

@@ -151,7 +151,7 @@ static void show_cpu_info (void)
 	}
 	else
 	{
-		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown, ");
+		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown");
 	}
 	
 	//config register
@@ -165,7 +165,7 @@ static void show_cpu_info (void)
 	}
 	else
 	{
-		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown, ");
+		printf("%s\n", ret == ENOSYS  ? "Not implemented" : "Unknown");
 	}
 }
 
