@@ -32,82 +32,101 @@ static void show_board_model (void)
 	printf("Model: %s\n", model ? model : "Unknown");
 }
 
-// show nand
+//  get nand params (all parmas are out params)
+int  get_nand_params (struct nand_chip **chip, struct nand_flash_dev **type, int *nand_maf_id, int *nand_dev_id)
+{
+	struct mtd_info *mtd = NULL;
+
+	mtd = get_mtd_device(NULL, 0);
+	if (mtd == NULL)
+	{
+		return CMD_RET_FAILURE;
+	}
+
+	*chip = mtd_to_nand(mtd);
+	if (*chip == NULL)
+	{
+		return CMD_RET_FAILURE;
+	}
+
+	// save global data flags
+	unsigned long save_flags = gd->flags;
+
+	// disable console to a ignore internal prints of nand_get_flash_type
+	gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+
+	*type = nand_get_flash_type(mtd, *chip, nand_maf_id, nand_dev_id, NULL);
+	if (*type == NULL)
+	{
+		return CMD_RET_FAILURE;
+	}
+
+	// restore previous flags
+	gd->flags = save_flags;
+
+	return CMD_RET_SUCCESS;
+}
+
+
+// show nand manufacturer info
+static void show_nand_manufacturer_info (int nand_maf_id, struct nand_chip *chip, struct nand_flash_dev *type)
+{
+	/* Try to identify manufacturer */
+	int maf_idx = 0;
+
+	for (maf_idx = 0; nand_manuf_ids[maf_idx].id != 0x0; maf_idx++) {
+		if (nand_manuf_ids[maf_idx].id == nand_maf_id)
+			break;
+	}
+	
+	// nand name
+	printf("Name: %s ", nand_manuf_ids[maf_idx].name);	
+
+	// nand model
+	if (chip->onfi_version)
+	{
+		printf("%s, ",chip->onfi_params.model);
+	}
+	else if (chip->jedec_version)
+	{
+		printf("%s, ",chip->jedec_params.model);
+	}
+	else
+	{
+		printf("%s, ",type->name);
+	}
+
+	// nand Manufacturer ID 		
+	printf("Manufacturer ID: 0x%02x, ",nand_maf_id);
+}
+
+
+// show nand info
 static void show_nand_info (void)
 {
+	int ret = CMD_RET_SUCCESS;
 	struct nand_flash_dev *type;
-	struct mtd_info *mtd = NULL;
 	struct nand_chip *chip = NULL;
 	int nand_maf_id;
 	int nand_dev_id;
 
 	printf("NAND: ");
 
-	mtd = get_mtd_device(NULL, 0);
-	if (mtd)
+	ret = get_nand_params (&chip, &type, &nand_maf_id, &nand_dev_id);
+	if (ret != CMD_RET_SUCCESS)
 	{
-		chip = mtd_to_nand(mtd);
-		if (chip == NULL)
-		{
-			goto ERROR_LABEL;
-		}
-
-		// save global data flags
-		unsigned long save_flags = gd->flags;
-
-		// disable console to a ignore internal prints of nand_get_flash_type
-		gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
-
-		type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, NULL);
-		if (type == NULL)
-		{
-			goto ERROR_LABEL;
-		}
-
-		// restore previous flags
-		gd->flags = save_flags;
-
-
-		/* Try to identify manufacturer */
-		int maf_idx = 0;
-
-		for (maf_idx = 0; nand_manuf_ids[maf_idx].id != 0x0; maf_idx++) {
-			if (nand_manuf_ids[maf_idx].id == nand_maf_id)
-				break;
-		}
-		
-		// nand name
-		printf("Name: %s ", nand_manuf_ids[maf_idx].name);
-		
-		// nand model
-
-		if (chip->onfi_version)
-		{
-			printf("%s, ",chip->onfi_params.model);
-		}
-		else if (chip->jedec_version)
-		{
-			printf("%s, ",chip->jedec_params.model);
-		}
-		else
-		{
-			printf("%s, ",type->name);
-		}
-
-		// nand size
-		printf("Size: ");
-	 	chip ? printf("%d MIB, ", (int)(chip->chipsize >> 20)) : printf("Unknown\n");
-
-		// nand Manufacturer ID 		
-		printf("Manufacturer ID: 0x%02x, ",nand_maf_id);
-
-		// nand Chip ID		
-		printf("Chip ID: 0x%02x\n", nand_dev_id);
-		return;
+			printf("Unknown\n");
+			return;
 	}
 
-ERROR_LABEL:
-	printf("Unknown\n");
+	show_nand_manufacturer_info(nand_maf_id, chip, type);
+
+	// nand size
+	printf("Size: ");
+	chip ? printf("%d MIB, ", (int)(chip->chipsize >> 20)) : printf("Unknown\n");
+
+	// nand Chip ID		
+	printf("Chip ID: 0x%02x\n", nand_dev_id);
 }
 
 
@@ -137,7 +156,6 @@ static void show_sf_info (void)
 	print_size(nor->size, "");
 	printf ("\n");
 }
-
 
 
 // show CPU 
@@ -192,12 +210,11 @@ static int do_shw(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 }
 
 
-
 U_BOOT_CMD(
-	shw,					//name
-	1,					//max params
-	0,					//rep
-	do_shw,					//func
+	shw,								//name
+	1,									//max params
+	0,									//rep
+	do_shw,								//func
 	"dispaly HW info (siklu command)",	//help
-	"" 					//usage
+	"" 									//usage
 );
