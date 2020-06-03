@@ -147,31 +147,35 @@ int board_early_init_f(void)
 	return 0;
 }
 
-
-int board_init(void)
+// get siklu HW revision
+inline siklu_print_hw_revision (void)
 {
-
-	//  Calculate & save siklu HW revision
-	// ------------------------------------
 	//  This is important to calculate the HW revision before the board init so that in the uboot we will 
-	//  be able to use the gpio bits for their dedicated purpose (e.g, disable_wigig, reset_pci)
+	//  be able to use the gpio bits for thier dedicated purpose (e.g, disable_wigig, reset_pci)
 	
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 	int hw_revision = 0;
 	
 	ret  = siklu_get_hw_revision(&hw_revision);
 
 	printf ("HW revision: ");
-	if (ret == CMD_RET_SUCCESS)
+	if (!ret)
 	{
 		printf ("%d\n", hw_revision);
 	}
 	else
 	{
 		//don't return error in order not to fail the init - otherwise a new boot can be burned only by a flash programmer
-		printf("%s\n", ret == ENOSYS  ? "Not implemented" : "Unknown");
+		printf("%s\n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
 	}
-	
+
+}
+
+int board_init(void)
+{
+
+	siklu_print_hw_revision();
+
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
 

@@ -5,71 +5,69 @@
 #include <asm/io.h>
 
 // get the board HW revision
-int siklu_get_hw_revision(int *hw_revsion)
+int siklu_get_hw_revision(u32 *hw_revsion)
 {
-
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 	
 	// siklu n366
 	if (of_machine_is_compatible("siklu,n366"))
 	{
 		ret = siklu_n366_get_hw_revision (hw_revsion);
-		if (ret != CMD_RET_SUCCESS)
+		if (ret)
 		{
 			return (ret);
 		}
 	}
 	else
 	{
-		return ENOSYS; // not implemented
+		return -ENOSYS; // not implemented
 	}
 
-	return CMD_RET_SUCCESS;
+	return 0;
 }
 
 
 // get CPU info
 int siklu_get_cpu_name (const char **cpu_name)
 {
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 	
 	// siklu n366
 	if (of_machine_is_compatible("siklu,n366"))
 	{
 		ret = siklu_n366_get_cpu_name(cpu_name);
-		if (ret != CMD_RET_SUCCESS)
+		if (ret)
 		{
 			return ret;
 		}
 	}
 	else
 	{
-		return ENOSYS; // not implemented
+		return -ENOSYS; // not implemented
 	}
 
-	return CMD_RET_SUCCESS;
+	return 0;
 }
 
 
 // get CPU info
 int siklu_get_cpu_config_register(uint64_t *config_reg)
 {
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 	
 	// siklu n366
 	if (of_machine_is_compatible("siklu,n366"))
 	{
 		ret = siklu_n366_get_cpu_config_register(config_reg);
-		if (ret != CMD_RET_SUCCESS)
+		if (ret)
 		{
 			return ret;
 		}
 	}
 	else
 	{
-		return ENOSYS; // not implemented
+		return -ENOSYS; // not implemented
 	}
 	
-
-	return CMD_RET_SUCCESS;
+	return 0;
 }

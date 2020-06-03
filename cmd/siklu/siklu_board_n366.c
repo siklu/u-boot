@@ -16,27 +16,21 @@
 #define SAR0_REG	(MVEBU_REGISTER(0x2400200))
 #define CPU_NAME	"marvell,armada8040"
 
-#define N366_HW_REVISION_NOT_INIT 	-1
-#define N366_HW_REVISION_FAILED 	-2
-
-// Siklu HW revision 
-static int siklu_saved_hw_revision = N366_HW_REVISION_NOT_INIT;
-
 static const char *hw_rev_gpio_bits_array[N366_NUM_OF_HW_REVISION_BITS]={
 	N366_HW_REVISION_GPIO_NAME_BIT_0, //LSB
 	N366_HW_REVISION_GPIO_NAME_BIT_1, 
 	N366_HW_REVISION_GPIO_NAME_BIT_2, 
 	N366_HW_REVISION_GPIO_NAME_BIT_3};
 
-static int siklu_n366_get_hw_revision_by_gpio (int *hw_revision)
+static int siklu_n366_get_hw_revision_by_gpio (u32 *hw_revision)
 {
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 	int val = 0;
 
 	for (int i=0; i<N366_NUM_OF_HW_REVISION_BITS; i++)
 	{
 		ret=siklu_read_gpio_by_name (hw_rev_gpio_bits_array[i], &val);
-		if (ret != CMD_RET_SUCCESS)
+		if (ret)
 		{
 			return ret;	
 		}
@@ -44,49 +38,41 @@ static int siklu_n366_get_hw_revision_by_gpio (int *hw_revision)
 		*hw_revision += val << i;
 	}
 
-	return CMD_RET_SUCCESS;
+	return 0;
 }
 
 // get the siklu board HW revision
-int siklu_n366_get_hw_revision (int *hw_revision)
+int siklu_n366_get_hw_revision (u32 *hw_revision)
 {
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
+	static u32 saved_hw_revision = 0;
+	static int saved_error_code = 0;
+	static bool is_first_call = true;
 
-	if (siklu_saved_hw_revision == N366_HW_REVISION_NOT_INIT)
+	if (is_first_call)
 	{
 		// this is the first time this function is called (should be before board init)
+		is_first_call = false;
 		ret = siklu_n366_get_hw_revision_by_gpio(hw_revision);
-		if (ret != CMD_RET_SUCCESS)
-		{
-			siklu_saved_hw_revision = N366_HW_REVISION_FAILED;
-			return ret;
-		}
-
-		siklu_saved_hw_revision = *hw_revision;
+		saved_hw_revision = *hw_revision;
+		saved_error_code = ret;	
 	}
-	
-	else if (siklu_saved_hw_revision == N366_HW_REVISION_FAILED)
-	{
-		// first try failed
-		return CMD_RET_FAILURE;
-	}
-
 	else
 	{
-		// get it from the saved static var
-		*hw_revision = siklu_saved_hw_revision;	
-	}	
-
-	return CMD_RET_SUCCESS;
+		// function was already called. take hw_revsion & ret from saved statics
+		*hw_revision = saved_hw_revision;
+		ret = saved_error_code;
+	}
+		
+	return ret;
 }
-
 
 
 // get CPU config register
 int siklu_n366_get_cpu_config_register(uint64_t *config_reg)
 {
 	*config_reg = readl(SAR0_REG);
-	return CMD_RET_SUCCESS;
+	return 0;
 }
 
 // get CPU name
@@ -94,6 +80,5 @@ int siklu_n366_get_cpu_name(const char **cpu_name)
 {
 	static const char *static_cpu_name= CPU_NAME;
 	*cpu_name = static_cpu_name;
-	return CMD_RET_SUCCESS;
+	return 0;
 }
-

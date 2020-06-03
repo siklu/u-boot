@@ -6,19 +6,19 @@
 // show HW revision
 void show_hw_revision (void)
 {
-	int ret = CMD_RET_SUCCESS;
-	int hw_revision = 0;
+	int ret = 0;
+	u32 hw_revision = 0;
 
 	printf("HW revision: ");
 
 	ret = siklu_get_hw_revision (&hw_revision);
-	if (ret == CMD_RET_SUCCESS)
+	if (!ret)
 	{
 		printf ("%u\n",hw_revision);
 	}
 	else
 	{
-		printf("%s \n", ret == ENOSYS  ? "Not implemented" : "Unknown");
+		printf("%s \n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
 	}
 }
 
@@ -33,7 +33,7 @@ static void show_board_model (void)
 }
 
 //  get nand params (all parmas are out params)
-int  get_nand_params (struct nand_chip **chip, struct nand_flash_dev **type, int *nand_maf_id, int *nand_dev_id)
+static int  get_nand_params (struct nand_chip **chip, struct nand_flash_dev **type, int *nand_maf_id, int *nand_dev_id)
 {
 	struct mtd_info *mtd = NULL;
 
@@ -161,7 +161,7 @@ static void show_sf_info (void)
 // show CPU 
 static void show_cpu_info (void)
 {
-	int ret = CMD_RET_SUCCESS;
+	int ret = 0;
 
 	printf("CPU: ");
 
@@ -171,13 +171,13 @@ static void show_cpu_info (void)
 	const char *cpu_name = NULL;
 
 	ret = siklu_get_cpu_name(&cpu_name);
-	if ((ret == CMD_RET_SUCCESS) && cpu_name)
+	if ((!ret) && cpu_name)
 	{
 		printf("%s, ",cpu_name);
 	}
 	else
 	{
-		printf("%s, ", ret == ENOSYS  ? "Not implemented" : "Unknown");
+		printf("%s, ", ret == -ENOSYS  ? "Not implemented" : "Unknown");
 	}
 	
 	//config register
@@ -185,13 +185,13 @@ static void show_cpu_info (void)
 	printf("config register: ");	
 
 	ret = siklu_get_cpu_config_register(&config_reg);
-	if (ret == CMD_RET_SUCCESS)
+	if (!ret)
 	{
 		printf("0x%llx\n",config_reg);
 	}
 	else
 	{
-		printf("%s\n", ret == ENOSYS  ? "Not implemented" : "Unknown");
+		printf("%s\n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
 	}
 }
 
