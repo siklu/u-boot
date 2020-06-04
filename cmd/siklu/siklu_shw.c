@@ -6,20 +6,7 @@
 // show HW revision
 void show_hw_revision (void)
 {
-	int ret = 0;
-	u32 hw_revision = 0;
-
-	printf("HW revision: ");
-
-	ret = siklu_get_hw_revision (&hw_revision);
-	if (!ret)
-	{
-		printf ("%u\n",hw_revision);
-	}
-	else
-	{
-		printf("%s \n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
-	}
+	siklu_print_hw_revision();
 }
 
 // show board model
