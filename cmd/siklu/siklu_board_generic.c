@@ -41,7 +41,6 @@ int siklu_get_hw_revision(u32 *hw_revsion)
 	}
 	else
 	{
-		//don't return error in order not to fail the init - otherwise a new boot can be burned only by a flash programmer
 		printf("%s\n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
 	}
 }
