@@ -1,7 +1,8 @@
 #include <common.h>
+#include <asm/gpio.h>
 
 // read gpio pin by number
-int siklu_read_gpio_by_number(unsigned int gpio_num, int *val)
+int siklu_read_gpio_by_number(unsigned int gpio_num, u32 *val)
 {
 	int ret = 0;
 
@@ -25,10 +26,10 @@ out:
 
 
 // read gpio pin by name
-int siklu_read_gpio_by_name(const char * str_gpio, int *val)
+int siklu_read_gpio_by_name(const char * str_gpio, u32 *val)
 {
 	int ret = 0;
-	int gpio_num = 0;
+	unsigned int gpio_num = 0;
 
 	ret = gpio_lookup_name(str_gpio, NULL, NULL, &gpio_num);
 	if (ret) {

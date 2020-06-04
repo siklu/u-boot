@@ -25,7 +25,7 @@ static const char *hw_rev_gpio_bits_array[N366_NUM_OF_HW_REVISION_BITS]={
 static int siklu_n366_get_hw_revision_by_gpio (u32 *hw_revision)
 {
 	int ret = 0;
-	int val = 0;
+	u32 val = 0;
 
 	for (int i=0; i<N366_NUM_OF_HW_REVISION_BITS; i++)
 	{

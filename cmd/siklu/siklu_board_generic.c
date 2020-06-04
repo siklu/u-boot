@@ -26,6 +26,25 @@ int siklu_get_hw_revision(u32 *hw_revsion)
 	return 0;
 }
 
+// print siklu HW revision
+ void siklu_print_hw_revision (void)
+{	
+	int ret = 0;
+	u32 hw_revision = 0;
+	
+	ret  = siklu_get_hw_revision(&hw_revision);
+
+	printf ("HW revision: ");
+	if (!ret)
+	{
+		printf ("%u\n", hw_revision);
+	}
+	else
+	{
+		//don't return error in order not to fail the init - otherwise a new boot can be burned only by a flash programmer
+		printf("%s\n", ret == -ENOSYS  ? "Not implemented" : "Unknown");
+	}
+}
 
 // get CPU info
 int siklu_get_cpu_name (const char **cpu_name)

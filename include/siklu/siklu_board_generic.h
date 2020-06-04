@@ -10,6 +10,13 @@
 int 
 siklu_get_hw_revision(u32 *hw_revsion);
 
+/**
+ * print siklu board HW revision
+ */
+void 
+siklu_print_hw_revision (void);
+
+#endif
 
 
 /**
@@ -30,4 +37,3 @@ siklu_get_cpu_name (const char **cpu_name);
 int 
 siklu_get_cpu_config_register(uint64_t *config_reg);
 
-#endif
