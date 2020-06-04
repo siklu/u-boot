@@ -150,8 +150,7 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
-
-	//  This is important to calculate the HW revision before the board init so that in the uboot we will 
+	//  it is important to calculate the HW revision before the board init so that in the uboot we will 
 	//  be able to use the gpio bits for thier dedicated purpose (e.g, disable_wigig, reset_pci)
 	siklu_print_hw_revision();
 
