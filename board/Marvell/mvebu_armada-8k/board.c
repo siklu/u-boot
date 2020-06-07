@@ -10,7 +10,7 @@
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
-
+#include <siklu/siklu_board_generic.h>
 #include <siklu_load_device_configurations.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -147,8 +147,13 @@ int board_early_init_f(void)
 	return 0;
 }
 
+
 int board_init(void)
 {
+	//  it is important to calculate the HW revision before the board init so that in the uboot we will 
+	//  be able to use the gpio bits for thier dedicated purpose (e.g, disable_wigig, reset_pci)
+	siklu_print_hw_revision();
+
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
 
