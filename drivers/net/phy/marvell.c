@@ -8,6 +8,9 @@
 #include <common.h>
 #include <errno.h>
 #include <phy.h>
+#include <dm/lists.h>
+#include <led.h>
+#include <dm/device-internal.h>
 
 #define PHY_AUTONEGOTIATE_TIMEOUT 5000
 
@@ -401,6 +404,130 @@ static int m88e151x_config(struct phy_device *phydev)
 	return 0;
 }
 
+#define PRE_WRITE_REG_PHY1G		0x16
+#define PRE_WRITE_VAL_PHY1G		3
+
+#define WRITE_REG_PHY1G			0x10
+
+#define WRITE_LED_1_ON_PHY1G	0x90
+#define WRITE_LED_1_OFF_PHY1G	0x80
+#define WRITE_LED_1_MASK_PHY1G	0xF0
+
+#define WRITE_LED_2_ON_PHY1G	0x9
+#define WRITE_LED_2_OFF_PHY1G	0x8
+#define WRITE_LED_2_MASK_PHY1G	0xF
+
+#define LABEL_LED_1				"led1"
+#define LABEL_LED_2				"led2"
+
+struct marvell_led_priv {
+	struct phy_device *phydev;
+	u16 reg_mask;
+	u16 val_on;
+	u16 val_off;
+};
+
+static enum led_state_t marvell_led_get_state(struct udevice *dev)
+{
+	struct marvell_led_priv *priv = dev_get_priv(dev);
+	phy_write(priv->phydev, MDIO_DEVAD_NONE, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+
+	int ret = phy_read(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G);
+	int val = (ret&priv->reg_mask);
+
+	if (val == priv->val_off)
+		return LEDST_OFF;
+	else
+		return LEDST_ON;
+}
+
+static int marvell_led_set_state(struct udevice *dev, enum led_state_t state)
+{
+	struct marvell_led_priv *priv = dev_get_priv(dev);
+	phy_write(priv->phydev, MDIO_DEVAD_NONE, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+
+	int ret = phy_read(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G);
+	int regval;
+	switch (state) {
+	case LEDST_OFF:
+		regval = priv->val_off;
+		break;
+	case LEDST_ON:
+		regval = priv->val_on;
+		break;
+	case LEDST_TOGGLE:
+		state = marvell_led_get_state(dev) == LEDST_OFF ? LEDST_ON : LEDST_OFF;
+		return marvell_led_set_state(dev, state);
+	default:
+		return -ENOSYS;
+	}
+
+	return phy_write(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G, (ret&(~priv->reg_mask))|regval);
+}
+
+struct udevice* marvell_led_create (const char* label, struct phy_device *phydev, u16 reg_mask, u16 val_on, u16 val_off)
+{
+	struct marvell_led_priv *priv;
+	struct udevice* dev;
+
+	char *name = asprintf("%s-%d-%s", phydev->bus->name, phydev->addr, label);
+
+	device_bind_driver(phydev->dev, "marvell_led", name, &dev);
+	if (dev == NULL) {
+		printf("ERROR: could not create mdio_led driver");
+		return NULL;
+	}
+	/* Activate the device */
+	device_probe(dev);
+
+	/* Set its variables */
+	priv = dev_get_priv(dev);
+	priv->reg_mask = reg_mask;
+	priv->val_off = val_off;
+	priv->val_on = val_on;
+	priv->phydev = phydev;
+	return dev;
+}
+
+static int marvell_led_bind(struct udevice *dev)
+{
+	struct led_uc_plat *uc_plat;
+
+	uc_plat = dev_get_uclass_platdata(dev);
+	uc_plat->label = dev->name;
+
+	return 0;
+}
+
+static int marvell_led_remove(struct udevice *dev)
+{
+	free(dev->name);
+
+	return 0;
+}
+
+static const struct led_ops marvell_led_ops = {
+	.set_state	= marvell_led_set_state,
+	.get_state	= marvell_led_get_state,
+};
+
+static int m88e151x_probe(struct phy_device *phydev)
+{
+	marvell_led_create(LABEL_LED_1, phydev, WRITE_LED_1_MASK_PHY1G, WRITE_LED_1_ON_PHY1G, WRITE_LED_1_OFF_PHY1G);
+	marvell_led_create(LABEL_LED_2, phydev, WRITE_LED_2_MASK_PHY1G, WRITE_LED_2_ON_PHY1G, WRITE_LED_2_OFF_PHY1G);
+
+	return 0;
+}
+
+U_BOOT_DRIVER(marvell_led) = {
+	.name	= "marvell_led",
+	.id	= UCLASS_LED,
+	.ops	= &marvell_led_ops,
+	.priv_auto_alloc_size = sizeof(struct marvell_led_priv),
+	.bind = marvell_led_bind,
+	.remove = marvell_led_remove,
+};
+
 /* Marvell 88E1118 */
 static int m88e1118_config(struct phy_device *phydev)
 {
@@ -668,6 +795,7 @@ static struct phy_driver M88E151x_driver = {
 	.shutdown = &genphy_shutdown,
 	.readext = &m88e1xxx_phy_extread,
 	.writeext = &m88e1xxx_phy_extwrite,
+	.probe = &m88e151x_probe,
 };
 
 static struct phy_driver M88E1310_driver = {

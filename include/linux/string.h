@@ -129,6 +129,8 @@ void *memchr_inv(const void *, int, size_t);
 unsigned long ustrtoul(const char *cp, char **endp, unsigned int base);
 unsigned long long ustrtoull(const char *cp, char **endp, unsigned int base);
 
+char *asprintf(const char *fmt, ...);
+
 #ifdef __cplusplus
 }
 #endif

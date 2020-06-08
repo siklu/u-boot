@@ -49,6 +49,40 @@
 			gpio = <&cpm_gpio1 23 GPIO_ACTIVE_HIGH>; /* GPIO[54] */
 		};
 	};
+	
+	leds {
+		compatible = "gpio-leds";
+		
+		power-green-led {
+			label = "power-g";
+			gpios = <&cpm_gpio1 17 GPIO_ACTIVE_LOW>; /* MPP49 */ 
+		};
+			
+		power-yellow-led {
+			label = "power-y";
+			gpios = <&cpm_gpio1 18 GPIO_ACTIVE_LOW>; /* MPP50 */
+		};
+		
+		modem-green-led {
+			label = "modem-g";
+			gpios = <&cpm_gpio1 19 GPIO_ACTIVE_LOW>; /* MPP51 */ 
+		};
+		
+		modem-yellow-led {
+			label = "modem-y";
+			gpios = <&cpm_gpio1 20 GPIO_ACTIVE_LOW>; /* MPP52 */
+		};
+		
+		sfp-green-led {
+			label = "sfp-g";
+			gpios = <&cps_gpio0 30 GPIO_ACTIVE_LOW>; /* MPP30 */
+		};
+		
+		sfp-yellow-led {
+			label = "sfp-y";
+			gpios = <&cps_gpio0 31 GPIO_ACTIVE_LOW>; /* MPP31 */
+		};
+	};
 };
 
 &ap_pinctl {

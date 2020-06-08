@@ -20,6 +20,7 @@
 #include <linux/string.h>
 #include <linux/ctype.h>
 #include <malloc.h>
+#include <stdarg.h>
 
 
 /**
@@ -727,3 +728,35 @@ void *memchr_inv(const void *start, int c, size_t bytes)
 	return check_bytes8(start, value, bytes % 8);
 }
 #endif
+
+static char *vasprintf(const char *fmt,
+			     va_list ap)
+{
+	unsigned int len;
+	char *p;
+	va_list aq;
+
+	va_copy(aq, ap);
+	len = vsnprintf(NULL, 0, fmt, aq);
+	va_end(aq);
+
+	p = malloc(len + 1);
+	if (!p)
+		return NULL;
+
+	vsnprintf(p, len + 1, fmt, ap);
+
+	return p;
+}
+
+char *asprintf(const char *fmt, ...)
+{
+	va_list ap;
+	char *p;
+
+	va_start(ap, fmt);
+	p = vasprintf(fmt, ap);
+	va_end(ap);
+
+	return p;
+}
