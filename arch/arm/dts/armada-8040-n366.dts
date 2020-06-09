@@ -224,10 +224,9 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&phy0_10g_3310_reset_pins &phy0_10g_3310_xmdio_pins>;
 	status = "okay";
-	phy-mode = "sgmii";
+	phy-mode = "sgmii"; // supposed to be "10gbase-kr" but mvpp2 doesn't support it 
 	phy = <&cpm_xe_phy0>;
-    marvell,reset-gpio = <&cpm_gpio1 29 GPIO_ACTIVE_LOW>;
-	reset-delay-us = <100000>;
+    phy-reset-gpios = <&cpm_gpio1 9 GPIO_ACTIVE_LOW>;
 };
 
 &cpm_eth1 {

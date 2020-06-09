@@ -19,6 +19,7 @@
 #include <linux/err.h>
 #include <linux/compiler.h>
 
+#define DEBUG
 DECLARE_GLOBAL_DATA_PTR;
 
 /* Generic PHY support and helper functions */
@@ -740,7 +741,9 @@ static struct phy_device *create_phy_by_mask(struct mii_dev *bus,
 	while (phy_mask) {
 		int addr = ffs(phy_mask) - 1;
 		int r = get_phy_id(bus, addr, devad, &phy_id);
-
+		printf("%d r\n", r);
+		printf("%d id\n", phy_id);
+		printf("%d add\n", addr);
 		/*
 		 * If the PHY ID is flat 0 we ignore it.  There are C45 PHYs
 		 * that return all 0s for C22 reads (like Aquantia AQR112) and
