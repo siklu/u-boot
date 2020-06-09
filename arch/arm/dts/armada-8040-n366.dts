@@ -148,7 +148,7 @@
 	
 	phy0_10g_3310_xmdio_pins: phy0-3310-xmdio-pins {
 		marvell,pins = <42 43>;
-		marvell,function = <0xa>;
+		marvell,function = <0x8>;
 	};
 	
 	phy0_10g_3310_reset_pins: phy0-3310-reset-pins {
@@ -271,7 +271,7 @@
 	
 	cps_mdio_pins: cps-mdio-pins {
 		marvell,pins = <4 5>;
-		marvell,function = <0x8>;
+		marvell,function = <0x0a>;
 	};
 	
 	cps_uart0_pins: cps-uart0-pins {
