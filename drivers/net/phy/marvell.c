@@ -519,6 +519,13 @@ static int m88e151x_probe(struct phy_device *phydev)
 	return 0;
 }
 
+static int m88x3310_probe(struct phy_device *phydev)
+{
+	printf("Hellow!\n");
+
+	return 0;
+}
+
 U_BOOT_DRIVER(marvell_led) = {
 	.name	= "marvell_led",
 	.id	= UCLASS_LED,
@@ -818,6 +825,14 @@ static struct phy_driver M88E1680_driver = {
 	.shutdown = &genphy_shutdown,
 };
 
+static struct phy_driver M88x3310_driver = {
+	.name = "Marvell 88x3310",
+	.uid = 0x002b09a0,
+	.mask = 0xffffff0,
+	.features = 0,
+	.probe = &m88x3310_probe,
+};
+
 int phy_marvell_init(void)
 {
 	phy_register(&M88E1310_driver);
@@ -830,6 +845,7 @@ int phy_marvell_init(void)
 	phy_register(&M88E1011S_driver);
 	phy_register(&M88E151x_driver);
 	phy_register(&M88E1680_driver);
+	phy_register(&M88x3310_driver);
 
 	return 0;
 }

@@ -145,6 +145,16 @@
 		marvell,pins = <32>;
 		marvell,function = <0>;
 	};
+	
+	phy0_10g_3310_xmdio_pins: phy0-3310-xmdio-pins {
+		marvell,pins = <42 43>;
+		marvell,function = <0xa>;
+	};
+	
+	phy0_10g_3310_reset_pins: phy0-3310-reset-pins {
+		marvell,pins = <61>;
+		marvell,function = <0>;
+	};
 };
 
 &cpm_comphy {
@@ -185,6 +195,15 @@
 	status = "okay";
 };
 
+&cpm_xmdio {
+	status = "okay";
+	pinctrl-names = "default";
+
+    cpm_xe_phy0: ethernet-phy@2 {
+        reg = <2>;
+	};
+};
+
 &cpm_pcie0 {
 	pinctrl-0 = <&cpm_pcie0_pins>;
 	pinctrl-names = "default";
@@ -199,6 +218,16 @@
 	num-lanes = <1>;
 	marvell,reset-gpio = <&cpm_gpio1 1 GPIO_ACTIVE_LOW>;
 	status = "okay";
+};
+
+&cpm_eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&phy0_10g_3310_reset_pins &phy0_10g_3310_xmdio_pins>;
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&cpm_xe_phy0>;
+    marvell,reset-gpio = <&cpm_gpio1 29 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <100000>;
 };
 
 &cpm_eth1 {
