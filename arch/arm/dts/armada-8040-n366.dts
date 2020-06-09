@@ -271,7 +271,7 @@
 	
 	cps_mdio_pins: cps-mdio-pins {
 		marvell,pins = <4 5>;
-		marvell,function = <0x0a>;
+		marvell,function = <0x8>;
 	};
 	
 	cps_uart0_pins: cps-uart0-pins {
