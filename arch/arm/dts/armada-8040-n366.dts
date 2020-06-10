@@ -22,6 +22,7 @@
 		gpio0 = &ap_gpio0;
 		gpio1 = &cpm_gpio0;
 		gpio2 = &cpm_gpio1;
+		ethernet = &cps_eth1;
 	};
 
 
