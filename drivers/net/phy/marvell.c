@@ -554,13 +554,6 @@ static int m88x3310_probe(struct phy_device *phydev)
 	return 0;
 }
 
-static int mv883310_startup(struct phy_device *phydev) {
-	/**
-	 * We do not support this PHY from a number of reasons.
-	 * We only need it for the LED. Always fail to load this PHY.
-	 */
-	return -1;
-}
 
 U_BOOT_DRIVER(marvell_led) = {
 	.name	= "marvell_led",
@@ -867,7 +860,6 @@ static struct phy_driver M88x3310_driver = {
 	.mask = 0xffffff0,
 	.features = 0,
 	.probe = &m88x3310_probe,
-	.startup = &mv883310_startup,
 };
 
 int phy_marvell_init(void)
