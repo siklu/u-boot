@@ -5,8 +5,10 @@
 #include <dm.h>
 #include <led.h>
 #include <dm/uclass-internal.h>
+#include <../net/eth_internal.h>
 
-typedef struct {
+typedef struct
+{
 	const char *yellow_label;
 	const char *green_label;
 } siklu_dual_led_def_t;
@@ -52,8 +54,8 @@ static const siklu_dual_led_def_t siklu_led_label_to_n366[SIKLU_LED_MAX] =
 			.green_label	= "cps-mdio-0-led2",
 	},
 	[SIKLU_LED_ETH2] = {
-			.yellow_label	= NULL,
-			.green_label	= NULL,
+			.yellow_label	= "cpm-xmdio-2-led2",
+			.green_label	= "cpm-xmdio-2-led1",
 	},
 	[SIKLU_LED_ETH3] = {
 			.yellow_label	= "sfp-y",
@@ -156,27 +158,34 @@ static int sled_color_to_sled_pos(const char* color)
  * we need to initialize the mdio bus in order for the phy driver
  * to load and initialize its LED API. This function does that.
  */
-static int load_marvell_led(void)
+static int load_ethernet_device(void)
 {
-	static int marvell_led_loaded = 0;
-	int ret = CMD_RET_SUCCESS;
-	if (marvell_led_loaded == 0)
+	static int ethernet_loaded = 0;
+	struct udevice *current_device = eth_get_dev();
+	// save global data flags
+	unsigned long save_flags = gd->flags;
+
+	if (ethernet_loaded == 1)
+		return 0;
+
+
+	// disable console to a ignore internal prints of nand_get_flash_type
+	gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+
+	do
 	{
-		net_init();
-		if (eth_is_on_demand_init())
-		{
-			eth_halt();
-			eth_set_current();
-			ret = eth_init();
-			if (ret < 0)
-			{
-				eth_halt();
-				return ret;
-			}
-		}
-		marvell_led_loaded = 1;
-	}
-	return ret;
+		eth_set_current_to_next();
+
+		eth_halt();
+		eth_init();
+	} while(eth_get_dev() != current_device);
+
+	ethernet_loaded = 1;
+
+	// restore previous flags
+	gd->flags = save_flags;
+
+	return CMD_RET_SUCCESS;
 }
 
 /*
@@ -236,7 +245,7 @@ static int do_led_control(cmd_tbl_t *cmdtp, int flag, int argc,
 	if (argc != 3)
 		return CMD_RET_USAGE;
 
-	ret = load_marvell_led();
+	ret = load_ethernet_device();
 	if (ret < 0) {
 		printf("LED mdio didn't load properly (err=%d)\n", ret);
 		return CMD_RET_FAILURE;

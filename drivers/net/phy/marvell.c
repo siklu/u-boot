@@ -408,31 +408,51 @@ static int m88e151x_config(struct phy_device *phydev)
 #define PRE_WRITE_VAL_PHY1G		3
 
 #define WRITE_REG_PHY1G			0x10
+#define	MDIO_DEVAD_PHY1G		MDIO_DEVAD_NONE
 
 #define WRITE_LED_1_ON_PHY1G	0x90
 #define WRITE_LED_1_OFF_PHY1G	0x80
-#define WRITE_LED_1_MASK_PHY1G	0xF0
+#define WRITE_LED_1_MASK_PHY1G	0xFF
 
 #define WRITE_LED_2_ON_PHY1G	0x9
 #define WRITE_LED_2_OFF_PHY1G	0x8
 #define WRITE_LED_2_MASK_PHY1G	0xF
+
+#define	MDIO_DEVAD_PHY10G		0x1F
+
+#define WRITE_LED_1_REG_PHY10G	0xF020
+#define WRITE_LED_2_REG_PHY10G	0xF021
+
+#define WRITE_LED_ON_PHY10G		0xB8
+#define WRITE_LED_OFF_PHY10G	0x0
+#define WRITE_LED_MASK_PHY10G	0xFF
 
 #define LABEL_LED_1				"led1"
 #define LABEL_LED_2				"led2"
 
 struct marvell_led_priv {
 	struct phy_device *phydev;
+	int (*pre_write_hook) (struct phy_device* phydev);
+	int devad;
+	u16 regnum;
 	u16 reg_mask;
 	u16 val_on;
 	u16 val_off;
 };
 
+
+static int pre_write_hook_phy1g (struct phy_device* phydev)
+{
+	return phy_write(phydev, MDIO_DEVAD_PHY1G, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+}
+
 static enum led_state_t marvell_led_get_state(struct udevice *dev)
 {
 	struct marvell_led_priv *priv = dev_get_priv(dev);
-	phy_write(priv->phydev, MDIO_DEVAD_NONE, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+	if (priv->pre_write_hook != NULL)
+		priv->pre_write_hook(priv->phydev);
 
-	int ret = phy_read(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G);
+	int ret = phy_read(priv->phydev, priv->devad, priv->regnum);
 	int val = (ret&priv->reg_mask);
 
 	if (val == priv->val_off)
@@ -444,9 +464,10 @@ static enum led_state_t marvell_led_get_state(struct udevice *dev)
 static int marvell_led_set_state(struct udevice *dev, enum led_state_t state)
 {
 	struct marvell_led_priv *priv = dev_get_priv(dev);
-	phy_write(priv->phydev, MDIO_DEVAD_NONE, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+	if (priv->pre_write_hook != NULL)
+		priv->pre_write_hook(priv->phydev);
 
-	int ret = phy_read(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G);
+	int ret = phy_read(priv->phydev, priv->devad, priv->regnum);
 	int regval;
 	switch (state) {
 	case LEDST_OFF:
@@ -462,10 +483,11 @@ static int marvell_led_set_state(struct udevice *dev, enum led_state_t state)
 		return -ENOSYS;
 	}
 
-	return phy_write(priv->phydev, MDIO_DEVAD_NONE, WRITE_REG_PHY1G, (ret&(~priv->reg_mask))|regval);
+	return phy_write(priv->phydev, priv->devad, priv->regnum, (ret&(~priv->reg_mask))|regval);
 }
 
-struct udevice* marvell_led_create (const char* label, struct phy_device *phydev, u16 reg_mask, u16 val_on, u16 val_off)
+struct udevice* marvell_led_create (const char* label, struct phy_device *phydev, int (*pre_write_hook) (struct phy_device* phydev),
+									int devad, u16 regnum, u16 reg_mask, u16 val_on, u16 val_off)
 {
 	struct marvell_led_priv *priv;
 	struct udevice* dev;
@@ -482,6 +504,9 @@ struct udevice* marvell_led_create (const char* label, struct phy_device *phydev
 
 	/* Set its variables */
 	priv = dev_get_priv(dev);
+	priv->pre_write_hook = pre_write_hook;
+	priv->devad = devad;
+	priv->regnum = regnum;
 	priv->reg_mask = reg_mask;
 	priv->val_off = val_off;
 	priv->val_on = val_on;
@@ -513,11 +538,22 @@ static const struct led_ops marvell_led_ops = {
 
 static int m88e151x_probe(struct phy_device *phydev)
 {
-	marvell_led_create(LABEL_LED_1, phydev, WRITE_LED_1_MASK_PHY1G, WRITE_LED_1_ON_PHY1G, WRITE_LED_1_OFF_PHY1G);
-	marvell_led_create(LABEL_LED_2, phydev, WRITE_LED_2_MASK_PHY1G, WRITE_LED_2_ON_PHY1G, WRITE_LED_2_OFF_PHY1G);
-
+	marvell_led_create(LABEL_LED_1, phydev, pre_write_hook_phy1g, MDIO_DEVAD_PHY1G, WRITE_REG_PHY1G,
+					   WRITE_LED_1_MASK_PHY1G, WRITE_LED_1_ON_PHY1G, WRITE_LED_1_OFF_PHY1G);
+	marvell_led_create(LABEL_LED_2, phydev, pre_write_hook_phy1g, MDIO_DEVAD_PHY1G, WRITE_REG_PHY1G,
+					   WRITE_LED_2_MASK_PHY1G, WRITE_LED_2_ON_PHY1G, WRITE_LED_2_OFF_PHY1G);
 	return 0;
 }
+
+static int m88x3310_probe(struct phy_device *phydev)
+{
+	marvell_led_create(LABEL_LED_1, phydev, NULL, MDIO_DEVAD_PHY10G, WRITE_LED_1_REG_PHY10G,
+					   WRITE_LED_MASK_PHY10G, WRITE_LED_ON_PHY10G, WRITE_LED_OFF_PHY10G);
+	marvell_led_create(LABEL_LED_2, phydev, NULL, MDIO_DEVAD_PHY10G, WRITE_LED_2_REG_PHY10G,
+					   WRITE_LED_MASK_PHY10G, WRITE_LED_ON_PHY10G, WRITE_LED_OFF_PHY10G);
+	return 0;
+}
+
 
 U_BOOT_DRIVER(marvell_led) = {
 	.name	= "marvell_led",
@@ -818,6 +854,14 @@ static struct phy_driver M88E1680_driver = {
 	.shutdown = &genphy_shutdown,
 };
 
+static struct phy_driver M88x3310_driver = {
+	.name = "Marvell 88x3310",
+	.uid = 0x002b09a0,
+	.mask = 0xffffff0,
+	.features = 0,
+	.probe = &m88x3310_probe,
+};
+
 int phy_marvell_init(void)
 {
 	phy_register(&M88E1310_driver);
@@ -830,6 +874,7 @@ int phy_marvell_init(void)
 	phy_register(&M88E1011S_driver);
 	phy_register(&M88E151x_driver);
 	phy_register(&M88E1680_driver);
+	phy_register(&M88x3310_driver);
 
 	return 0;
 }
