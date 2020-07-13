@@ -20,6 +20,10 @@ menu "Siklu Environment Settings"
 config SIKLU_ENV_PART
 	string "SPI NOR environment MTD partition"
 
+config SIKLU_DEFAULT_MAC_ADDRESS
+	string "MAC address the device should use if it failed to get one using device_config"
+	default "00:24:a4:00:de:ad"
+
 endmenu
 endif
 

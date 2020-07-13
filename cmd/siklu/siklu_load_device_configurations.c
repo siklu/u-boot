@@ -71,17 +71,35 @@ static int load_mac_addresses_to_env(u_char *fdt) {
 	return 0;
 }
 
+static int load_default_mac_addresses_to_env(void) {
+	unsigned char mac[ARP_HLEN];
+	
+	printf("Warning: Using default mac address (%s)\n", CONFIG_SIKLU_DEFAULT_MAC_ADDRESS);
+	
+	load_mac_from_fdt_prop(CONFIG_SIKLU_DEFAULT_MAC_ADDRESS, 
+		sizeof(CONFIG_SIKLU_DEFAULT_MAC_ADDRESS), 
+		mac);
+
+	populate_ethaddr_env(mac, DEFAULT_ALLOCATED_MACS);
+	
+	return 0;
+}
+
 int load_siklu_device_configurations() {
 	u_char *fdt;
+	int ret;
 	
 	fdt = siklu_read_fdt_from_mtd_part(CONFIG_SIKLU_CONFIG_MTD_PART);
-	if (! fdt)
-		return -1;
-
-	if (load_mac_addresses_to_env(fdt))
-		return -1;
+	if (! fdt) {
+		return load_default_mac_addresses_to_env();
+	}
+		
+	ret = load_mac_addresses_to_env(fdt);
+	if (ret) {
+		ret = load_default_mac_addresses_to_env();
+	}
 	
 	free(fdt);
-
-	return 0;
+	
+	return ret;
 }
