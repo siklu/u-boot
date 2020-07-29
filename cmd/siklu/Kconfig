@@ -63,7 +63,7 @@ config SIKLU_NFS_HOSTNAME
 	
 config SIKLU_LINUX_NFS_VERSION
 	string "Linux NFS version to be used when using nfsroot"
-	default "4"
+	default "3"
 
 endmenu
 

@@ -106,7 +106,7 @@ setup_nfs_bootargs(const char *rootpath, bool usb) {
 	}
 	
 	snprintf(nfsroot, sizeof(nfsroot),
-			"%s:%s,tcp,v%s", env_get(ENV_NFS_SERVERIP), rootpath, CONFIG_SIKLU_LINUX_NFS_VERSION);
+			"%s:%s,tcp,nfsvers=%s", env_get(ENV_NFS_SERVERIP), rootpath, CONFIG_SIKLU_LINUX_NFS_VERSION);
 	
 	snprintf(ip, sizeof(ip), 
 			"%s:%s::%s:%s:%s:none",
