@@ -34,6 +34,8 @@ siklu_read_fdt_from_mtd_part(const char *mtd_part) {
 	
 	if (validate_fdt(fdt_buff))
 		goto err_free;
+
+	fdt_set_totalsize(fdt_buff, mtd->size);
 	
 	return fdt_buff;
 
