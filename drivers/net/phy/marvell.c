@@ -100,6 +100,12 @@
 #define MIIM_88E151x_LED1_100_1000_LINK	6
 #define MIIM_88E151x_LED_TIMER_CTRL	18
 #define MIIM_88E151x_INT_EN_OFFS	7
+#define MIIM_88E151x_LED_POLARITY_ON_HIGH		1
+#define MIIM_88E151x_LED0_POLARITY_BIT_OFF		0
+#define MIIM_88E151x_LED0_POLARITY_BIT_LEN		4
+#define MIIM_88E151x_LED_POLARITY_REG		17
+
+
 /* Page 18 registers */
 #define MIIM_88E151x_GENERAL_CTRL	20
 #define MIIM_88E151x_MODE_SGMII		1
@@ -404,10 +410,7 @@ static int m88e151x_config(struct phy_device *phydev)
 	return 0;
 }
 
-#define PRE_WRITE_REG_PHY1G		0x16
-#define PRE_WRITE_VAL_PHY1G		3
-
-#define WRITE_REG_PHY1G			0x10
+#define WRITE_REG_PHY1G			16
 #define	MDIO_DEVAD_PHY1G		MDIO_DEVAD_NONE
 
 #define WRITE_LED_1_ON_PHY1G	0x90
@@ -443,7 +446,7 @@ struct marvell_led_priv {
 
 static int pre_write_hook_phy1g (struct phy_device* phydev)
 {
-	return phy_write(phydev, MDIO_DEVAD_PHY1G, PRE_WRITE_REG_PHY1G, PRE_WRITE_VAL_PHY1G);
+	return phy_write(phydev, MDIO_DEVAD_PHY1G, MIIM_88E1118_PHY_PAGE, MIIM_88E1118_PHY_LED_PAGE);
 }
 
 static enum led_state_t marvell_led_get_state(struct udevice *dev)
@@ -538,10 +541,13 @@ static const struct led_ops marvell_led_ops = {
 
 static int m88e151x_probe(struct phy_device *phydev)
 {
-	marvell_led_create(LABEL_LED_1, phydev, pre_write_hook_phy1g, MDIO_DEVAD_PHY1G, WRITE_REG_PHY1G,
-					   WRITE_LED_1_MASK_PHY1G, WRITE_LED_1_ON_PHY1G, WRITE_LED_1_OFF_PHY1G);
 	marvell_led_create(LABEL_LED_2, phydev, pre_write_hook_phy1g, MDIO_DEVAD_PHY1G, WRITE_REG_PHY1G,
 					   WRITE_LED_2_MASK_PHY1G, WRITE_LED_2_ON_PHY1G, WRITE_LED_2_OFF_PHY1G);
+	
+	phy_write(phydev, MDIO_DEVAD_PHY1G, MIIM_88E1118_PHY_PAGE, MIIM_88E1118_PHY_LED_PAGE);
+	
+	m88e151x_phy_writebits(phydev, MIIM_88E151x_LED_POLARITY_REG, MIIM_88E151x_LED0_POLARITY_BIT_OFF, MIIM_88E151x_LED0_POLARITY_BIT_LEN, MIIM_88E151x_LED_POLARITY_ON_HIGH);
+
 	return 0;
 }
 

@@ -6,12 +6,7 @@
 #include <led.h>
 #include <dm/uclass-internal.h>
 #include <../net/eth_internal.h>
-
-typedef struct
-{
-	const char *yellow_label;
-	const char *green_label;
-} siklu_dual_led_def_t;
+#include <siklu/common_gpio.h>
 
 typedef enum
 {
@@ -30,6 +25,13 @@ typedef enum
 	SIKLU_COLOR_MAX
 } SIKLU_LED_COLOR;
 
+typedef struct
+{
+	const char *yellow_label;
+	const char *green_label;
+	void(*board_hook)(SIKLU_LED_COLOR color, enum led_state_t state);
+} siklu_dual_led_def_t;
+
 static const char* const siklu_led_label_to_str[SIKLU_LED_MAX] =
 {
 	[SIKLU_LED_POWER]	= "power",
@@ -38,6 +40,36 @@ static const char* const siklu_led_label_to_str[SIKLU_LED_MAX] =
 	[SIKLU_LED_ETH2]	= "eth2",
 	[SIKLU_LED_ETH3]	= "eth3",
 };
+
+static void n366_eth1_led_hook(SIKLU_LED_COLOR color, enum led_state_t state){
+	if(color == SIKLU_YELLOW_COLOR) {
+		siklu_write_gpio_by_name("cpm_gpio122", 0);
+	} else {
+		siklu_write_gpio_by_name("cpm_gpio122", 1);
+	}
+}
+
+static int siklu_led_set_state(const siklu_dual_led_def_t *def, SIKLU_LED_COLOR color, enum led_state_t state) {
+	int ret;
+	const char *led_label;
+	struct udevice *dev;
+
+	if(def->board_hook) {
+		def->board_hook(color, state);
+	}
+
+	led_label = (color == SIKLU_GREEN_COLOR ? def->green_label : def->yellow_label);
+
+	ret = led_get_by_label(led_label, &dev);
+	if (ret) 
+		return ret;
+
+	ret = led_set_state(dev, state);
+	if (ret)
+		return ret;
+
+	return ret;
+}
 
 static const siklu_dual_led_def_t siklu_led_label_to_n366[SIKLU_LED_MAX] =
 {
@@ -49,11 +81,12 @@ static const siklu_dual_led_def_t siklu_led_label_to_n366[SIKLU_LED_MAX] =
 			.yellow_label	= "modem-y",
 			.green_label 	= "modem-g",
 	},
-	[SIKLU_LED_ETH1] = {
-			.yellow_label	= "cps-mdio-0-led1",
-			.green_label	= "cps-mdio-0-led2",
-	},
 	[SIKLU_LED_ETH2] = {
+			.yellow_label	= "cps-mdio-0-led2",
+			.green_label	= "cps-mdio-0-led2",
+			.board_hook = n366_eth1_led_hook,
+	},
+	[SIKLU_LED_ETH1] = {
 			.yellow_label	= "cpm-xmdio-2-led2",
 			.green_label	= "cpm-xmdio-2-led1",
 	},
@@ -98,24 +131,9 @@ static const siklu_dual_led_def_t* led_arr_get(void)
 }
 
 /*
- * gets a string of led name and returns if it's a yellow or green led
- */
-static int led_str_to_color_pos(const char* led, const siklu_dual_led_def_t* led_arr)
-{
-	for (int i = 0; i < SIKLU_LED_MAX; i++)
-	{
-		if (strncmp(led, led_arr[i].yellow_label, strlen(led)) == 0)
-			return SIKLU_YELLOW_COLOR;
-		else if (strncmp(led, led_arr[i].green_label, strlen(led)) == 0)
-			return SIKLU_GREEN_COLOR;
-	}
-	return SIKLU_COLOR_MAX;
-}
-
-/*
  * gets a string of sled name and returns its position in the sled array
  */
-static int sled_str_to_sled_pos(const char *sled)
+static SIKLU_LED_TYPE sled_str_to_led_type(const char *sled)
 {
 	for (int i = 0; i < SIKLU_LED_MAX; i++)
 	{
@@ -123,17 +141,6 @@ static int sled_str_to_sled_pos(const char *sled)
 			return i;
 	}
 	return SIKLU_LED_MAX;
-}
-
-/*
- * gets a string of sled name and led color and returns its position in the led array
- */
-static const char* sled_str_to_led_str (const char* sled, SIKLU_LED_COLOR led_color)
-{
-	int led_pos = sled_str_to_sled_pos(sled);
-	const siklu_dual_led_def_t* led_arr = led_arr_get();
-
-	return (led_color == SIKLU_YELLOW_COLOR) ? led_arr[led_pos].yellow_label : led_arr[led_pos].green_label;
 }
 
 static enum led_state_t sled_status_to_led_status(const char* status)
@@ -191,42 +198,25 @@ static int load_ethernet_device(void)
 /*
  * takes care of ALL command in siklu u-boot
  */
-static int all_leds(enum led_state_t cmd_for_all, SIKLU_LED_COLOR led_color)
+static int all_leds_color(SIKLU_LED_COLOR led_color)
 {
-	struct udevice *dev;
-	int ret;
 	const siklu_dual_led_def_t* led_arr = led_arr_get();
+	int i;
 
-	for (uclass_find_first_device(UCLASS_LED, &dev);
-		 dev;
-		 uclass_find_next_device(&dev))
-	{
-		struct led_uc_plat *plat = dev_get_uclass_platdata(dev);
-		if (!plat->label)
-			continue;
+	for(i = 0; i < SIKLU_LED_MAX; ++i) {
+		siklu_led_set_state(&led_arr[i], led_color, LEDST_ON);
+	}
+	return 0;
+}
 
-		if ((cmd_for_all == LEDST_ON) && (led_str_to_color_pos(plat->label, led_arr) != led_color))
-			continue;
+static int turn_off_all_leds() {
+		const siklu_dual_led_def_t* led_arr = led_arr_get();
+	int i;
+	int color;
 
-		ret = led_get_by_label(plat->label, &dev);
-		if (ret) {
-			printf("LED '%s' not found (err=%d)\n", plat->label, ret);
-			return CMD_RET_FAILURE;
-		}
-
-		switch (cmd_for_all)
-		{
-			case LEDST_OFF:
-			case LEDST_ON:
-				ret = led_set_state(dev, cmd_for_all);
-				break;
-			default:
-				ret = -1;
-				break;
-		}
-		if (ret < 0) {
-			printf("LED '%s' operation failed (err=%d)\n", plat->label, ret);
-			return CMD_RET_FAILURE;
+	for(i = 0; i < SIKLU_LED_MAX; ++i) {
+		for(color = 0; color < SIKLU_COLOR_MAX; ++color) {
+			siklu_led_set_state(&led_arr[i], color, LEDST_OFF);
 		}
 	}
 	return 0;
@@ -236,10 +226,11 @@ static int do_led_control(cmd_tbl_t *cmdtp, int flag, int argc,
 					  char *const argv[])
 {
 	enum led_state_t cmd;
-	const char* led_label;
-	struct udevice *dev;
+	const siklu_dual_led_def_t* led_arr = led_arr_get();
 
 	int ret, led_color;
+	int i;
+	SIKLU_LED_TYPE led_type;
 
 	/* Validate arguments */
 	if (argc != 3)
@@ -253,31 +244,31 @@ static int do_led_control(cmd_tbl_t *cmdtp, int flag, int argc,
 
 	cmd = sled_status_to_led_status(argv[2]);
 	led_color = sled_color_to_sled_pos(argv[2]);
+	if(led_color == SIKLU_COLOR_MAX && cmd != LEDST_OFF) {
+		printf("Invalid led status: %s", argv[2]);
+		return CMD_RET_USAGE;
+	}
 
-	if (strcmp(argv[1], "all") == 0)
-		return all_leds(cmd, led_color);
-
-	for (int i = 0; i < SIKLU_COLOR_MAX; i++)
-	{
-		if (cmd == LEDST_OFF)
-			led_label = sled_str_to_led_str(argv[1], i);
-		else
-			led_label = sled_str_to_led_str(argv[1], led_color);
-
-		ret = led_get_by_label(led_label, &dev);
-		if (ret) {
-			printf("LED '%s' not found (err=%d)\n", argv[1], ret);
-			return CMD_RET_FAILURE;
+	if (strcmp(argv[1], "all") == 0) {		
+		if(cmd == LEDST_ON) {
+			all_leds_color(led_color);
+		} else {
+			turn_off_all_leds();
 		}
 
-		ret = led_set_state(dev, cmd);
-		if (ret < 0) {
-			printf("LED '%s' operation failed (err=%d)\n", argv[1], ret);
-			return CMD_RET_FAILURE;
-		}
+		return 0;
+	}
 
-		if (cmd == LEDST_ON)
-			break;
+	led_type = sled_str_to_led_type(argv[1]);
+	if(led_type == SIKLU_LED_MAX) {
+		printf("Invalid led: %s\n", argv[1]);
+		return CMD_RET_FAILURE;
+	}
+	
+	ret = siklu_led_set_state(&led_arr[led_type], led_color, cmd);
+	if(ret) {
+		printf("Failed to set led: %d\n", ret);
+		return CMD_RET_FAILURE;
 	}
 
 	return CMD_RET_SUCCESS;

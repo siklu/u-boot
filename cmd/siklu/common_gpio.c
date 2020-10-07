@@ -43,3 +43,29 @@ int siklu_read_gpio_by_name(const char * str_gpio, u32 *val)
 
 	return 0;
 }
+
+// read gpio pin by name
+int siklu_write_gpio_by_name(const char * str_gpio, u32 val)
+{
+	int ret = 0;
+	unsigned int gpio_num = 0;
+
+	ret = gpio_lookup_name(str_gpio, NULL, NULL, &gpio_num);
+	if(ret)
+		goto out;
+
+	// request the gpio pin
+	ret = gpio_request(gpio_num, "siklu_common_gpio");
+	if (ret) 
+		goto out;
+
+	// read the gpio value
+	ret = gpio_direction_output(gpio_num, val);
+	if (ret)
+		goto out_free;
+
+out_free:
+	gpio_free(gpio_num);
+out:
+	return ret;
+}
