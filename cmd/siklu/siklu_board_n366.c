@@ -83,8 +83,15 @@ int siklu_n366_get_cpu_name(const char **cpu_name)
 
 const char *pse_out_gpio_name = "cps_gpio03";
 
-int siklu_n366_disable_pse_out(void) {
-	siklu_write_gpio_by_name(pse_out_gpio_name, 0);
-	siklu_write_gpio_by_name(pse_out_gpio_name, 1);
-	siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+int siklu_n366_disable_pse_out(void) 
+{
+	int ret;
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+	if(ret)
+		return ret;
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 1);
+	if(ret)
+		return ret;
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+	return ret;
 }

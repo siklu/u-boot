@@ -155,7 +155,10 @@ int board_init(void)
 	siklu_print_hw_revision();
 
 	if (of_machine_is_compatible("siklu,n366")) {
-		siklu_disable_pse_out();
+		int ret = siklu_n366_disable_pse_out();
+		if(ret) {
+			printf("Failed to disable PSE out\n");
+		}
 	}
 
 	/* adress of boot parameters */
