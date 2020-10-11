@@ -29,6 +29,9 @@ siklu_n366_get_cpu_config_register(uint64_t *config_reg);
 int 
 siklu_n366_get_cpu_name(const char **cpu_name);
 
-
+/**
+ * @brief Disable PSE out. 
+ */
+int siklu_n366_disable_pse_out(void);
 
 #endif

@@ -3,6 +3,7 @@
 #include <asm/arch/soc.h>
 #include <siklu/siklu_board_n366.h>
 #include <siklu/common_gpio.h>
+#include <time.h>
 
 #define N366_NUM_OF_HW_REVISION_BITS 3
 
@@ -79,4 +80,21 @@ int siklu_n366_get_cpu_name(const char **cpu_name)
 	static const char *static_cpu_name= CPU_NAME;
 	*cpu_name = static_cpu_name;
 	return 0;
+}
+
+const char *pse_out_gpio_name = "cps_gpio03";
+
+int siklu_n366_disable_pse_out(void) 
+{
+	int ret;
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+	if(ret)
+		return ret;
+	udelay(100);
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 1);
+	if(ret)
+		return ret;
+	udelay(100);
+	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+	return ret;
 }
