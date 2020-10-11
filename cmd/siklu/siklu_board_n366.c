@@ -3,6 +3,7 @@
 #include <asm/arch/soc.h>
 #include <siklu/siklu_board_n366.h>
 #include <siklu/common_gpio.h>
+#include <time.h>
 
 #define N366_NUM_OF_HW_REVISION_BITS 3
 
@@ -89,9 +90,11 @@ int siklu_n366_disable_pse_out(void)
 	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
 	if(ret)
 		return ret;
+	udelay(100);
 	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 1);
 	if(ret)
 		return ret;
+	udelay(100);
 	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
 	return ret;
 }
