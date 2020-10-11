@@ -80,3 +80,11 @@ int siklu_n366_get_cpu_name(const char **cpu_name)
 	*cpu_name = static_cpu_name;
 	return 0;
 }
+
+const char *pse_out_gpio_name = "cps_gpio03";
+
+int siklu_n366_disable_pse_out(void) {
+	siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+	siklu_write_gpio_by_name(pse_out_gpio_name, 1);
+	siklu_write_gpio_by_name(pse_out_gpio_name, 0);
+}
