@@ -55,7 +55,7 @@ config SIKLU_NFS_NETDEV
 	
 config SIKLU_NFS_USB_NETDEV
 	string "The linux network device that will be used to load nfs, on USB mode"
-	default "eth3"
+	default "usb0"
 	
 config SIKLU_NFS_HOSTNAME
 	string "Hostname to be passed to Linux when booting from NFS"
