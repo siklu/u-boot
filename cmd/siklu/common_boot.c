@@ -1,6 +1,7 @@
 #include <common.h>
 
 #include "common_boot.h"
+#include <siklu/siklu_board_generic.h>
 
 #define BOOT_DIR "/boot"
 
@@ -8,13 +9,23 @@ void setup_bootargs(const char *bootargs) {
 	char formatted_bootargs[1024];
 	const char *mtdparts;
 	const char *old_bootargs;
+	struct siklu_board *board;
+	const char *additional_board_bootargs;
 
 	old_bootargs = env_get("bootargs");
 	mtdparts = env_get("mtdparts");
 
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s",
+	board = siklu_get_board();
+	if(board && board->additional_bootargs) {
+		additional_board_bootargs = board->additional_bootargs;
+	} else {
+		additional_board_bootargs = NULL;
+	}
+
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s %s",
 			bootargs, old_bootargs ? old_bootargs : "",
-			mtdparts ? mtdparts : "");
+			mtdparts ? mtdparts : "",
+			additional_board_bootargs ? additional_board_bootargs : "");
 	env_set("bootargs", formatted_bootargs);
 }
 

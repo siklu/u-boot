@@ -37,3 +37,9 @@ siklu_get_cpu_name (const char **cpu_name);
 int 
 siklu_get_cpu_config_register(uint64_t *config_reg);
 
+struct siklu_board {
+    const char *compatible;
+    const char *additional_bootargs;
+};
+
+struct siklu_board *siklu_get_board(void);
