@@ -89,3 +89,22 @@ int siklu_get_cpu_config_register(uint64_t *config_reg)
 	
 	return 0;
 }
+
+static const struct siklu_board boards[] = {
+	{ 
+		.compatible = "siklu,n366",
+		/* Limit memory to 2G on siklu N366 boards */
+		.additional_bootargs = "mem=2G"
+	}
+};
+
+struct siklu_board *siklu_get_board(void) {
+	int i;
+	for(i = 0; i < ARRAY_SIZE(boards); ++i) {
+		if(of_machine_is_compatible(boards[i].compatible)) {
+			return &boards[i];
+		}
+	}
+
+	return NULL;
+}
