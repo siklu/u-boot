@@ -94,7 +94,8 @@ static const struct siklu_board boards[] = {
 	{ 
 		.compatible = "siklu,n366",
 		/* Limit memory to 2G on siklu N366 boards */
-		.additional_bootargs = "mem=2G"
+		/* Pin isolcpus 0,2,3 to not be used by default */
+		.additional_bootargs = "mem=2G isolcpus=0,2,3"
 	}
 };
 
