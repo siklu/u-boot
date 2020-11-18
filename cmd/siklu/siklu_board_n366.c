@@ -98,3 +98,24 @@ int siklu_n366_disable_pse_out(void)
 	ret = siklu_write_gpio_by_name(pse_out_gpio_name, 0);
 	return ret;
 }
+
+static const char *power_led_green = "cpm_gpio117";
+static const char *power_led_yellow = "cpm_gpio118";
+#define CP0_GPIO1_BLINK_EN_REG	0xF2440148
+#define POWER_LED_GREEN_BIT	BIT(17)
+
+void siklu_n366_power_leds_init(void)
+{
+	unsigned int blink_en;
+
+	/* Yellow LED off */
+	siklu_write_gpio_by_name(power_led_yellow, 1);
+
+	/* Green LED on */
+	siklu_write_gpio_by_name(power_led_green, 0);
+
+	/* Green LED blink */
+	blink_en = readl(CP0_GPIO1_BLINK_EN_REG);
+	blink_en |= POWER_LED_GREEN_BIT;
+	writel(blink_en, CP0_GPIO1_BLINK_EN_REG);
+}
