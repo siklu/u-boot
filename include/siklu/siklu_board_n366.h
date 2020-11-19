@@ -34,4 +34,9 @@ siklu_n366_get_cpu_name(const char **cpu_name);
  */
 int siklu_n366_disable_pse_out(void);
 
+/**
+ * @brief Initialize power LED
+ */
+void siklu_n366_power_leds_init(void);
+
 #endif

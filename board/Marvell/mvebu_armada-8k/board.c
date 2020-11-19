@@ -159,6 +159,7 @@ int board_init(void)
 		if(ret) {
 			printf("Failed to disable PSE out\n");
 		}
+		siklu_n366_power_leds_init();
 	}
 
 	/* adress of boot parameters */
