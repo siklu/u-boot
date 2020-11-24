@@ -94,6 +94,7 @@ setup_nfs_bootargs(const char *rootpath, bool usb) {
 	char ip[512];
 	const char *netmask;
 	const char *nfs_netdev = CONFIG_SIKLU_NFS_NETDEV;
+	const char *gateway;
 	
 	if (usb) {
 		nfs_netdev = CONFIG_SIKLU_NFS_USB_NETDEV;
@@ -104,13 +105,17 @@ setup_nfs_bootargs(const char *rootpath, bool usb) {
 		netmask = CONFIG_SIKLU_DEFAULT_NFS_NETMASK;
 		SK_LOG_NFS("Using default netmask: %s\n", netmask);
 	}
+
+	gateway = env_get("gatewayip");
+	if (! gateway)
+		gateway = "";
 	
 	snprintf(nfsroot, sizeof(nfsroot),
 			"%s:%s,tcp,nfsvers=%s", env_get(ENV_NFS_SERVERIP), rootpath, CONFIG_SIKLU_LINUX_NFS_VERSION);
 	
 	snprintf(ip, sizeof(ip), 
-			"%s:%s::%s:%s:%s:none",
-			env_get("ipaddr"), env_get(ENV_NFS_SERVERIP), netmask, CONFIG_SIKLU_NFS_HOSTNAME, nfs_netdev);
+			"%s:%s:%s:%s:%s:%s:none",
+			env_get("ipaddr"), env_get(ENV_NFS_SERVERIP), gateway, netmask, CONFIG_SIKLU_NFS_HOSTNAME, nfs_netdev);
 	
 	snprintf(bootargs, sizeof(bootargs), 
 			"root=/dev/nfs rw ip=%s nfsroot=%s", ip, nfsroot);
