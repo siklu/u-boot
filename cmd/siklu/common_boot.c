@@ -71,12 +71,17 @@ int load_kernel_image(void) {
 	int ret;
 	char formatted_bootargs[1024];
 	const char *old_bootargs;
-	const char* fdt_param = siklu_fdt_getprop_string(dtb_load_address(),"/chosen", "bootargs", NULL);
+	unsigned int fdt_addr;
 
-	printf("siklu boot added args");
+	if (strict_strtoul(dtb_load_address(), 16, &fdt_addr) < 0)
+		return -EINVAL;
+
+	const char* fdt_param = siklu_fdt_getprop_string(fdt_addr, "/chosen", "bootargs", NULL);
+
 	if (!IS_ERR(fdt_param)) {
 		old_bootargs = env_get("bootargs");
 		snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s", old_bootargs, fdt_param);
+		printf("SIKLU BOOT: Added DTS-specific bootargs: %s\n", fdt_param);
 		env_set("bootargs", formatted_bootargs);
 	}
 
