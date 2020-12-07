@@ -1,7 +1,9 @@
 #include <common.h>
 
 #include "common_boot.h"
+#include "common_fdt.h"
 #include <siklu/siklu_board_generic.h>
+#include <linux/err.h>
 
 #define BOOT_DIR "/boot"
 
@@ -67,7 +69,17 @@ static char *boot_command(void)
 int load_kernel_image(void) {
 	char buff[256];
 	int ret;
-	
+	char formatted_bootargs[1024];
+	const char *old_bootargs;
+	const char* fdt_param = siklu_fdt_getprop_string(dtb_load_address(),"/chosen", "bootargs", NULL);
+
+	printf("siklu boot added args");
+	if (!IS_ERR(fdt_param)) {
+		old_bootargs = env_get("bootargs");
+		snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s", old_bootargs, fdt_param);
+		env_set("bootargs", formatted_bootargs);
+	}
+
 	snprintf(buff, sizeof(buff), "%s %s - %s", boot_command(),
 			kernel_load_address(), dtb_load_address());
 	
