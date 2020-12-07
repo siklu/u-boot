@@ -17,17 +17,9 @@ void setup_bootargs(const char *bootargs) {
 	old_bootargs = env_get("bootargs");
 	mtdparts = env_get("mtdparts");
 
-	board = siklu_get_board();
-	if(board && board->additional_bootargs) {
-		additional_board_bootargs = board->additional_bootargs;
-	} else {
-		additional_board_bootargs = NULL;
-	}
-
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s %s",
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s",
 			bootargs, old_bootargs ? old_bootargs : "",
-			mtdparts ? mtdparts : "",
-			additional_board_bootargs ? additional_board_bootargs : "");
+			mtdparts ? mtdparts : "");
 	env_set("bootargs", formatted_bootargs);
 }
 
