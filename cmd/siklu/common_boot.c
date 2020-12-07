@@ -1,7 +1,9 @@
 #include <common.h>
 
 #include "common_boot.h"
+#include "common_fdt.h"
 #include <siklu/siklu_board_generic.h>
+#include <linux/err.h>
 
 #define BOOT_DIR "/boot"
 
@@ -15,17 +17,9 @@ void setup_bootargs(const char *bootargs) {
 	old_bootargs = env_get("bootargs");
 	mtdparts = env_get("mtdparts");
 
-	board = siklu_get_board();
-	if(board && board->additional_bootargs) {
-		additional_board_bootargs = board->additional_bootargs;
-	} else {
-		additional_board_bootargs = NULL;
-	}
-
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s %s",
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s",
 			bootargs, old_bootargs ? old_bootargs : "",
-			mtdparts ? mtdparts : "",
-			additional_board_bootargs ? additional_board_bootargs : "");
+			mtdparts ? mtdparts : "");
 	env_set("bootargs", formatted_bootargs);
 }
 
@@ -67,7 +61,22 @@ static char *boot_command(void)
 int load_kernel_image(void) {
 	char buff[256];
 	int ret;
-	
+	char formatted_bootargs[1024];
+	const char *old_bootargs;
+	unsigned int fdt_addr;
+
+	if (strict_strtoul(dtb_load_address(), 16, &fdt_addr) < 0)
+		return -EINVAL;
+
+	const char* fdt_param = siklu_fdt_getprop_string(fdt_addr, "/chosen", "bootargs", NULL);
+
+	if (!IS_ERR(fdt_param)) {
+		old_bootargs = env_get("bootargs");
+		snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s", old_bootargs, fdt_param);
+		printf("SIKLU BOOT: Added DTS-specific bootargs: %s\n", fdt_param);
+		env_set("bootargs", formatted_bootargs);
+	}
+
 	snprintf(buff, sizeof(buff), "%s %s - %s", boot_command(),
 			kernel_load_address(), dtb_load_address());
 	
