@@ -61,7 +61,7 @@ PLATFORM_LDFLAGS =
 
 #####################   SIKLU Additions  ####################
 # == use  'last changed revision' instead 'Revision' ==
-# SVNVERSION_STR=$(shell svnversion $(ARMADA_UBOOT_DIR))
+# SVNVERSION_STR=$(shell svnversion $(ARMADA_UBOOT_DIR) | cut -d' ' -f1)
 SVNVERSION_STR=$(shell $(TOPDIR)/tools/setlocalversion $(TOPDIR))
 
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
