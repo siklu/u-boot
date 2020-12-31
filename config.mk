@@ -35,7 +35,7 @@ PROJ_SVN_REV := $(shell svnversion -n ${SIKLU_SRCROOT})
 
 
 
-SVNVERSION_STR=$(shell svnversion)
+SVNVERSION_STR=$(shell svnversion | cut -d' ' -f1)
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
 SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(MAJOR)\" -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
 
