@@ -74,6 +74,11 @@ ifeq "$(CONFIG_ARMADA_38X)"  "y"
   CSRC += $(BOARD)/mvCtrlPex.c
   CSRC += $(BOARD)/mvHighSpeedEnvSpec-38x.c
   CSRC += $(BOARD)/mvHighSpeedTopologySpec-38x.c
+  CSRC += $(BOARD)/spi_flash.c
+  CSRC += $(BOARD)/mv_spi.c
+  CSRC += $(BOARD)/mvSysSpi.c
+  CSRC += $(BOARD)/mvSpi.c
+  CSRC += $(BOARD)/gigadevice.c
 endif
 
 ifeq "$(CONFIG_ARMADA_39X)"  "y"
