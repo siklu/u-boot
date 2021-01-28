@@ -1520,15 +1520,6 @@ int ddr3_tip_ip_training_wrapper(u32 dev_num, enum hws_access_type access_type,
 						return status;
 				}
 
-				/* Tx training results are unstable for bytes 1,2 that both
-				 * route to the same die. This leads to training failure.
-				 * Force a reasonable average value for e2.
-				 */
-				if (if_id == 0 && direction == OPER_WRITE
-						&& (sybphy_id == 1 || sybphy_id == 2)) {
-					result[HWS_HIGH2LOW][0] &= 0xffffff00;
-					result[HWS_HIGH2LOW][0] |= 0x1f;
-				}
 				e1 = GET_TAP_RESULT(result[HWS_LOW2HIGH][0], EDGE_1);
 				e2 = GET_TAP_RESULT(result[HWS_HIGH2LOW][0], EDGE_1);
 				DEBUG_TRAINING_IP_ENGINE
@@ -1553,7 +1544,7 @@ int ddr3_tip_ip_training_wrapper(u32 dev_num, enum hws_access_type access_type,
 						bit_bit_mask[sybphy_id] |= (1 << bit_id);
 						bit_bit_mask_active = 1;
 						DEBUG_TRAINING_IP_ENGINE
-							(DEBUG_LEVEL_INFO,
+							(DEBUG_LEVEL_TRACE,
 							 ("if_id %d sybphy_id %d bit %d BIT_SPLIT_OUT\n",
 							 if_id, sybphy_id, bit_id));
 					} else {
@@ -1703,7 +1694,7 @@ int ddr3_tip_ip_training_wrapper(u32 dev_num, enum hws_access_type access_type,
 				for (bit_id = 0; bit_id < bit_end; bit_id++) {
 					/* debug print all the bit edges after alignment */
 					DEBUG_TRAINING_IP_ENGINE
-						(DEBUG_LEVEL_INFO,
+						(DEBUG_LEVEL_TRACE,
 						 ("if_id %d sybphy_id %d bit %d l2h %d h2l %d\n",
 						 if_id, sybphy_id, bit_id, l2h_adll_value[sybphy_id][bit_id],
 						 h2l_adll_value[sybphy_id][bit_id]));
@@ -1727,7 +1718,7 @@ int ddr3_tip_ip_training_wrapper(u32 dev_num, enum hws_access_type access_type,
 					max_center_subphy_adll[sybphy_id] -
 					min_center_subphy_adll[sybphy_id];
 				DEBUG_TRAINING_IP_ENGINE
-					(DEBUG_LEVEL_INFO,
+					(DEBUG_LEVEL_TRACE,
 					 ("if_id %d sybphy_id %d min center %d max center %d center %d\n",
 					 if_id, sybphy_id, min_center_subphy_adll[sybphy_id],
 					 max_center_subphy_adll[sybphy_id],
@@ -1765,18 +1756,18 @@ int ddr3_tip_ip_training_wrapper(u32 dev_num, enum hws_access_type access_type,
 				byte_status[if_id][sybphy_id] = BYTE_SPLIT_OUT_MIX;
 
 				DEBUG_TRAINING_IP_ENGINE
-					(DEBUG_LEVEL_INFO,
+					(DEBUG_LEVEL_TRACE,
 					 ("if_id %d sybphy_id %d byte state 0x%x\n",
 					 if_id, sybphy_id, byte_status[if_id][sybphy_id]));
 				for (bit_id = 0; bit_id < bit_end; bit_id++) {
 					if (bit_state[sybphy_id * BUS_WIDTH_IN_BITS + bit_id] == BIT_LOW_UI) {
 						l2h_if_train_res[sybphy_id * BUS_WIDTH_IN_BITS + bit_id] += 64;
 						h2l_if_train_res[sybphy_id * BUS_WIDTH_IN_BITS + bit_id] += 64;
+					}
 					DEBUG_TRAINING_IP_ENGINE
 						(DEBUG_LEVEL_TRACE,
 						 ("if_id %d sybphy_id %d bit_id %d added 64 adlls\n",
 						 if_id, sybphy_id, bit_id));
-					}
 				}
 			}
 		}

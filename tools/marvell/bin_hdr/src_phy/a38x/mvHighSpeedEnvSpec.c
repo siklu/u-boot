@@ -73,13 +73,6 @@
 #include "mvCtrlPex.h"
 #include "printf.h"
 
-#include "spi_flash.h"
-#include "spi_flash_internal.h"
-
-void __udelay (unsigned long usec);
-#define mvOsDelay(us)      __udelay(us*1000)
-#define mvOsUDelay         __udelay
-
 #if defined (MV88F68XX)
 #elif defined (MV88F69XX)
 #else
@@ -87,7 +80,6 @@ void __udelay (unsigned long usec);
 #endif
 
 #define SLOWDOWN  mvOsUDelay(50);
-#define BYTES_USED_FOR_SERDES_CONFIG 2
 
 #ifdef REGISTER_TRACE_DEBUG
 static MV_U32 _MV_REG_READ(MV_U32 regAddr)
@@ -1132,7 +1124,7 @@ MV_STATUS mvHwsPreSerdesInitConfig(MV_VOID)
 /***************************************************************************/
 MV_STATUS mvHwsCtrlHighSpeedSerdesPhyConfig(MV_VOID)
 {
-	DEBUG_INIT_FULL_S("\n### mvHwsCtrlHighSpeedSerdesPhyConfig ###\n");
+	DEBUG_INIT_FULL_S("\n### mvCtrlHighSpeedSerdesPhyConfig ###\n");
 
 	DEBUG_INIT_S("High speed PHY - Version: ");
 	DEBUG_INIT_S(SERDES_VERION);
@@ -1140,7 +1132,7 @@ MV_STATUS mvHwsCtrlHighSpeedSerdesPhyConfig(MV_VOID)
 
 	/* Init serdes sequences DB */
 	if (mvHwsSerdesSeqInit() != MV_OK){
-		DEBUG_INIT_S("mvHwsCtrlHighSpeedSerdesPhyConfig: Error: Serdes initialization fail\n");
+		mvPrintf("mvHwsCtrlHighSpeedSerdesPhyConfig: Error: Serdes initialization fail\n");
 		return MV_FAIL;
 	}
 
@@ -1151,63 +1143,6 @@ MV_STATUS mvHwsCtrlHighSpeedSerdesPhyConfig(MV_VOID)
 	/* Board topology load */
 	DEBUG_INIT_FULL_S("mvCtrlHighSpeedSerdesPhyConfig: Loading board topology..\n");
     CHECK_STATUS(mvHwsBoardTopologyLoad(serdesConfigurationMap));
-
-	/* Do serdes config based on value saved to flash by user space */
-    // Read serdes config value from flash 
-#define CONFIG_2_5 0x25
-#define CONFIG_1_0 0x10
-    size_t MTD_total_size = 2031616; // bytes
-    size_t MTD_erase_size = 4096; // bytes
-    char buf[BYTES_USED_FOR_SERDES_CONFIG];
-    size_t len = sizeof(buf) / 2;
-    memset(buf, 0 , sizeof(buf));
-    u32 offset = MTD_total_size - MTD_erase_size;
-    spi_save_regs();
-    // The constant arguments to spi_flash_probe
-    // were taken from output when running a U-Boot command to read SPI flash
-    struct spi_flash *flash = spi_flash_probe(1,0,50000000,3);    
-    spi_restore_regs();
-	int ret = spi_flash_read(flash, offset, len, (void *)buf);
-	if (ret)
-    {
-		DEBUG_INIT_S("Error\n");
-    }
-	else
-    {
-		DEBUG_INIT_S("Done\n");
-		DEBUG_INIT_S("First bytes in last erase block of U-Boot MTD partition: ");
-        // Show contents of bytes read from flash
-        int i;
-        for (i = 0; i < sizeof(buf); i++)
-        {
-            if (i % 16 == 0)
-                DEBUG_INIT_S("\n");
-            DEBUG_INIT_D(buf[i],2);
-            DEBUG_INIT_S(" ");
-        }
-        //DEBUG_INIT_S("\nEnd bin_hdr flash read\n");
-    }
-    // Set the Serdes config based on value read from flash
-	MV_U32 laneNum;
-	for (laneNum = 0; laneNum < mvHwsSerdesGetMaxLane(); laneNum++) {
-		if (serdesConfigurationMap[laneNum].serdesType != SGMII2)
-		{
-			continue;
-		}
-        if (buf[0] == CONFIG_1_0 )
-        {
-		    serdesConfigurationMap[laneNum].serdesSpeed = __1_25Gbps;
-        }
-        else if (buf[0] == CONFIG_2_5 )
-        {
-		    serdesConfigurationMap[laneNum].serdesSpeed = __3_125Gbps;
-        }
-        else
-        {
-		    DEBUG_INIT_S("Serdes config value on flash is neither 1G nor 2.5G. Configuring for 1G.\n");
-		    serdesConfigurationMap[laneNum].serdesSpeed = __1_25Gbps;
-        }
-	}
 
 	/* print topology */
 	printTopologyDetails(serdesConfigurationMap);

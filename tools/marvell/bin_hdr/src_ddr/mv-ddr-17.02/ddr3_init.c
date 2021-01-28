@@ -125,9 +125,6 @@ u8 generic_init_controller = 1;
 
 static int mv_ddr_training_params_set(u8 dev_num);
 
-#define CPU_RSTOUTN_MASK_REG	0x18260
-#define CPU_SYS_SOFT_RST_REG	0x18264
-
 /*
  * Name:     ddr3_init - Main DDR3 Init function
  * Desc:     This routine initialize the DDR3 MC and runs HW training.
@@ -149,7 +146,6 @@ int ddr3_init(void)
 
 	/* Set log level for training library */
 	mv_ddr_user_log_level_set(DEBUG_BLOCK_ALL);
-	ddr3_hws_set_log_level(DEBUG_BLOCK_CENTRALIZATION, DEBUG_LEVEL_INFO);
 
 	mv_ddr_early_init();
 
@@ -195,12 +191,6 @@ int ddr3_init(void)
 	status = hws_ddr3_tip_run_alg(0, ALGO_TYPE_DYNAMIC);
 	if (MV_OK != status) {
 		printf("%s Training Sequence - FAILED\n", ddr_type);
-#if 0
-		mdelay(1000);
-		/* Reset. Maybe we'll have better luck next time. */
-		MV_REG_BIT_SET(CPU_RSTOUTN_MASK_REG, 1);
-		MV_REG_BIT_SET(CPU_SYS_SOFT_RST_REG, 1);
-#endif
 		return status;
 	}
 #endif
