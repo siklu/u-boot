@@ -64,7 +64,7 @@
 #ifndef _MV_HIGHSPEED_ENV_SPEC_H
 #define _MV_HIGHSPEED_ENV_SPEC_H
 
-#include "mv_os.h"
+#include <bootstrap_os.h>
 #include "bin_hdr_twsi.h"
 #include "mvUart.h"
 #include "util.h"
