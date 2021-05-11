@@ -54,6 +54,14 @@ static int siklu_led_set_state(const siklu_dual_led_def_t *def, SIKLU_LED_COLOR 
 	const char *led_label;
 	struct udevice *dev;
 
+	if ((state == LEDST_OFF) && (color == SIKLU_COLOR_MAX)) {
+	// turn off all colors for this led
+		for(int color_idx = 0; color_idx < SIKLU_COLOR_MAX; ++color_idx) {
+			siklu_led_set_state(def, color_idx, LEDST_OFF);
+		}
+		return 0;
+	}
+
 	if(def->board_hook) {
 		def->board_hook(color, state);
 	}
@@ -212,12 +220,9 @@ static int all_leds_color(SIKLU_LED_COLOR led_color)
 static int turn_off_all_leds() {
 		const siklu_dual_led_def_t* led_arr = led_arr_get();
 	int i;
-	int color;
-
+	
 	for(i = 0; i < SIKLU_LED_MAX; ++i) {
-		for(color = 0; color < SIKLU_COLOR_MAX; ++color) {
-			siklu_led_set_state(&led_arr[i], color, LEDST_OFF);
-		}
+		siklu_led_set_state(&led_arr[i], SIKLU_COLOR_MAX, LEDST_OFF);
 	}
 	return 0;
 }
