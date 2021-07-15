@@ -30,12 +30,10 @@ VERSION_MK=${PROJECT_ROOT_DIR}/host/version-$(PLATFORM_NAME).mk
 MAJOR=$(shell grep "MAJOR =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ' | tr '\\' '\"' | tr --delete \")
 MINOR=$(shell grep "MINOR =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ')
 BUILD=$(shell grep "BUILD =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ')
-UBOOT_SVN_REV := $(shell svnversion -n ${NXP_UBOOT_DIR})
-PROJ_SVN_REV := $(shell svnversion -n ${SIKLU_SRCROOT})
 
 
 
-SVNVERSION_STR=$(shell svnversion | cut -d' ' -f1)
+SVNVERSION_STR=$(shell $(PROJECT_ROOT_DIR)/tools/get_version.sh)
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
 SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(MAJOR)\" -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
 

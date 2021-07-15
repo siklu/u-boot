@@ -16,11 +16,16 @@
 
 
 #undef U_BOOT_VERSION  // Siklu !!!
+#ifdef SIKLU_GIT_VERSION_FORMAT
+#define U_BOOT_VERSION "U-Boot 2017.11-git"U_BOOT_SVNVERSION_STR
+#define U_BOOT_VERSION_STRING U_BOOT_VERSION CONFIG_IDENT_STRING
+#else
 #define U_BOOT_VERSION "U-Boot 2017.11-svn"U_BOOT_SVNVERSION_STR
 
 
 #define U_BOOT_VERSION_STRING U_BOOT_VERSION " (" U_BOOT_DATE " - " \
 	U_BOOT_TIME " " U_BOOT_TZ ")" CONFIG_IDENT_STRING
+#endif
 
 #ifndef __ASSEMBLY__
 extern const char version_string[];
