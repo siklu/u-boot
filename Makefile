@@ -759,6 +759,9 @@ $(VERSION_FILE):
 		   printf '#define U_BOOT_VERSION "U-Boot %s%s"\n' \
 			"$(U_BOOT_VERSION)" "$${localvers}" ; \
 		) > $@.tmp
+		@if [ ! -d "$(PROJECT_ROOT_DIR)/.svn" ]; then \
+			echo '#define SIKLU_GIT_VERSION_FORMAT' ; \
+		fi >> $@.tmp
 		@( printf '#define CC_VERSION_STRING "%s"\n' \
 		 '$(shell $(CC) --version | head -n 1)' )>>  $@.tmp
 		@( printf '#define LD_VERSION_STRING "%s"\n' \
