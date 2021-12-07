@@ -2,6 +2,7 @@
 #include <command.h>
 #include <env_callback.h>
 #include <malloc.h>
+#include <version.h>
 
 #include "definitions.h"
 
@@ -31,9 +32,11 @@ void setup_bootargs(const char *bootargs) {
 	}
 
 
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s",
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s board=siklu ver=%s.%d.%d-%srevv ",
 			bootargs, old_bootargs ? old_bootargs : "",
-			mtdparts ? mtdparts : "");
+			mtdparts ? mtdparts : "",
+           _VER_MAJOR, _VER_MINOR, _VER_BUILD, U_BOOT_SVNVERSION_STR);
+
 	env_set(ENV_BOOTARGS, formatted_bootargs);
 }
 
@@ -175,7 +178,7 @@ setup_nfs_bootargs(const char *rootpath, bool usb) {
 			env_get(ENV_NFS_STATIC_IP), env_get(ENV_NFS_SERVERIP), gateway, netmask, CONFIG_SIKLU_NFS_HOSTNAME, nfs_netdev);
 	
 	snprintf(bootargs, sizeof(bootargs), 
-			"root=/dev/nfs rw ip=%s nfsroot=%s", ip, nfsroot);
+			"root=/dev/nfs ro ip=%s nfsroot=%s", ip, nfsroot);
 
 	setup_bootargs(bootargs);
 } 
