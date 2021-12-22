@@ -467,7 +467,7 @@ static int run_linux_code(int is_system_in_bist) {
 
 	// i += sprintf(buf + i, "ver=%s.%s.%srevv ", SIKLU_U_BOOT_VERSION, U_BOOT_SVNVERSION_STR, U_BOOT_DATE);
 #ifdef SIKLU_GIT_VERSION_FORMAT
-	i += sprintf(buf + i, "ver=%s.%d.%d-%srevv ", _VER_MAJOR, _VER_MINOR,
+	i += sprintf(buf + i, "ver=%s.%s.%s-%srevv ", _VER_MAJOR, _VER_MINOR,
 			_VER_BUILD, U_BOOT_SVNVERSION_STR);
 #else
 	i += sprintf(buf + i, "ver=%s.%d.%d.%s %srevv ", _VER_MAJOR, _VER_MINOR,

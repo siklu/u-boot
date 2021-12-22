@@ -32,7 +32,7 @@ void setup_bootargs(const char *bootargs) {
 	}
 
 
-	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s board=siklu ver=%s.%d.%d-%srevv ",
+	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s board=siklu ver=%s.%s.%s-%srevv ",
 			bootargs, old_bootargs ? old_bootargs : "",
 			mtdparts ? mtdparts : "",
            _VER_MAJOR, _VER_MINOR, _VER_BUILD, U_BOOT_SVNVERSION_STR);

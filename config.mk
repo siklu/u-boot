@@ -25,17 +25,20 @@ VENDOR :=
 
 #####################   SIKLU Additions  #####   edikk TBD. should be placed in platform.mk
 
-VERSION_MK=${PROJECT_ROOT_DIR}/host/version-$(PLATFORM_NAME).mk
+# According to the requirements of PORTF-772,
+# the u-boot version should be configured directly in file sdk_nxp/infra/u-boot/config.mk
+# using hardcoded numbers.
+# Do not add/remove white spaces, because
+# UBOOT_MAJOR_STR, UBOOT_MINOR_STR, and UBOOT_BUILD_STR parsed in script ~/sdk_nxp/host-scripts/create_target_uboot.sh
 
-MAJOR=$(shell grep "MAJOR =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ' | tr '\\' '\"' | tr --delete \")
-MINOR=$(shell grep "MINOR =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ')
-BUILD=$(shell grep "BUILD =" ${VERSION_MK} | cut -d'=' -f2 | tr -d ' ')
-
-
+UBOOT_MAJOR_STR = "20"
+UBOOT_MINOR_STR = "0"
+UBOOT_BUILD_STR = "0"
 
 SVNVERSION_STR=$(shell $(PROJECT_ROOT_DIR)/tools/get_version.sh)
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
-SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(MAJOR)\" -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
+
+SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(UBOOT_MAJOR_STR)\" -D_VER_MINOR=\"$(UBOOT_MINOR_STR)\" -D_VER_BUILD=\"$(UBOOT_BUILD_STR)\"
 
 PLATFORM_CPPFLAGS += $(SIKLU_FLAGS)
 #########   End Siklu additions ################
