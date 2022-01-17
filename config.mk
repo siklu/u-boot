@@ -22,6 +22,27 @@ OBJCOPYFLAGS :=
 VENDOR :=
 #########################################################################
 
+
+#####################   SIKLU Additions  #####   edikk TBD. should be placed in platform.mk
+
+# According to the requirements of PORTF-772,
+# the u-boot version should be configured directly in file sdk_nxp/infra/u-boot/config.mk
+# using hardcoded numbers.
+# Do not add/remove white spaces, because
+# UBOOT_MAJOR_STR, UBOOT_MINOR_STR, and UBOOT_BUILD_STR parsed in script ~/sdk_nxp/host-scripts/create_target_uboot.sh
+
+UBOOT_MAJOR_STR = "20"
+UBOOT_MINOR_STR = "0"
+UBOOT_BUILD_STR = "0"
+
+SVNVERSION_STR=$(shell $(PROJECT_ROOT_DIR)/tools/get_version.sh)
+SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
+
+SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(UBOOT_MAJOR_STR)\" -D_VER_MINOR=\"$(UBOOT_MINOR_STR)\" -D_VER_BUILD=\"$(UBOOT_BUILD_STR)\"
+
+PLATFORM_CPPFLAGS += $(SIKLU_FLAGS)
+#########   End Siklu additions ################
+
 ARCH := $(CONFIG_SYS_ARCH:"%"=%)
 CPU := $(CONFIG_SYS_CPU:"%"=%)
 ifdef CONFIG_SPL_BUILD

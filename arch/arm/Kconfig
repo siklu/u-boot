@@ -617,6 +617,13 @@ config ARCH_MX6
 if ARCH_MX6
 config SPL_LDSCRIPT
         default "arch/arm/mach-omap2/u-boot-spl.lds"
+        
+config SIKLU_BOARD
+	bool "Support Siklu PCB19x board"
+	default n
+	help
+	  Support Siklu PCB19x board.        
+        
 endif
 
 config ARCH_MX5

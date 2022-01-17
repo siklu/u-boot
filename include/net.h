@@ -819,6 +819,9 @@ static inline void net_random_ethaddr(uchar *addr)
 
 	addr[0] &= 0xfe;	/* clear multicast bit */
 	addr[0] |= 0x02;	/* set local assignment bit (IEEE802) */
+#ifdef CONFIG_SIKLU_BOARD
+	addr[0] = 0; // clear first byte for siklu debug only
+#endif // 	CONFIG_SIKLU_BOARD
 }
 
 /* Convert an IP address to a string */

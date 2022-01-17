@@ -30,4 +30,10 @@ config RTC_DS1307
 	  Support for Dallas Semiconductor (now Maxim) DS1307 and DS1338/9 and
 	  compatible Real Time Clock devices.
 
+
+config RTC_PCF8523
+	bool "Enable PCF8523 IIC driver"
+	help
+	  Support for Philips PCF8523 Real Time Clock device.
+
 endmenu

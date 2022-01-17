@@ -120,6 +120,59 @@ static int fec_mdio_read(struct ethernet_regs *eth, uint8_t phyaddr,
 	return val;
 }
 
+
+int fec_mdio_op_clause45(const struct ethernet_regs *eth, CLAUSE45_OP_E op,
+		uint8_t phyaddr,
+		uint8_t devaddr,
+		uint16_t* addr_data)
+{
+	uint32_t reg;		/* convenient holder for the PHY register */
+	uint32_t phy;		/* convenient holder for the PHY */
+	uint32_t _op;
+	uint32_t start;
+	uint16_t data;
+	uint32_t reg_val;
+	int val;
+
+	if (op == CLAUSE45_OP_READ)
+		data=0xFFFF;
+	else
+		data = *addr_data;
+
+
+	/*
+	 * reading from any PHY's register is done by properly
+	 * programming the FEC's MII data register.
+	 */
+	writel(FEC_IEVENT_MII, &eth->ievent);
+	reg = devaddr << FEC_MII_DATA_RA_SHIFT;
+	phy = phyaddr << FEC_MII_DATA_PA_SHIFT;
+	_op = (op & 0x3) << FEC_MII_DATA_OP_SHIFT;
+
+	reg_val =  _op | FEC_MII_DATA_TA | phy | reg | data; // clause45 requires 2 first bits = '00'
+	writel(reg_val , &eth->mii_data);
+
+	/* wait for the related interrupt */
+	start = get_timer(0);
+	while (!(readl(&eth->ievent) & FEC_IEVENT_MII)) {
+		if (get_timer(start) > (CONFIG_SYS_HZ / 1000)) {
+			printf("Read MDIO failed...\n");
+			return -1;
+		}
+	}
+
+	/* clear mii interrupt bit */
+	writel(FEC_IEVENT_MII, &eth->ievent);
+
+	/* it's now safe to read the PHY's register */
+	val = (unsigned short)readl(&eth->mii_data);
+	debug("%s: phy: %02x reg:%02x val:%#x\n", __func__, phyaddr,
+	      devaddr, val);
+	* addr_data = val;
+	return 0;
+
+}
+
 static void fec_mii_setspeed(struct ethernet_regs *eth)
 {
 	/*
@@ -143,6 +196,11 @@ static void fec_mii_setspeed(struct ethernet_regs *eth)
 #ifdef FEC_QUIRK_ENET_MAC
 	speed--;
 #endif
+
+#ifdef CONFIG_SIKLU_BOARD
+	speed = 9; // siklu force siklu RMII speed required values. TBD check the value ???
+#endif
+
 	writel(speed << 1 | hold << 8, &eth->mii_speed);
 	debug("%s: mii_speed %08x\n", __func__, readl(&eth->mii_speed));
 }
@@ -180,7 +238,11 @@ static int fec_mdio_write(struct ethernet_regs *eth, uint8_t phyaddr,
 static int fec_phy_read(struct mii_dev *bus, int phyaddr, int dev_addr,
 			int regaddr)
 {
-	return fec_mdio_read(bus->priv, phyaddr, regaddr);
+	int ret = 0;
+
+	ret = fec_mdio_read(bus->priv, phyaddr, regaddr);
+
+	return ret;
 }
 
 static int fec_phy_write(struct mii_dev *bus, int phyaddr, int dev_addr,
@@ -501,6 +563,11 @@ static int fec_open(struct eth_device *edev)
 	miiphy_duplex(edev->name, fec->phy_id);
 #endif
 
+#ifdef CONFIG_SIKLU_BOARD
+	speed = CONFIG_FEC_FIXED_SPEED;  // siklu - miiphy_speed() returns wrong value 10M instead 100M. therefore overwite
+#endif //
+
+
 #ifdef FEC_QUIRK_ENET_MAC
 	{
 		u32 ecr = readl(&fec->eth->ecntrl) & ~FEC_ECNTRL_SPEED;
@@ -571,6 +638,10 @@ static int fec_init(struct eth_device *dev, bd_t *bd)
 		/* FIFO receive start register */
 		writel(0x520, &fec->eth->r_fstart);
 	}
+
+	// siklu - enable MIB statistics
+	writel(0, &fec->eth->mib_control);// siklu edikk tbd ??? put right value here
+
 
 	/* size and address of each buffer */
 	writel(FEC_MAX_PKT_SIZE, &fec->eth->emrbr);
@@ -737,6 +808,7 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 	}
 
 	if (!timeout) {
+		printf("%s()  error on line %d\n", __func__, __LINE__);
 		ret = -EINVAL;
 		goto out;
 	}
@@ -763,8 +835,10 @@ static int fec_send(struct eth_device *dev, void *packet, int length)
 			break;
 	}
 
-	if (!timeout)
+	if (!timeout) {
+		printf("%s()  error on line %d\n", __func__, __LINE__);
 		ret = -EINVAL;
+	}
 
 out:
 	debug("fec_send: status 0x%x index %d ret %i\n",
@@ -1141,6 +1215,7 @@ int fecmxc_initialize_multi(bd_t *bd, int dev_id, int phy_id, uint32_t addr)
 	bus = fec_get_miibus(base_mii, dev_id);
 	if (!bus)
 		return -ENOMEM;
+
 #ifdef CONFIG_PHYLIB
 	phydev = phy_find_by_mask(bus, 1 << phy_id, PHY_INTERFACE_MODE_RGMII);
 	if (!phydev) {

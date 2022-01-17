@@ -60,22 +60,29 @@ void imx_iomux_v3_setup_pad(iomux_v3_cfg_t pad)
 #endif
 #endif
 
-	if (is_mx7() || is_mx6ull() || is_mx6sll() || mux_ctrl_ofs)
+	if (is_mx7() || is_mx6ull() || is_mx6sll() || mux_ctrl_ofs) {
+		//printf (" %p - %x\n", base + mux_ctrl_ofs,mux_mode ); 
 		__raw_writel(mux_mode, base + mux_ctrl_ofs);
+	}
 
-	if (sel_input_ofs)
+	if (sel_input_ofs) {
+		// printf (" %p - %x\n", base + sel_input_ofs,sel_input ); 
 		__raw_writel(sel_input, base + sel_input_ofs);
+	}
 
 #ifdef CONFIG_IOMUX_SHARE_CONF_REG
 	if (!(pad_ctrl & NO_PAD_CTRL))
 		__raw_writel((mux_mode << PAD_MUX_MODE_SHIFT) | pad_ctrl,
 			base + pad_ctrl_ofs);
 #else
-	if (!(pad_ctrl & NO_PAD_CTRL) && pad_ctrl_ofs)
+	if (!(pad_ctrl & NO_PAD_CTRL) && pad_ctrl_ofs) {
 		__raw_writel(pad_ctrl, base + pad_ctrl_ofs);
+		// printf (" %p - %x\n", base + pad_ctrl_ofs,pad_ctrl ); 
+	}
 #if defined(CONFIG_MX6SLL)
-	else if ((pad_ctrl & NO_PAD_CTRL) && pad_ctrl_ofs)
+	else if ((pad_ctrl & NO_PAD_CTRL) && pad_ctrl_ofs) {
 		clrbits_le32(base + pad_ctrl_ofs, PAD_CTL_IPD_BIT);
+	}
 #endif
 #endif
 

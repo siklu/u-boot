@@ -159,11 +159,14 @@ int env_import(const char *buf, int check)
 	int ret;
 
 	if (check) {
-		uint32_t crc;
+		uint32_t crc, calc_crc;
 
 		memcpy(&crc, &ep->crc, sizeof(crc));
 
-		if (crc32(0, ep->data, ENV_SIZE) != crc) {
+		calc_crc = crc32(0, ep->data, ENV_SIZE);
+		// printf(" Calc CRC 0x%x, environment.crc 0x%x, size %d\n", calc_crc, crc, ENV_SIZE);
+
+		if (calc_crc != crc) {
 			set_default_env("!bad CRC");
 			return 0;
 		}

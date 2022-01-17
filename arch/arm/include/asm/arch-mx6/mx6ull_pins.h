@@ -750,6 +750,7 @@ enum {
 	MX6_PAD_LCD_DATA23__SRC_BT_CFG31                      = IOMUX_PAD(0x0400, 0x0174, 6, 0x0000, 0, 0),
 	MX6_PAD_LCD_DATA23__USDHC2_DATA3                      = IOMUX_PAD(0x0400, 0x0174, 8, 0x0688, 1, 0),
 
+	MX6_PAD_NAND_RE_B__NAND_RE_B                          = IOMUX_PAD(0x0404, 0x0178, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0), // siklu nand pins
 	MX6_PAD_NAND_RE_B__RAWNAND_RE_B                       = IOMUX_PAD(0x0404, 0x0178, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_RE_B__USDHC2_CLK                         = IOMUX_PAD(0x0404, 0x0178, 1, 0x0670, 2, 0),
 	MX6_PAD_NAND_RE_B__QSPI_B_SCLK                        = IOMUX_PAD(0x0404, 0x0178, 2, 0x0000, 0, 0),
@@ -758,6 +759,7 @@ enum {
 	MX6_PAD_NAND_RE_B__GPIO4_IO00                         = IOMUX_PAD(0x0404, 0x0178, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_RE_B__ECSPI3_SS2                         = IOMUX_PAD(0x0404, 0x0178, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_WE_B__NAND_WE_B                 		  = IOMUX_PAD(0x0408, 0x017C, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0), // siklu nand pins
 	MX6_PAD_NAND_WE_B__RAWNAND_WE_B                       = IOMUX_PAD(0x0408, 0x017C, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_WE_B__USDHC2_CMD                         = IOMUX_PAD(0x0408, 0x017C, 1, 0x0678, 2, 0),
 	MX6_PAD_NAND_WE_B__QSPI_B_SS0_B                       = IOMUX_PAD(0x0408, 0x017C, 2, 0x0000, 0, 0),
@@ -766,6 +768,7 @@ enum {
 	MX6_PAD_NAND_WE_B__GPIO4_IO01                         = IOMUX_PAD(0x0408, 0x017C, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_WE_B__ECSPI3_SS3                         = IOMUX_PAD(0x0408, 0x017C, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA00__DATA00  						  = IOMUX_PAD(0x040C, 0x0180, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0), // siklu nand pins
 	MX6_PAD_NAND_DATA00__RAWNAND_DATA00                   = IOMUX_PAD(0x040C, 0x0180, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA00__USDHC2_DATA0                     = IOMUX_PAD(0x040C, 0x0180, 1, 0x067C, 2, 0),
 	MX6_PAD_NAND_DATA00__QSPI_B_SS1_B                     = IOMUX_PAD(0x040C, 0x0180, 2, 0x0000, 0, 0),
@@ -774,6 +777,7 @@ enum {
 	MX6_PAD_NAND_DATA00__GPIO4_IO02                       = IOMUX_PAD(0x040C, 0x0180, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA00__ECSPI4_RDY                       = IOMUX_PAD(0x040C, 0x0180, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA01__DATA01  						  = IOMUX_PAD(0x0410, 0x0184, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0), // siklu nand pins
 	MX6_PAD_NAND_DATA01__RAWNAND_DATA01                   = IOMUX_PAD(0x0410, 0x0184, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA01__USDHC2_DATA1                     = IOMUX_PAD(0x0410, 0x0184, 1, 0x0680, 2, 0),
 	MX6_PAD_NAND_DATA01__QSPI_B_DQS                       = IOMUX_PAD(0x0410, 0x0184, 2, 0x0000, 0, 0),
@@ -782,6 +786,7 @@ enum {
 	MX6_PAD_NAND_DATA01__GPIO4_IO03                       = IOMUX_PAD(0x0410, 0x0184, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA01__ECSPI4_SS1                       = IOMUX_PAD(0x0410, 0x0184, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA02__DATA02  						  = IOMUX_PAD(0x0414, 0x0188, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA02__RAWNAND_DATA02                   = IOMUX_PAD(0x0414, 0x0188, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA02__USDHC2_DATA2                     = IOMUX_PAD(0x0414, 0x0188, 1, 0x0684, 1, 0),
 	MX6_PAD_NAND_DATA02__QSPI_B_DATA00                    = IOMUX_PAD(0x0414, 0x0188, 2, 0x0000, 0, 0),
@@ -790,6 +795,7 @@ enum {
 	MX6_PAD_NAND_DATA02__GPIO4_IO04                       = IOMUX_PAD(0x0414, 0x0188, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA02__ECSPI4_SS2                       = IOMUX_PAD(0x0414, 0x0188, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA03__DATA03    						  = IOMUX_PAD(0x0418, 0x018C, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA03__RAWNAND_DATA03                   = IOMUX_PAD(0x0418, 0x018C, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA03__USDHC2_DATA3                     = IOMUX_PAD(0x0418, 0x018C, 1, 0x0688, 2, 0),
 	MX6_PAD_NAND_DATA03__QSPI_B_DATA01                    = IOMUX_PAD(0x0418, 0x018C, 2, 0x0000, 0, 0),
@@ -798,6 +804,7 @@ enum {
 	MX6_PAD_NAND_DATA03__GPIO4_IO05                       = IOMUX_PAD(0x0418, 0x018C, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA03__ECSPI4_SS3                       = IOMUX_PAD(0x0418, 0x018C, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA04__DATA04 						  = IOMUX_PAD(0x041C, 0x0190, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA04__RAWNAND_DATA04                   = IOMUX_PAD(0x041C, 0x0190, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA04__USDHC2_DATA4                     = IOMUX_PAD(0x041C, 0x0190, 1, 0x068C, 1, 0),
 	MX6_PAD_NAND_DATA04__QSPI_B_DATA02                    = IOMUX_PAD(0x041C, 0x0190, 2, 0x0000, 0, 0),
@@ -807,6 +814,7 @@ enum {
 	MX6_PAD_NAND_DATA04__UART2_DCE_TX                     = IOMUX_PAD(0x041C, 0x0190, 8, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA04__UART2_DTE_RX                     = IOMUX_PAD(0x041C, 0x0190, 8, 0x062C, 2, 0),
 
+	MX6_PAD_NAND_DATA05__DATA05 						  = IOMUX_PAD(0x0420, 0x0194, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA05__RAWNAND_DATA05                   = IOMUX_PAD(0x0420, 0x0194, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA05__USDHC2_DATA5                     = IOMUX_PAD(0x0420, 0x0194, 1, 0x0690, 1, 0),
 	MX6_PAD_NAND_DATA05__QSPI_B_DATA03                    = IOMUX_PAD(0x0420, 0x0194, 2, 0x0000, 0, 0),
@@ -816,6 +824,7 @@ enum {
 	MX6_PAD_NAND_DATA05__UART2_DCE_RX                     = IOMUX_PAD(0x0420, 0x0194, 8, 0x062C, 3, 0),
 	MX6_PAD_NAND_DATA05__UART2_DTE_TX                     = IOMUX_PAD(0x0420, 0x0194, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DATA06__DATA06  						  = IOMUX_PAD(0x0424, 0x0198, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA06__RAWNAND_DATA06                   = IOMUX_PAD(0x0424, 0x0198, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA06__USDHC2_DATA6                     = IOMUX_PAD(0x0424, 0x0198, 1, 0x0694, 1, 0),
 	MX6_PAD_NAND_DATA06__SAI2_RX_BCLK                     = IOMUX_PAD(0x0424, 0x0198, 2, 0x0000, 0, 0),
@@ -825,6 +834,7 @@ enum {
 	MX6_PAD_NAND_DATA06__UART2_DCE_CTS                    = IOMUX_PAD(0x0424, 0x0198, 8, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA06__UART2_DTE_RTS                    = IOMUX_PAD(0x0424, 0x0198, 8, 0x0628, 4, 0),
 
+	MX6_PAD_NAND_DATA07__DATA07  						  = IOMUX_PAD(0x0428, 0x019C, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DATA07__RAWNAND_DATA07                   = IOMUX_PAD(0x0428, 0x019C, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DATA07__USDHC2_DATA7                     = IOMUX_PAD(0x0428, 0x019C, 1, 0x0698, 1, 0),
 	MX6_PAD_NAND_DATA07__QSPI_A_SS1_B                     = IOMUX_PAD(0x0428, 0x019C, 2, 0x0000, 0, 0),
@@ -834,6 +844,7 @@ enum {
 	MX6_PAD_NAND_DATA07__UART2_DCE_RTS                    = IOMUX_PAD(0x0428, 0x019C, 8, 0x0628, 5, 0),
 	MX6_PAD_NAND_DATA07__UART2_DTE_CTS                    = IOMUX_PAD(0x0428, 0x019C, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_ALE__ALE   							  = IOMUX_PAD(0x042C, 0x01A0, IOMUX_CONFIG_SION |  0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_ALE__RAWNAND_ALE                         = IOMUX_PAD(0x042C, 0x01A0, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_ALE__USDHC2_RESET_B                      = IOMUX_PAD(0x042C, 0x01A0, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_ALE__QSPI_A_DQS                          = IOMUX_PAD(0x042C, 0x01A0, 2, 0x0000, 0, 0),
@@ -842,6 +853,7 @@ enum {
 	MX6_PAD_NAND_ALE__GPIO4_IO10                          = IOMUX_PAD(0x042C, 0x01A0, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_ALE__ECSPI3_SS1                          = IOMUX_PAD(0x042C, 0x01A0, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_WP_B__WP_B  							  = IOMUX_PAD(0x0430, 0x01A4, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_WP_B__RAWNAND_WP_B                       = IOMUX_PAD(0x0430, 0x01A4, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_WP_B__USDHC1_RESET_B                     = IOMUX_PAD(0x0430, 0x01A4, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_WP_B__QSPI_A_SCLK                        = IOMUX_PAD(0x0430, 0x01A4, 2, 0x0000, 0, 0),
@@ -850,6 +862,7 @@ enum {
 	MX6_PAD_NAND_WP_B__GPIO4_IO11                         = IOMUX_PAD(0x0430, 0x01A4, 5, 0x0000, 0, 0),
 	MX6_PAD_NAND_WP_B__ECSPI3_RDY                         = IOMUX_PAD(0x0430, 0x01A4, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_READY_B__READY_B      					  = IOMUX_PAD(0x0434, 0x01A8, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_READY_B__RAWNAND_READY_B                 = IOMUX_PAD(0x0434, 0x01A8, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_READY_B__USDHC1_DATA4                    = IOMUX_PAD(0x0434, 0x01A8, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_READY_B__QSPI_A_DATA00                   = IOMUX_PAD(0x0434, 0x01A8, 2, 0x0000, 0, 0),
@@ -859,6 +872,7 @@ enum {
 	MX6_PAD_NAND_READY_B__UART3_DCE_TX                    = IOMUX_PAD(0x0434, 0x01A8, 8, 0x0000, 0, 0),
 	MX6_PAD_NAND_READY_B__UART3_DTE_RX                    = IOMUX_PAD(0x0434, 0x01A8, 8, 0x0634, 2, 0),
 
+	MX6_PAD_NAND_CE0_B__CE0_B   						  = IOMUX_PAD(0x0438, 0x01AC, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_CE0_B__RAWNAND_CE0_B                     = IOMUX_PAD(0x0438, 0x01AC, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_CE0_B__USDHC1_DATA5                      = IOMUX_PAD(0x0438, 0x01AC, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_CE0_B__QSPI_A_DATA01                     = IOMUX_PAD(0x0438, 0x01AC, 2, 0x0000, 0, 0),
@@ -868,6 +882,7 @@ enum {
 	MX6_PAD_NAND_CE0_B__UART3_DCE_RX                      = IOMUX_PAD(0x0438, 0x01AC, 8, 0x0634, 3, 0),
 	MX6_PAD_NAND_CE0_B__UART3_DTE_TX                      = IOMUX_PAD(0x0438, 0x01AC, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_CE1_B__CE1_B    						  = IOMUX_PAD(0x043C, 0x01B0, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_CE1_B__RAWNAND_CE1_B                     = IOMUX_PAD(0x043C, 0x01B0, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_CE1_B__USDHC1_DATA6                      = IOMUX_PAD(0x043C, 0x01B0, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_CE1_B__QSPI_A_DATA02                     = IOMUX_PAD(0x043C, 0x01B0, 2, 0x0000, 0, 0),
@@ -877,6 +892,7 @@ enum {
 	MX6_PAD_NAND_CE1_B__UART3_DCE_CTS                     = IOMUX_PAD(0x043C, 0x01B0, 8, 0x0000, 0, 0),
 	MX6_PAD_NAND_CE1_B__UART3_DTE_RTS                     = IOMUX_PAD(0x043C, 0x01B0, 8, 0x0630, 2, 0),
 
+	MX6_PAD_NAND_CLE__CLE    							  = IOMUX_PAD(0x0440, 0x01B4, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_CLE__RAWNAND_CLE                         = IOMUX_PAD(0x0440, 0x01B4, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_CLE__USDHC1_DATA7                        = IOMUX_PAD(0x0440, 0x01B4, 1, 0x0000, 0, 0),
 	MX6_PAD_NAND_CLE__QSPI_A_DATA03                       = IOMUX_PAD(0x0440, 0x01B4, 2, 0x0000, 0, 0),
@@ -886,6 +902,7 @@ enum {
 	MX6_PAD_NAND_CLE__UART3_DCE_RTS                       = IOMUX_PAD(0x0440, 0x01B4, 8, 0x0630, 3, 0),
 	MX6_PAD_NAND_CLE__UART3_DTE_CTS                       = IOMUX_PAD(0x0440, 0x01B4, 8, 0x0000, 0, 0),
 
+	MX6_PAD_NAND_DQS__DQS    							  = IOMUX_PAD(0x0444, 0x01B8, IOMUX_CONFIG_SION | 0, 0x0000, 0, 0),// siklu nand pins
 	MX6_PAD_NAND_DQS__RAWNAND_DQS                         = IOMUX_PAD(0x0444, 0x01B8, 0, 0x0000, 0, 0),
 	MX6_PAD_NAND_DQS__CSI_FIELD                           = IOMUX_PAD(0x0444, 0x01B8, 1, 0x0530, 1, 0),
 	MX6_PAD_NAND_DQS__QSPI_A_SS0_B                        = IOMUX_PAD(0x0444, 0x01B8, 2, 0x0000, 0, 0),

@@ -79,7 +79,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		gpio_spi: gpio_spi@0 {
+		gpio_spi: gpio_spi@0 {  /* SNx4HC595 8-Bit Shift Registers With 3-State Output Registers */
 			compatible = "fairchild,74hc595";
 			gpio-controller;
 			oe-gpios = <&gpio5 8 0>;

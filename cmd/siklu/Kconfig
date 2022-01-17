@@ -1,0 +1,44 @@
+
+config SIKLU
+	bool "Siklu devices"
+	   
+config SIKLU_DEFAULT_MTD_PARTS
+	string "Siklu default MTD partitions"
+	default "mtdparts=gpmi-nand:128k(env),128k(env2),128k(env_t),40M(uimage0),40M(uimage1),16M(conf),-(log)"
+
+config SIKLU_DEFAULT_EXTRA_BOOTARGS
+	string "Siklu default extra arguments to kernel line"
+	default "console=ttymxc0,115200 nfcConfig=4bitecc board=siklu "
+
+menu "NFS Boot Options"
+
+config SIKLU_DEFAULT_NFS_SERVERIP
+	string "Default NFS serverip"
+	default "192.168.1.30"
+	
+config SIKLU_DEFAULT_NFS_NETMASK
+	string "Default NFS netmask"
+	default "255.255.255.0"
+	
+config SIKLU_DEFAULT_NFS_ROOTPATH
+	string "Default NFS rootpath (%s = developer_id)"
+	default "/home/%s/nfs-8010"
+	
+config SIKLU_NFS_NETDEV
+	string "The linux network device that will be used to load nfs, in non-USB mode"
+	default "eth0"
+	
+config SIKLU_NFS_USB_NETDEV
+	string "The linux network device that will be used to load nfs, in USB mode"
+	default "eth1"
+	
+config SIKLU_NFS_HOSTNAME
+	string "Hostname to be passed to Linux when booting from NFS"
+	default "Siklu"
+	
+config SIKLU_LINUX_NFS_VERSION
+	string "Linux NFS version to be used when using nfsroot"
+	default "3"
+
+endmenu
+

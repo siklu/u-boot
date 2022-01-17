@@ -345,8 +345,26 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 	if (!mxcs)
 		return -EINVAL;
 
-	if (flags & SPI_XFER_BEGIN)
+
+	if (0) // edikk for debug only
+	{
+		printf(" SPI write %d bytes, start - %d, stop %d  ", n_bytes,
+							!!(flags & SPI_XFER_BEGIN), !!(flags & SPI_XFER_END)	);
+		if (dout) {
+			int i=0;
+			const u8* _dout = dout;
+
+			for (i=0; i<n_bytes; i++) {
+				printf(" %02x", _dout[i]);
+			}
+		}
+		printf("\n");
+	}
+
+	//printf("%s()   called flag %lx, line %d\n", __func__, flags, __LINE__); // edikk remove
+	if (flags & SPI_XFER_BEGIN) {
 		mxc_spi_cs_activate(mxcs);
+	}
 
 	while (n_bytes > 0) {
 		if (n_bytes < MAX_SPI_BYTES)
@@ -367,6 +385,7 @@ static int mxc_spi_xfer_internal(struct mxc_spi_slave *mxcs,
 		n_bytes -= blk_size;
 	}
 
+	//printf("%s()   called flag %lx, line %d\n", __func__, flags, __LINE__); // edikk remove
 	if (flags & SPI_XFER_END) {
 		mxc_spi_cs_deactivate(mxcs);
 	}
@@ -418,17 +437,23 @@ static int setup_cs_gpio(struct mxc_spi_slave *mxcs,
 {
 	int ret;
 
+
 	mxcs->gpio = board_spi_cs_gpio(bus, cs);
 	if (mxcs->gpio == -1)
 		return 0;
 
 	gpio_request(mxcs->gpio, "spi-cs");
+#ifdef CONFIG_SIKLU_BOARD
+	{ // siklu configure IOMUXC_SW_MUX_CTL_PAD_UART2_TX_DATA register connect to
+		// ALT5  Select mux mode: ALT5 mux port: GPIO1_IO20 of instance: gpio1
+		writel(0x5, (uint32_t*) 0x20e0094);
+	}
+#endif // 	CONFIG_SIKLU_BOARD
 	ret = gpio_direction_output(mxcs->gpio, !(mxcs->ss_pol));
 	if (ret) {
 		printf("mxc_spi: cannot setup gpio %d\n", mxcs->gpio);
 		return -EINVAL;
 	}
-
 	return 0;
 }
 
@@ -442,8 +467,10 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 	struct mxc_spi_slave *mxcs;
 	int ret;
 
-	if (bus >= ARRAY_SIZE(spi_bases))
+	if (bus >= ARRAY_SIZE(spi_bases)) {
+		printf("%s() Error on line %d\n", __func__, __LINE__);
 		return NULL;
+	}
 
 	if (max_hz == 0) {
 		printf("Error: desired clock is 0\n");
@@ -504,8 +531,8 @@ static int mxc_spi_probe(struct udevice *bus)
 		dev_err(bus, "No cs-gpios property\n");
 		return -EINVAL;
 	}
-
-	plat->base = dev_get_addr(bus);
+	// plat->base = dev_get_addr(bus);   edikk original line
+	plat->base = devfdt_get_addr(bus);
 	if (plat->base == FDT_ADDR_T_NONE)
 		return -ENODEV;
 
@@ -514,7 +541,6 @@ static int mxc_spi_probe(struct udevice *bus)
 		dev_err(bus, "Setting cs error\n");
 		return ret;
 	}
-
 	mxcs->max_hz = fdtdec_get_int(blob, node, "spi-max-frequency",
 				      20000000);
 

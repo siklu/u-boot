@@ -56,11 +56,10 @@ U_BOOT_CMD(
 
 #endif
 
-U_BOOT_CMD(
-	reset, 1, 0,	do_reset,
-	"Perform RESET of the CPU",
-	""
-);
+#ifndef CONFIG_SIKLU_BOARD
+// Siklu board doesn't use reset CLI command. instead it use "reboot"
+U_BOOT_CMD(	reset, 1, 0,	do_reset, 	"Perform RESET of the CPU", 	"");
+#endif // CONFIG_SIKLU_BOARD
 
 #ifdef CONFIG_CMD_POWEROFF
 U_BOOT_CMD(

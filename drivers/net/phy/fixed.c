@@ -17,6 +17,22 @@ DECLARE_GLOBAL_DATA_PTR;
 int fixedphy_probe(struct phy_device *phydev)
 {
 	struct fixed_link *priv;
+
+#ifdef CONFIG_SIKLU_BOARD
+
+	priv = malloc(sizeof(*priv));
+	if (!priv)
+		return -ENOMEM;
+	memset(priv, 0, sizeof(*priv));
+
+	phydev->priv = priv;
+	priv->link_speed = 100;
+	priv->duplex = 1;
+	priv->pause = 0;      //fdtdec_get_bool(gd->fdt_blob, ofnode, "pause");
+	priv->asym_pause = 0; //fdtdec_get_bool(gd->fdt_blob, ofnode, "asym-pause");
+
+
+#else
 	int ofnode = phydev->addr;
 	u32 val;
 
@@ -40,9 +56,10 @@ int fixedphy_probe(struct phy_device *phydev)
 	priv->pause = fdtdec_get_bool(gd->fdt_blob, ofnode, "pause");
 	priv->asym_pause = fdtdec_get_bool(gd->fdt_blob, ofnode, "asym-pause");
 
+
+#endif //
 	/* fixed-link phy must not be reset by core phy code */
 	phydev->flags |= PHY_FLAG_BROKEN_RESET;
-
 	return 0;
 }
 
@@ -68,7 +85,11 @@ static struct phy_driver fixedphy_driver = {
 	.uid		= PHY_FIXED_ID,
 	.mask		= 0xffffffff,
 	.name		= "Fixed PHY",
+#ifdef CONFIG_SIKLU_BOARD
+	.features	= (PHY_100BT_FEATURES | PHY_DEFAULT_FEATURES),
+#else
 	.features	= PHY_GBIT_FEATURES | SUPPORTED_MII,
+#endif // 	CONFIG_SIKLU_BOARD
 	.probe		= fixedphy_probe,
 	.startup	= fixedphy_startup,
 	.shutdown	= fixedphy_shutdown,

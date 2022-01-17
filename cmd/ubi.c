@@ -76,7 +76,7 @@ static void display_ubi_info(struct ubi_device *ubi)
 			ubi->vid_hdr_offset, ubi->vid_hdr_aloffset);
 	ubi_msg("data offset:                %d", ubi->leb_start);
 	ubi_msg("max. allowed volumes:       %d", ubi->vtbl_slots);
-	ubi_msg("wear-leveling threshold:    %d", CONFIG_MTD_UBI_WL_THRESHOLD);
+	// ubi_msg("wear-leveling threshold:    %d", CONFIG_MTD_UBI_WL_THRESHOLD);   edikk error on compile ???
 	ubi_msg("number of internal volumes: %d", UBI_INT_VOL_COUNT);
 	ubi_msg("number of user volumes:     %d",
 			ubi->vol_count - UBI_INT_VOL_COUNT);

@@ -222,6 +222,12 @@ int genphy_update_link(struct phy_device *phydev)
 {
 	unsigned int mii_reg;
 
+#ifdef CONFIG_SIKLU_BOARD
+	phydev->link = 1;  // siklu link always  up
+	return 0;
+#endif // 	CONFIG_SIKLU_BOARD
+
+
 	/*
 	 * Wait if the link is up, and autonegotiation is in progress
 	 * (ie - we're capable and it's not done)
@@ -434,8 +440,10 @@ int genphy_startup(struct phy_device *phydev)
 	int ret;
 
 	ret = genphy_update_link(phydev);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
+
 
 	return genphy_parse_link(phydev);
 }
@@ -685,7 +693,16 @@ static struct phy_device *create_phy_by_mask(struct mii_dev *bus,
 	u32 phy_id = 0xffffffff;
 	while (phy_mask) {
 		int addr = ffs(phy_mask) - 1;
+
+#ifdef SIKLU_PCB19x_SWITCH_MDIO_BUS
+		int r = 0; /* siklu commentaries: this code is little tricky: We need "real PHY" here
+		but 10G phy and TI transceiver works by clause45 mode and don't answer. Therefore I return here '0'
+		as if it answered  */
+		phy_id = 0xA11; // simulate Marvell device
+#else
 		int r = get_phy_id(bus, addr, devad, &phy_id);
+#endif
+
 		/* If the PHY ID is mostly f's, we didn't find anything */
 		if (r == 0 && (phy_id & 0x1fffffff) != 0x1fffffff)
 			return phy_device_create(bus, addr, phy_id, interface);
@@ -863,7 +880,7 @@ struct phy_device *phy_connect(struct mii_dev *bus, int addr,
 #ifdef CONFIG_PHY_FIXED
 	int sn;
 	const char *name;
-	sn = fdt_first_subnode(gd->fdt_blob, dev_of_offset(dev));
+	sn = fdt_first_subnode(gd->fdt_blob, dev_of_offset( (struct udevice *)dev));
 	while (sn > 0) {
 		name = fdt_get_name(gd->fdt_blob, sn, NULL);
 		if (name != NULL && strcmp(name, "fixed-link") == 0) {
@@ -889,8 +906,9 @@ struct phy_device *phy_connect(struct mii_dev *bus, int addr,
  */
 int phy_startup(struct phy_device *phydev)
 {
-	if (phydev->drv->startup)
+	if (phydev->drv->startup) {
 		return phydev->drv->startup(phydev);
+	}
 
 	return 0;
 }

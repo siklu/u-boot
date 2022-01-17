@@ -17,4 +17,18 @@ config IMX_THERMAL
           cpufreq is used as the cooling device to throttle CPUs when the
           passive trip is crossed.
 
+
 endif # if DM_THERMAL
+
+config TMP421_THERMAL
+	bool "Temperature sensor driver TMP421"
+	depends on SIKLU_BOARD
+	help
+		Support TMP421 remote and local temperature sensor.
+
+
+
+
+
+
+
