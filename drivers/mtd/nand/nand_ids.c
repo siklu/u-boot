@@ -66,7 +66,7 @@ const struct nand_flash_dev nand_flash_ids[] = {
 	{"NAND 128MiB 3,3V 16-bit",	0x59, 512, 128, 0x4000, NAND_BUSWIDTH_16},
 
 	{"NAND 256MiB 3,3V 8-bit",	0x71, 512, 256, 0x4000, 0},
-
+	{"SPI-NAND 256MiB 3,3V 8-bit",	0xc8, 2048, 128, 131072, 0},/*SPI_NAND*/
 	/*
 	 * These are the new chips with large page size. The pagesize and the
 	 * erasesize is determined from the extended id bytes
@@ -88,6 +88,7 @@ const struct nand_flash_dev nand_flash_ids[] = {
 	{"NAND 128MiB 1,8V 8-bit",	0xA1, 0, 128, 0, LP_OPTIONS},
 	{"NAND 128MiB 3,3V 8-bit",	0xF1, 0, 128, 0, LP_OPTIONS},
 	{"NAND 128MiB 3,3V 8-bit",	0xD1, 0, 128, 0, LP_OPTIONS},
+	{"NAND 128MiB 3,3V 8-bit",	0x80, 0, 128, 0, LP_OPTIONS},	// Siklu Macronix
 	{"NAND 128MiB 1,8V 16-bit",	0xB1, 0, 128, 0, LP_OPTIONS16},
 	{"NAND 128MiB 3,3V 16-bit",	0xC1, 0, 128, 0, LP_OPTIONS16},
 	{"NAND 128MiB 1,8V 16-bit",     0xAD, 0, 128, 0, LP_OPTIONS16},
@@ -109,6 +110,8 @@ const struct nand_flash_dev nand_flash_ids[] = {
 	{"NAND 1GiB 3,3V 8-bit",	0xD3, 0, 1024, 0, LP_OPTIONS},
 	{"NAND 1GiB 1,8V 16-bit",	0xB3, 0, 1024, 0, LP_OPTIONS16},
 	{"NAND 1GiB 3,3V 16-bit",	0xC3, 0, 1024, 0, LP_OPTIONS16},
+/* there are two NAND chips with the same ID : no autodetect - identify manually -  */
+	{"NAND 1GiB 3,3V 8-bit",	0x38, 4096, 1024, 524288, LP_OPTIONS},
 
 	/* 16 Gigabit */
 	{"NAND 2GiB 1,8V 8-bit",	0xA5, 0, 2048, 0, LP_OPTIONS},
@@ -146,6 +149,16 @@ const struct nand_flash_dev nand_flash_ids[] = {
 	{"NAND 64GiB 1,8V 16-bit",	0x2E, 0, 65536, 0, LP_OPTIONS16},
 	{"NAND 64GiB 3,3V 16-bit",	0x4E, 0, 65536, 0, LP_OPTIONS16},
 
+#ifdef CONFIG_MV_MTD_MLC_NAND_SUPPORT
+	/* 32 Gigabit - wrongly detected due to changes in READ_ID decoding */
+	{"NAND 4GiB 3,3V 8-bit",	0xD7, 4096, 4096, 524288, LP_OPTIONS},
+	{"NAND 4GiB 3,3V 8-bit",	0x68, 8192, 4096, 1048576, LP_OPTIONS},
+	/* 32 Gigabit - wrongly detected due to changes in READ_ID decoding */
+	{"NAND 8GiB 3,3V 8-bit",	0x88, 8192, 8192, 2097152, LP_OPTIONS},
+#else
+	/* 32 Gigabit */
+	{"NAND 4GiB 3,3V 8-bit",	0xD7, 0, 4096, 0, LP_OPTIONS},
+#endif
 	/*
 	 * Renesas AND 1 Gigabit. Those chips do not support extended id and
 	 * have a strange page/block layout !  The chosen minimum erasesize is
@@ -177,5 +190,6 @@ const struct nand_manufacturers nand_manuf_ids[] = {
 	{NAND_MFR_HYNIX, "Hynix"},
 	{NAND_MFR_MICRON, "Micron"},
 	{NAND_MFR_AMD, "AMD"},
+	{NAND_MFR_MACRONIX, "Macronix"},
 	{0x0, "Unknown"}
 };

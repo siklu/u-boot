@@ -290,7 +290,7 @@ int saveenv(void)
 	if (ret)
 		goto done;
 
-	puts("Writing to SPI flash...");
+	puts("Writing to SPI flash...");// siklu_remarkM13  write environment into SPI FLASH offs 0x1e0000, size 0x10000
 	ret = spi_flash_write(env_flash, CONFIG_ENV_OFFSET,
 		CONFIG_ENV_SIZE, &env_new);
 	if (ret)
@@ -302,7 +302,6 @@ int saveenv(void)
 		if (ret)
 			goto done;
 	}
-
 	ret = 0;
 	puts("done\n");
 
@@ -315,8 +314,14 @@ int saveenv(void)
 
 void env_relocate_spec(void)
 {
-	char buf[CONFIG_ENV_SIZE];
+	char * buf;
 	int ret;
+	buf = (char *)malloc(CONFIG_ENV_SIZE);
+
+	if (!buf) {
+		set_default_env("!malloc() failed");
+		goto out;
+	}
 
 	env_flash = spi_flash_probe(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
 			CONFIG_ENV_SPI_MAX_HZ, CONFIG_ENV_SPI_MODE);

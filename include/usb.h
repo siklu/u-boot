@@ -76,6 +76,12 @@ struct usb_interface {
 	unsigned char	act_altsetting;
 
 	struct usb_endpoint_descriptor ep_desc[USB_MAXENDPOINTS];
+	/*
+	 * Super Speed Device will have Super Speed Endpoint
+	 * Companion Descriptor  (section 9.6.7 of usb 3.0 spec)
+	 * Revision 1.0 June 6th 2011
+	 */
+	struct usb_ss_ep_comp_descriptor ss_ep_comp_desc[USB_MAXENDPOINTS];
 } __attribute__ ((packed));
 
 /* Configuration information.. */
@@ -136,6 +142,8 @@ struct usb_device {
 	struct usb_device *children[USB_MAXCHILDREN];
 
 	void *controller;		/* hardware controller private data */
+	/* slot_id - for xHCI enabled devices */
+	unsigned int slot_id;
 };
 
 /**********************************************************************
@@ -149,7 +157,7 @@ struct usb_device {
 	defined(CONFIG_USB_OMAP3) || defined(CONFIG_USB_DA8XX) || \
 	defined(CONFIG_USB_BLACKFIN) || defined(CONFIG_USB_AM35X) || \
 	defined(CONFIG_USB_MUSB_DSPS) || defined(CONFIG_USB_MUSB_AM35X) || \
-	defined(CONFIG_USB_MUSB_OMAP2PLUS)
+	defined(CONFIG_USB_MUSB_OMAP2PLUS) || defined(CONFIG_USB_XHCI)
 
 int usb_lowlevel_init(int index, void **controller);
 int usb_lowlevel_stop(int index);
@@ -177,7 +185,7 @@ int submit_int_msg(struct usb_device *dev, unsigned long pipe, void *buffer,
 extern void udc_disconnect(void);
 
 #else
-#error USB Lowlevel not defined
+// #error USB Lowlevel not defined    Siklu board doesnt have USB siklu_remarkM14
 #endif
 
 #ifdef CONFIG_USB_STORAGE
@@ -349,6 +357,10 @@ int usb_set_interface(struct usb_device *dev, int interface, int alternate);
 #define usb_pipecontrol(pipe)	(usb_pipetype((pipe)) == PIPE_CONTROL)
 #define usb_pipebulk(pipe)	(usb_pipetype((pipe)) == PIPE_BULK)
 
+#define usb_pipe_ep_index(pipe)	\
+		usb_pipecontrol(pipe) ? (usb_pipeendpoint(pipe) * 2) : \
+				((usb_pipeendpoint(pipe) * 2) - \
+				 (usb_pipein(pipe) ? 0 : 1))
 
 /*************************************************************************
  * Hub Stuff
@@ -393,5 +405,6 @@ struct usb_device *usb_alloc_new_device(void *controller);
 
 int usb_new_device(struct usb_device *dev);
 void usb_free_device(void);
+int usb_alloc_device(struct usb_device *dev);
 
 #endif /*_USB_H_ */

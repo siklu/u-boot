@@ -158,7 +158,7 @@ unexport CDPATH
 # The "examples" conditionally depend on U-Boot (say, when USE_PRIVATE_LIBGCC
 # is "yes"), so compile examples after U-Boot is compiled.
 SUBDIR_TOOLS = tools
-SUBDIR_EXAMPLES = examples/standalone examples/api
+SUBDIR_EXAMPLES = examples/standalone examples/api 
 SUBDIRS = $(SUBDIR_TOOLS)
 
 .PHONY : $(SUBDIRS) $(VERSION_FILE) $(TIMESTAMP_FILE)
@@ -178,16 +178,20 @@ endif
 
 # load ARCH, BOARD, and CPU configuration
 include $(obj)include/config.mk
-export	ARCH CPU BOARD VENDOR SOC
+export	ARCH CPU BOARD VENDOR SOC DDR3LIB DDRTYPE
 
 # set default to nothing for native builds
 ifeq ($(HOSTARCH),$(ARCH))
-CROSS_COMPILE ?=
+# CROSS_COMPILE ?=                                 #SIKLU changed, see line below
 endif
+
+# SIKLU Cross compiler defined explicitly here
+export CROSS_COMPILE := $(CROSS_COMPILE_UBOOT)
+export CROSS_COMPILE_BH := ${CROSS_COMPILE_UBOOT}
+
 
 # load other configuration
 include $(TOPDIR)/config.mk
-
 # If board code explicitly specified LDSCRIPT or CONFIG_SYS_LDSCRIPT, use
 # that (or fail if absent).  Otherwise, search for a linker script in a
 # standard location.
@@ -217,7 +221,11 @@ ifndef LDSCRIPT
 		LDSCRIPT := $(TOPDIR)/$(CPUDIR)/u-boot.lds
 	endif
 	ifeq ($(wildcard $(LDSCRIPT)),)
-		LDSCRIPT := $(TOPDIR)/arch/$(ARCH)/cpu/u-boot.lds
+		ifeq ("$(BOARD_TYPE)","mv_fpga_board")	
+			LDSCRIPT :=  $(TOPDIR)/arch/$(ARCH)/cpu/u-boot_fpga.lds
+		else
+			LDSCRIPT := $(TOPDIR)/arch/$(ARCH)/cpu/u-boot.lds
+		endif
 		# We don't expect a Makefile here
 		LDSCRIPT_MAKEFILE_DIR =
 	endif
@@ -260,6 +268,10 @@ LIBS-y += drivers/net/npe/libnpe.o
 endif
 LIBS-$(CONFIG_OF_EMBED) += dts/libdts.o
 LIBS-y += arch/$(ARCH)/lib/lib$(ARCH).o
+
+ifeq ("$(BOARD_TYPE)","mv_fpga_board")
+# all the below LIBS are omitted
+else
 LIBS-y += fs/libfs.o \
 	fs/cbfs/libcbfs.o \
 	fs/cramfs/libcramfs.o \
@@ -271,30 +283,43 @@ LIBS-y += fs/libfs.o \
 	fs/ubifs/libubifs.o \
 	fs/yaffs2/libyaffs2.o \
 	fs/zfs/libzfs.o
-LIBS-y += net/libnet.o
-LIBS-y += disk/libdisk.o
+	
 LIBS-y += drivers/bios_emulator/libatibiosemu.o
 LIBS-y += drivers/block/libblock.o
-LIBS-$(CONFIG_BOOTCOUNT_LIMIT) += drivers/bootcount/libbootcount.o
 LIBS-y += drivers/dma/libdma.o
+LIBS-y += drivers/mmc/libmmc.o
+LIBS-y += drivers/mtd/nand/libnand.o
+LIBS-y += drivers/mtd/onenand/libonenand.o
+LIBS-y += drivers/mtd/ubi/libubi.o
+LIBS-y += drivers/net/sk98lin/libsk98lin.o
+LIBS-y += drivers/pcmcia/libpcmcia.o
+LIBS-y += drivers/power/libpower.o 
+LIBS-y += drivers/video/libvideo.o
+LIBS-y += lib/libfdt/libfdt.o
+endif
+	
+LIBS-y += net/libnet.o
+LIBS-y += disk/libdisk.o
+
+
+LIBS-$(CONFIG_BOOTCOUNT_LIMIT) += drivers/bootcount/libbootcount.o
+
 LIBS-y += drivers/fpga/libfpga.o
 LIBS-y += drivers/gpio/libgpio.o
 LIBS-y += drivers/hwmon/libhwmon.o
 LIBS-y += drivers/i2c/libi2c.o
 LIBS-y += drivers/input/libinput.o
 LIBS-y += drivers/misc/libmisc.o
-LIBS-y += drivers/mmc/libmmc.o
+
 LIBS-y += drivers/mtd/libmtd.o
-LIBS-y += drivers/mtd/nand/libnand.o
-LIBS-y += drivers/mtd/onenand/libonenand.o
-LIBS-y += drivers/mtd/ubi/libubi.o
+
 LIBS-y += drivers/mtd/spi/libspi_flash.o
 LIBS-y += drivers/net/libnet.o
 LIBS-y += drivers/net/phy/libphy.o
+
 LIBS-y += drivers/pci/libpci.o
-LIBS-y += drivers/pcmcia/libpcmcia.o
-LIBS-y += drivers/power/libpower.o \
-	drivers/power/fuel_gauge/libfuel_gauge.o \
+
+LIBS-y += drivers/power/fuel_gauge/libfuel_gauge.o \
 	drivers/power/pmic/libpmic.o \
 	drivers/power/battery/libbattery.o
 LIBS-y += drivers/spi/libspi.o
@@ -326,10 +351,8 @@ LIBS-y += drivers/usb/musb/libusb_musb.o
 LIBS-y += drivers/usb/musb-new/libusb_musb-new.o
 LIBS-y += drivers/usb/phy/libusb_phy.o
 LIBS-y += drivers/usb/ulpi/libusb_ulpi.o
-LIBS-y += drivers/video/libvideo.o
 LIBS-y += drivers/watchdog/libwatchdog.o
 LIBS-y += common/libcommon.o
-LIBS-y += lib/libfdt/libfdt.o
 LIBS-y += api/libapi.o
 LIBS-y += post/libpost.o
 LIBS-y += test/libtest.o
@@ -736,6 +759,9 @@ $(VERSION_FILE):
 		   printf '#define U_BOOT_VERSION "U-Boot %s%s"\n' \
 			"$(U_BOOT_VERSION)" "$${localvers}" ; \
 		) > $@.tmp
+		@if [ ! -d "$(PROJECT_ROOT_DIR)/.svn" ]; then \
+			echo '#define SIKLU_GIT_VERSION_FORMAT' ; \
+		fi >> $@.tmp
 		@( printf '#define CC_VERSION_STRING "%s"\n' \
 		 '$(shell $(CC) --version | head -n 1)' )>>  $@.tmp
 		@( printf '#define LD_VERSION_STRING "%s"\n' \
@@ -784,6 +810,213 @@ $(obj).boards.depend:	boards.cfg
 #
 lcname	= $(shell echo $(1) | sed -e 's/\(.*\)_config/\L\1/')
 ucname	= $(shell echo $(1) | sed -e 's/\(.*\)_config/\U\1/')
+
+#########################################################################
+## Coldfire
+#########################################################################
+
+astro_mcf5373l_config \
+astro_mcf5373l_RAM_config :	unconfig
+	@$(MKCONFIG) -n $@ -t $@ astro_mcf5373l m68k mcf532x mcf5373l astro
+
+M52277EVB_config \
+M52277EVB_spansion_config \
+M52277EVB_stmicro_config :	unconfig
+	@case "$@" in \
+	M52277EVB_config)		FLASH=SPANSION;; \
+	M52277EVB_spansion_config)	FLASH=SPANSION;; \
+	M52277EVB_stmicro_config)	FLASH=STMICRO;; \
+	esac; \
+	if [ "$${FLASH}" = "SPANSION" ] ; then \
+		echo "#define CONFIG_SYS_SPANSION_BOOT"	>> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x00000000" > $(obj)board/freescale/m52277evb/config.tmp ; \
+		cp $(obj)board/freescale/m52277evb/u-boot.spa $(obj)board/freescale/m52277evb/u-boot.lds ; \
+	fi; \
+	if [ "$${FLASH}" = "STMICRO" ] ; then \
+		echo "#define CONFIG_CF_SBF"	>> $(obj)include/config.h ; \
+		echo "#define CONFIG_SYS_STMICRO_BOOT"	>> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x43E00000" > $(obj)board/freescale/m52277evb/config.tmp ; \
+		cp $(obj)board/freescale/m52277evb/u-boot.stm $(obj)board/freescale/m52277evb/u-boot.lds ; \
+	fi
+	@$(MKCONFIG) -n $@ -a M52277EVB m68k mcf5227x m52277evb freescale
+
+M5235EVB_config \
+M5235EVB_Flash16_config \
+M5235EVB_Flash32_config:	unconfig
+	@case "$@" in \
+	M5235EVB_config)		FLASH=16;; \
+	M5235EVB_Flash16_config)	FLASH=16;; \
+	M5235EVB_Flash32_config)	FLASH=32;; \
+	esac; \
+	if [ "$${FLASH}" != "16" ] ; then \
+		echo "#define NORFLASH_PS32BIT	1" >> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0xFFC00000" > $(obj)board/freescale/m5235evb/config.tmp ; \
+		cp $(obj)board/freescale/m5235evb/u-boot.32 $(obj)board/freescale/m5235evb/u-boot.lds ; \
+	else \
+		echo "CONFIG_SYS_TEXT_BASE = 0xFFE00000" > $(obj)board/freescale/m5235evb/config.tmp ; \
+		cp $(obj)board/freescale/m5235evb/u-boot.16 $(obj)board/freescale/m5235evb/u-boot.lds ; \
+	fi
+	@$(MKCONFIG) -n $@ -a M5235EVB m68k mcf523x m5235evb freescale
+
+cobra5272_config :		unconfig
+	@$(MKCONFIG) $@ m68k mcf52x2 cobra5272
+
+EB+MCF-EV123_config :		unconfig
+	@mkdir -p $(obj)include
+	@mkdir -p $(obj)board/BuS/EB+MCF-EV123
+	@echo "CONFIG_SYS_TEXT_BASE = 0xFFE00000"|tee $(obj)board/BuS/EB+MCF-EV123/textbase.mk
+	@$(MKCONFIG) -n $@ EB+MCF-EV123 m68k mcf52x2 EB+MCF-EV123 BuS
+
+EB+MCF-EV123_internal_config :	unconfig
+	@mkdir -p $(obj)include
+	@mkdir -p $(obj)board/BuS/EB+MCF-EV123
+	@echo "CONFIG_SYS_TEXT_BASE = 0xF0000000"|tee $(obj)board/BuS/EB+MCF-EV123/textbase.mk
+	@$(MKCONFIG) -n $@ EB+MCF-EV123 m68k mcf52x2 EB+MCF-EV123 BuS
+
+M5329AFEE_config \
+M5329BFEE_config :	unconfig
+	@case "$@" in \
+	M5329AFEE_config)	NAND=0;; \
+	M5329BFEE_config)	NAND=16;; \
+	esac; \
+	if [ "$${NAND}" != "0" ] ; then \
+		echo "#define NANDFLASH_SIZE	$${NAND}" > $(obj)include/config.h ; \
+	fi
+	@$(MKCONFIG) -n $@ -a M5329EVB m68k mcf532x m5329evb freescale
+
+M5373EVB_config :	unconfig
+	@case "$@" in \
+	M5373EVB_config)	NAND=16;; \
+	esac; \
+	if [ "$${NAND}" != "0" ] ; then \
+		echo "#define NANDFLASH_SIZE	$${NAND}" > $(obj)include/config.h ; \
+	fi
+	@$(MKCONFIG) -a M5373EVB m68k mcf532x m5373evb freescale
+
+M54451EVB_config \
+M54451EVB_stmicro_config :	unconfig
+	@case "$@" in \
+	M54451EVB_config)		FLASH=NOR;; \
+	M54451EVB_stmicro_config)	FLASH=STMICRO;; \
+	esac; \
+	if [ "$${FLASH}" = "NOR" ] ; then \
+		echo "CONFIG_SYS_TEXT_BASE = 0x00000000" > $(obj)board/freescale/m54451evb/config.tmp ; \
+		cp $(obj)board/freescale/m54451evb/u-boot.spa $(obj)board/freescale/m54451evb/u-boot.lds ; \
+	fi; \
+	if [ "$${FLASH}" = "STMICRO" ] ; then \
+		echo "#define CONFIG_CF_SBF"	>> $(obj)include/config.h ; \
+		echo "#define CONFIG_SYS_STMICRO_BOOT"	>> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x47E00000" > $(obj)board/freescale/m54451evb/config.tmp ; \
+		cp $(obj)board/freescale/m54451evb/u-boot.stm $(obj)board/freescale/m54451evb/u-boot.lds ; \
+	fi; \
+	echo "#define CONFIG_SYS_INPUT_CLKSRC 24000000" >> $(obj)include/config.h ;
+	@$(MKCONFIG) -n $@ -a M54451EVB m68k mcf5445x m54451evb freescale
+
+M54455EVB_config \
+M54455EVB_atmel_config \
+M54455EVB_intel_config \
+M54455EVB_a33_config \
+M54455EVB_a66_config \
+M54455EVB_i33_config \
+M54455EVB_i66_config \
+M54455EVB_stm33_config :	unconfig
+	@case "$@" in \
+	M54455EVB_config)		FLASH=ATMEL; FREQ=33333333;; \
+	M54455EVB_atmel_config)		FLASH=ATMEL; FREQ=33333333;; \
+	M54455EVB_intel_config)		FLASH=INTEL; FREQ=33333333;; \
+	M54455EVB_a33_config)		FLASH=ATMEL; FREQ=33333333;; \
+	M54455EVB_a66_config)		FLASH=ATMEL; FREQ=66666666;; \
+	M54455EVB_i33_config)		FLASH=INTEL; FREQ=33333333;; \
+	M54455EVB_i66_config)		FLASH=INTEL; FREQ=66666666;; \
+	M54455EVB_stm33_config)		FLASH=STMICRO; FREQ=33333333;; \
+	esac; \
+	if [ "$${FLASH}" = "INTEL" ] ; then \
+		echo "#define CONFIG_SYS_INTEL_BOOT" >> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x00000000" > $(obj)board/freescale/m54455evb/config.tmp ; \
+		cp $(obj)board/freescale/m54455evb/u-boot.int $(obj)board/freescale/m54455evb/u-boot.lds ; \
+	fi; \
+	if [ "$${FLASH}" = "ATMEL" ] ; then \
+		echo "#define CONFIG_SYS_ATMEL_BOOT"	>> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x04000000" > $(obj)board/freescale/m54455evb/config.tmp ; \
+		cp $(obj)board/freescale/m54455evb/u-boot.atm $(obj)board/freescale/m54455evb/u-boot.lds ; \
+	fi; \
+	if [ "$${FLASH}" = "STMICRO" ] ; then \
+		echo "#define CONFIG_CF_SBF"	>> $(obj)include/config.h ; \
+		echo "#define CONFIG_SYS_STMICRO_BOOT"	>> $(obj)include/config.h ; \
+		echo "CONFIG_SYS_TEXT_BASE = 0x4FE00000" > $(obj)board/freescale/m54455evb/config.tmp ; \
+		cp $(obj)board/freescale/m54455evb/u-boot.stm $(obj)board/freescale/m54455evb/u-boot.lds ; \
+	fi; \
+	echo "#define CONFIG_SYS_INPUT_CLKSRC $${FREQ}" >> $(obj)include/config.h ; \
+	$(XECHO) "... with $${FREQ}Hz input clock"
+	@$(MKCONFIG) -n $@ -a M54455EVB m68k mcf5445x m54455evb freescale
+
+M5475AFE_config \
+M5475BFE_config \
+M5475CFE_config \
+M5475DFE_config \
+M5475EFE_config \
+M5475FFE_config \
+M5475GFE_config :	unconfig
+	@case "$@" in \
+	M5475AFE_config)	BOOT=2;CODE=0;VID=0;USB=0;RAM=64;RAM1=0;; \
+	M5475BFE_config)	BOOT=2;CODE=16;VID=0;USB=0;RAM=64;RAM1=0;; \
+	M5475CFE_config)	BOOT=2;CODE=16;VID=1;USB=1;RAM=64;RAM1=0;; \
+	M5475DFE_config)	BOOT=2;CODE=0;VID=0;USB=1;RAM=64;RAM1=0;; \
+	M5475EFE_config)	BOOT=2;CODE=0;VID=1;USB=1;RAM=64;RAM1=0;; \
+	M5475FFE_config)	BOOT=2;CODE=32;VID=1;USB=1;RAM=64;RAM1=64;; \
+	M5475GFE_config)	BOOT=4;CODE=0;VID=0;USB=0;RAM=64;RAM1=0;; \
+	esac; \
+	echo "#define CONFIG_SYS_BUSCLK	133333333" > $(obj)include/config.h ; \
+	echo "#define CONFIG_SYS_BOOTSZ	$${BOOT}" >> $(obj)include/config.h ; \
+	echo "#define CONFIG_SYS_DRAMSZ	$${RAM}" >> $(obj)include/config.h ; \
+	if [ "$${RAM1}" != "0" ] ; then \
+		echo "#define CONFIG_SYS_DRAMSZ1	$${RAM1}" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${CODE}" != "0" ] ; then \
+		echo "#define CONFIG_SYS_NOR1SZ	$${CODE}" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${VID}" == "1" ] ; then \
+		echo "#define CONFIG_SYS_VIDEO" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${USB}" == "1" ] ; then \
+		echo "#define CONFIG_SYS_USBCTRL" >> $(obj)include/config.h ; \
+	fi
+	@$(MKCONFIG) -n $@ -a M5475EVB m68k mcf547x_8x m547xevb freescale
+
+M5485AFE_config \
+M5485BFE_config \
+M5485CFE_config \
+M5485DFE_config \
+M5485EFE_config \
+M5485FFE_config \
+M5485GFE_config \
+M5485HFE_config :	unconfig
+	@case "$@" in \
+	M5485AFE_config)	BOOT=2;CODE=0;VID=0;USB=0;RAM=64;RAM1=0;; \
+	M5485BFE_config)	BOOT=2;CODE=16;VID=0;USB=0;RAM=64;RAM1=0;; \
+	M5485CFE_config)	BOOT=2;CODE=16;VID=1;USB=1;RAM=64;RAM1=0;; \
+	M5485DFE_config)	BOOT=2;CODE=0;VID=0;USB=1;RAM=64;RAM1=0;; \
+	M5485EFE_config)	BOOT=2;CODE=0;VID=1;USB=1;RAM=64;RAM1=0;; \
+	M5485FFE_config)	BOOT=2;CODE=32;VID=1;USB=1;RAM=64;RAM1=64;; \
+	M5485GFE_config)	BOOT=4;CODE=0;VID=0;USB=0;RAM=64;RAM1=0;; \
+	M5485HFE_config)	BOOT=2;CODE=16;VID=1;USB=0;RAM=64;RAM1=0;; \
+	esac; \
+	echo "#define CONFIG_SYS_BUSCLK	100000000" > $(obj)include/config.h ; \
+	echo "#define CONFIG_SYS_BOOTSZ	$${BOOT}" >> $(obj)include/config.h ; \
+	echo "#define CONFIG_SYS_DRAMSZ	$${RAM}" >> $(obj)include/config.h ; \
+	if [ "$${RAM1}" != "0" ] ; then \
+		echo "#define CONFIG_SYS_DRAMSZ1	$${RAM1}" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${CODE}" != "0" ] ; then \
+		echo "#define CONFIG_SYS_NOR1SZ	$${CODE}" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${VID}" == "1" ] ; then \
+		echo "#define CONFIG_SYS_VIDEO" >> $(obj)include/config.h ; \
+	fi; \
+	if [ "$${USB}" == "1" ] ; then \
+		echo "#define CONFIG_SYS_USBCTRL" >> $(obj)include/config.h ; \
+	fi
+	@$(MKCONFIG) -n $@ -a M5485EVB m68k mcf547x_8x m548xevb freescale
 
 #########################################################################
 ## ARM1176 Systems

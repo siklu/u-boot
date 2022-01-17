@@ -68,6 +68,7 @@
 
 static struct usb_hub_device hub_dev[USB_MAX_HUB];
 static int usb_hub_index;
+extern int usb_second_reset_needed;
 
 
 static int usb_get_hub_descriptor(struct usb_device *dev, void *data, int size)
@@ -142,7 +143,9 @@ static struct usb_hub_device *usb_hub_allocate(void)
 
 static inline char *portspeed(int portstatus)
 {
-	if (portstatus & (1 << USB_PORT_FEAT_HIGHSPEED))
+	if (portstatus & (1 << USB_PORT_FEAT_SUPERSPEED))
+		return "5 Gb/s";
+	else if (portstatus & (1 << USB_PORT_FEAT_HIGHSPEED))
 		return "480 Mb/s";
 	else if (portstatus & (1 << USB_PORT_FEAT_LOWSPEED))
 		return "1.5 Mb/s";
@@ -238,6 +241,7 @@ void usb_hub_port_connect_change(struct usb_device *dev, int port)
 	/* Reset the port */
 	if (hub_port_reset(dev, port, &portstatus) < 0) {
 		printf("cannot reset port %i!?\n", port + 1);
+		usb_second_reset_needed = 1;
 		return;
 	}
 
@@ -246,7 +250,9 @@ void usb_hub_port_connect_change(struct usb_device *dev, int port)
 	/* Allocate a new device struct for it */
 	usb = usb_alloc_new_device(dev->controller);
 
-	if (portstatus & USB_PORT_STAT_HIGH_SPEED)
+	if (portstatus & USB_PORT_STAT_SUPER_SPEED)
+		usb->speed = USB_SPEED_SUPER;
+	else if (portstatus & USB_PORT_STAT_HIGH_SPEED)
 		usb->speed = USB_SPEED_HIGH;
 	else if (portstatus & USB_PORT_STAT_LOW_SPEED)
 		usb->speed = USB_SPEED_LOW;
@@ -418,9 +424,20 @@ static int usb_hub_configure(struct usb_device *dev)
 
 			portstatus = le16_to_cpu(portsts->wPortStatus);
 			portchange = le16_to_cpu(portsts->wPortChange);
-
+#ifdef CONFIG_MARVELL
+/* - USB3.0 issue with Avanta-LP/Armada-375:
+ *   If usb device was already connected before detection ('usb start'),
+ *   port connect status bit is set (USB_PORT_STAT_CONNECTION),
+ *   but port connect status change bit (USB_PORT_STAT_C_CONNECTION) is not set.
+ * - Added WA (aligned with kernel driver): instead of checking port change status,
+ *   to be satisfied with checking USB_PORT_STAT_CONNECTION Bit on portstatus only" */
+			if (((portchange & USB_PORT_STAT_C_CONNECTION) ==
+				(portstatus & USB_PORT_STAT_CONNECTION)) ||
+				(portstatus & USB_PORT_STAT_CONNECTION))
+#else
 			if ((portchange & USB_PORT_STAT_C_CONNECTION) ==
 				(portstatus & USB_PORT_STAT_CONNECTION))
+#endif
 				break;
 
 			mdelay(100);
@@ -431,8 +448,18 @@ static int usb_hub_configure(struct usb_device *dev)
 
 		USB_HUB_PRINTF("Port %d Status %X Change %X\n",
 				i + 1, portstatus, portchange);
-
+#ifdef CONFIG_MARVELL
+/* - USB3.0 issue with Avanta-LP/Armada-375:
+ *   If usb device was already connected before detection ('usb start'),
+ *   port connect status bit is set (USB_PORT_STAT_CONNECTION),
+ *   but port connect status change bit (USB_PORT_STAT_C_CONNECTION) is not set.
+ * - Added WA (aligned with kernel driver): instead of checking port change status,
+ *   to be satisfied with checking USB_PORT_STAT_CONNECTION Bit on portstatus only" */
+		if ((portchange & USB_PORT_STAT_C_CONNECTION) ||
+			(portstatus & USB_PORT_STAT_CONNECTION)) {
+#else
 		if (portchange & USB_PORT_STAT_C_CONNECTION) {
+#endif
 			USB_HUB_PRINTF("port %d connection change\n", i + 1);
 			usb_hub_port_connect_change(dev, i);
 		}

@@ -56,9 +56,16 @@ static char *from_env(char *envvar)
 static int format_mac_pxe(char *outbuf, size_t outbuf_len)
 {
 	size_t ethaddr_len;
-	char *p, *ethaddr;
-
-	ethaddr = from_env("ethaddr");
+	char *p, *ethaddr=0;
+	
+	if (strcmp(from_env("ethact"),"egiga0")==0)
+		ethaddr = from_env("ethaddr");
+	else if(strcmp(from_env("ethact"),"egiga1")==0)
+		ethaddr = from_env("eth1addr");
+	else if(strcmp(from_env("ethact"),"egiga2")==0)
+		ethaddr = from_env("eth2addr");
+	else if(strcmp(from_env("ethact"),"egiga3")==0)
+		ethaddr = from_env("eth3addr");
 
 	if (!ethaddr)
 		return -ENOENT;
@@ -204,9 +211,7 @@ static int get_relfile(char *file_path, void *file_addr)
 
 		return -ENAMETOOLONG;
 	}
-
 	strcat(relfile, file_path);
-
 	printf("Retrieving file: %s\n", relfile);
 
 	sprintf(addr_buf, "%p", file_addr);
@@ -270,7 +275,7 @@ static int get_pxelinux_path(char *file, void *pxefile_addr_r)
 	}
 
 	sprintf(path, PXELINUX_DIR "%s", file);
-
+	
 	return get_pxe_file(path, pxefile_addr_r);
 }
 
@@ -337,6 +342,31 @@ static int pxe_ipaddr_paths(void *pxefile_addr_r)
 }
 
 /*
+ *
+ *
+ */
+int pxe_env_files(void *pxefile_addr_r)
+{
+	int err;
+	char *temp, filename[20],file_enviroments[200];
+	
+	strcpy(file_enviroments,getenv("pxe_files_load"));
+	while( (temp = strstr(file_enviroments,":"))!=NULL)
+	{
+		strncpy(filename,temp+1, strstr(temp+1,":")-temp-1);
+		filename[strstr(temp+1,":")-temp-1]='\0';
+		strcpy(file_enviroments,temp+1);
+		err = get_pxelinux_path(filename, pxefile_addr_r);
+
+		if (err > 0)
+			return err;	
+	}
+
+	return -ENOENT;
+}
+
+
+/*
  * Entry point for the 'pxe get' command.
  * This Follows pxelinux's rules to download a config file from a tftp server.
  * The file is stored at the location given by the pxefile_addr_r environment
@@ -350,8 +380,7 @@ static int pxe_ipaddr_paths(void *pxefile_addr_r)
  *
  * Returns 0 on success or 1 on error.
  */
-static int
-do_pxe_get(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_pxe_get(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	char *pxefile_addr_str;
 	unsigned long pxefile_addr_r;
@@ -379,6 +408,7 @@ do_pxe_get(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (pxe_uuid_path((void *)pxefile_addr_r) > 0
 		|| pxe_mac_path((void *)pxefile_addr_r) > 0
 		|| pxe_ipaddr_paths((void *)pxefile_addr_r) > 0
+		|| pxe_env_files((void*)pxefile_addr_r)>0
 		|| get_pxelinux_path("default", (void *)pxefile_addr_r) > 0) {
 
 		printf("Config file found\n");
@@ -1379,8 +1409,7 @@ static void handle_pxe_menu(struct pxe_menu *cfg)
  *
  * Returns 0 on success, 1 on error.
  */
-static int
-do_pxe_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_pxe_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	unsigned long pxefile_addr_r;
 	struct pxe_menu *cfg;

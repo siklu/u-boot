@@ -269,7 +269,7 @@ int saveenv(void)
 	}
 #endif	/* CONFIG_ENV_SECT_SIZE */
 
-	debug("Protect off %08lX ... %08lX\n", (ulong)flash_addr, end_addr);
+	printf("Protect off %08lX ... %08lX\n", (ulong)flash_addr, end_addr);
 
 	if (flash_sect_protect(0, (long)flash_addr, end_addr))
 		goto done;

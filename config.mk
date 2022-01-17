@@ -24,6 +24,7 @@
 #########################################################################
 
 include $(TOPDIR)/helper.mk
+include $(PROJECT_ROOT_DIR)/host/version-$(PLATFORM_NAME).mk
 
 ifeq ($(CURDIR),$(SRCTREE))
 dir :=
@@ -57,6 +58,14 @@ endif
 PLATFORM_RELFLAGS =
 PLATFORM_CPPFLAGS =
 PLATFORM_LDFLAGS =
+
+#####################   SIKLU Additions  ####################
+# == use  'last changed revision' instead 'Revision' ==
+# SVNVERSION_STR=$(shell svnversion $(ARMADA_UBOOT_DIR) | cut -d' ' -f1)
+SVNVERSION_STR=$(shell $(TOPDIR)/tools/setlocalversion $(TOPDIR))
+
+SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
+SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\""$(MAJOR)"\" -D_VER_MINOR=$(MINOR) -D_VER_BUILD=$(BUILD) 
 
 #########################################################################
 
@@ -316,7 +325,7 @@ export	CONFIG_SYS_TEXT_BASE PLATFORM_CPPFLAGS PLATFORM_RELFLAGS CPPFLAGS CFLAGS 
 # Allow boards to use custom optimize flags on a per dir/file basis
 BCURDIR = $(subst $(SRCTREE)/,,$(CURDIR:$(obj)%=%))
 ALL_AFLAGS = $(AFLAGS) $(AFLAGS_$(BCURDIR)/$(@F)) $(AFLAGS_$(BCURDIR))
-ALL_CFLAGS = $(CFLAGS) $(CFLAGS_$(BCURDIR)/$(@F)) $(CFLAGS_$(BCURDIR))
+ALL_CFLAGS = $(CFLAGS) $(CFLAGS_$(BCURDIR)/$(@F)) $(CFLAGS_$(BCURDIR))  $(SIKLU_FLAGS)
 EXTRA_CPPFLAGS = $(CPPFLAGS_$(BCURDIR)/$(@F)) $(CPPFLAGS_$(BCURDIR))
 ALL_CFLAGS += $(EXTRA_CPPFLAGS)
 

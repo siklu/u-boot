@@ -504,6 +504,11 @@ void main_loop (void)
 	set_working_fdt_addr((void *)gd->fdt_blob);
 #endif /* CONFIG_OF_CONTROL */
 
+#if	defined(MV_SIKLU_WIGIG_BOARD)
+	printf("  Stop boot process, disable WDT\n");  // siklu_remarkM43
+	extern int wdt_stop(void);
+	wdt_stop();
+#endif // 	MV_SIKLU_WIGIG_BOARD
 	/*
 	 * Main Loop for Monitor Command Processing
 	 */
@@ -1247,7 +1252,7 @@ int parse_line (char *line, char *argv[])
 /****************************************************************************/
 
 #ifndef CONFIG_SYS_HUSH_PARSER
-static void process_macros (const char *input, char *output)
+void process_macros (const char *input, char *output)
 {
 	char c, prev;
 	const char *varname_start = NULL;

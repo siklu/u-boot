@@ -225,6 +225,9 @@ COBJS-y += image.o
 COBJS-y += memsize.o
 COBJS-y += stdio.o
 
+ifndef CONFIG_SPL_BUILD
+COBJS-y += env_sf.o env_common_se.o cmd_nvedit_se.o
+endif
 
 COBJS	:= $(sort $(COBJS-y))
 XCOBJS	:= $(sort $(XCOBJS-y))
@@ -236,13 +239,74 @@ CPPFLAGS += -I..
 
 all:	$(LIB) $(XOBJS)
 
-$(LIB): $(obj).depend $(OBJS)
+$(LIB): $(OBJS)
 	$(call cmd_link_o_target, $(OBJS))
 
 $(obj)env_embedded.o: $(src)env_embedded.c $(obj)../tools/envcrc
 	$(CC) $(AFLAGS) -Wa,--no-warn \
 		-DENV_CRC=$(shell $(obj)../tools/envcrc) \
 		-c -o $@ $(src)env_embedded.c
+
+# EEPROM in Serial Flash support.
+ifndef CONFIG_SPL_BUILD
+# Need to include my own headers instead of the default one for env_sf.c
+# and env_common.c.
+env_sf.o:		CFLAGS := -I$(TOPDIR) $(ALL_CFLAGS)
+env_common.o:		CFLAGS := -I$(TOPDIR) $(ALL_CFLAGS)
+
+env_sf.o:		$(TOPDIR)/config.h
+env_common.o:		$(TOPDIR)/env_default.h
+
+$(TOPDIR)/config.h:	$(TOPDIR)/include/config.h
+	sed '/MV_NAND/d; $$a\#define CONFIG_ENV_SECT_SIZE 0x10000\n#define CONFIG_ENV_OFFSET (0x200000 - CONFIG_ENV_SECT_SIZE)\n#define CONFIG_ENV_SIZE CONFIG_ENV_SECT_SIZE' < $^ > $@
+
+$(TOPDIR)/env_default.h:
+	/bin/echo -e 'const unsigned char default_environment[] = {\n'		\
+			'\t"SE_product_name=WIGIG_ST\\0"\n'			\
+			'\t"SE_mac=00:24:a4:00:de:ad\\0"\n'			\
+			'\t"SE_board_serial=F123456789\\0"\n'			\
+			'\t"SE_system_serial=\\0"\n'				\
+			'\t"SE_port_map=c---\\0"\n'				\
+			'};\n' > $@
+
+cmd_mem.o:		cmd_mem.c
+	$(CC)  $(ALL_CFLAGS) -o $@ $< -c
+	$(OBJCOPY) --globalize-symbol=do_mem_md $@
+
+env_sf.o:		env_sf.c
+	$(CC)  $(ALL_CFLAGS) -o $@ $< -c
+	$(OBJCOPY) $(addprefix --redefine-sym , $(foreach f,			\
+			env_relocate_spec saveenv env_init env_name_spec	\
+			env_htab env_import set_default_env,			\
+		$(f)=$(f)_se))							\
+		 $@
+	$(OBJCOPY) --globalize-symbol=env_flash $@
+
+env_common_se.o:	env_common.o
+	cp -a $^ $@
+	$(OBJCOPY) $(addprefix --redefine-sym , $(foreach f,			\
+			env_complete env_get_addr env_get_char			\
+			env_get_char_memory env_get_char_spec env_htab		\
+			env_import env_relocate getenv_default getenv_yesno	\
+			set_default_env set_default_vars default_environment,	\
+		$(f)=$(f)_se))							\
+		 $@
+
+cmd_nvedit_se.o:	cmd_nvedit.o
+	cp -a $^ $@
+	$(OBJCOPY) $(addprefix --redefine-sym , $(foreach f,			\
+			envmatch get_env_id getenv getenv_f getenv_ulong	\
+			setenv setenv_addr setenv_ulong env_htab		\
+			_u_boot_list_cmd_run _u_boot_list_cmd_setenv		\
+			_u_boot_list_cmd_printenv _u_boot_list_cmd_editenv	\
+			_u_boot_list_cmd_env _u_boot_list_cmd_saveenv		\
+			default_environment env_print,				\
+		$(f)=$(f)_se))							\
+		 $@
+	$(OBJCOPY) --globalize-symbol=env_print_se $@
+
+.DEFAULT_GOAL:	all
+endif
 
 $(obj)../tools/envcrc:
 	$(MAKE) -C ../tools

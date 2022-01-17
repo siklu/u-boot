@@ -448,8 +448,15 @@ void fdt_fixup_ethernet(void *fdt)
 	int node, i, j;
 	char enet[16], *tmp, *end;
 	char mac[16] = "ethaddr";
+	char mtu[16] = "ethmtu";
 	const char *path;
 	unsigned char mac_addr[6];
+	ulong ulongtmp;
+
+#ifdef MV_SIKLU_WIGIG_BOARD
+	return; // siklu board doesn't need update/fixup here  siklu_remarkM24
+#endif // 	MV_SIKLU_WIGIG_BOARD
+
 
 	node = fdt_path_offset(fdt, "/aliases");
 	if (node < 0)
@@ -475,7 +482,11 @@ void fdt_fixup_ethernet(void *fdt)
 		do_fixup_by_path(fdt, path, "local-mac-address",
 				&mac_addr, 6, 1);
 
+		ulongtmp = getenv_ulong(mtu, 10, 1500);
+		do_fixup_by_path_u32(fdt, path, "eth,port-mtu", (u32)ulongtmp, 0);
+
 		sprintf(mac, "eth%daddr", ++i);
+		sprintf(mtu, "eth%dmtu", i);
 	}
 }
 

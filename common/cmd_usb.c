@@ -271,12 +271,24 @@ static void usb_display_config(struct usb_device *dev)
 
 static inline char *portspeed(int speed)
 {
-	if (speed == USB_SPEED_HIGH)
-		return "480 Mb/s";
-	else if (speed == USB_SPEED_LOW)
-		return "1.5 Mb/s";
-	else
-		return "12 Mb/s";
+	char *speed_str;
+
+	switch (speed) {
+	case USB_SPEED_SUPER:
+		speed_str = "5 Gb/s";
+		break;
+	case USB_SPEED_HIGH:
+		speed_str = "480 Mb/s";
+		break;
+	case USB_SPEED_LOW:
+		speed_str = "1.5 Mb/s";
+		break;
+	default:
+		speed_str = "12 Mb/s";
+		break;
+	}
+
+	return speed_str;
 }
 
 /* shows the device tree recursively */
@@ -363,7 +375,7 @@ static int do_usbboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 /******************************************************************************
  * usb command intepreter
  */
-static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 
 	int i;
@@ -378,10 +390,21 @@ static int do_usb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	if ((strncmp(argv[1], "reset", 5) == 0) ||
 		 (strncmp(argv[1], "start", 5) == 0)) {
+		int init_result;
+
 		bootstage_mark_name(BOOTSTAGE_ID_USB_START, "usb_start");
 		usb_stop();
 		printf("(Re)start USB...\n");
-		if (usb_init() >= 0) {
+		init_result = usb_init();
+		if (init_result > 0) {
+			if (simple_strtoul(getenv("usbType"), NULL, 10) == 3) {
+				/* WA for USB3 init after reset with device in port */
+				printf("Bad detection, need a second reset...\n");
+				usb_stop();
+				init_result = usb_init();
+			}
+		}
+		if (init_result >= 0) {
 #ifdef CONFIG_USB_STORAGE
 			/* try to recognize storage devices immediately */
 			usb_stor_curr_dev = usb_stor_scan(1);

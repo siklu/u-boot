@@ -236,16 +236,21 @@ typedef void (interrupt_handler_t)(void *);
 		(__x < 0) ? -__x : __x;		\
 	})
 
+
+#if defined(MV_NAND_BOOT)
+#define	TOTAL_MALLOC_LEN	(CONFIG_SYS_MALLOC_LEN) /* we are doing this because CONFIG_ENV_ADDR is function */
+#else
 #if defined(CONFIG_ENV_IS_EMBEDDED)
 #define TOTAL_MALLOC_LEN	CONFIG_SYS_MALLOC_LEN
-#elif ( ((CONFIG_ENV_ADDR+CONFIG_ENV_SIZE) < CONFIG_SYS_MONITOR_BASE) || \
+#elif /* ( ((CONFIG_ENV_ADDR+CONFIG_ENV_SIZE) < CONFIG_SYS_MONITOR_BASE) || \
 	(CONFIG_ENV_ADDR >= (CONFIG_SYS_MONITOR_BASE + CONFIG_SYS_MONITOR_LEN)) ) || \
-      defined(CONFIG_ENV_IS_IN_NVRAM)
+     */ defined(CONFIG_ENV_IS_IN_NVRAM)
 #define	TOTAL_MALLOC_LEN	(CONFIG_SYS_MALLOC_LEN + CONFIG_ENV_SIZE)
+
 #else
 #define	TOTAL_MALLOC_LEN	CONFIG_SYS_MALLOC_LEN
 #endif
-
+#endif
 /**
  * container_of - cast a member of a structure out to the containing structure
  * @ptr:	the pointer to the member.
@@ -334,8 +339,8 @@ extern ulong save_size;		/* Default Save Size */
 void	doc_probe(unsigned long physadr);
 
 /* common/cmd_net.c */
-int do_tftpb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
-
+int do_tftpb (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
+int do_source (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 /* common/cmd_fat.c */
 int do_fat_fsload(cmd_tbl_t *, int, int, char * const []);
 
@@ -963,10 +968,17 @@ int cpu_release(int nr, int argc, char * const argv[]);
  * of a function scoped static buffer.  It can not be used to create a cache
  * line aligned global buffer.
  */
-#define ALLOC_ALIGN_BUFFER(type, name, size, align)			\
-	char __##name[ROUND(size * sizeof(type), align) + (align - 1)];	\
+#define PAD_COUNT(s, pad) ((s - 1) / pad + 1)
+#define PAD_SIZE(s, pad) (PAD_COUNT(s, pad) * pad)
+#define ALLOC_ALIGN_BUFFER_PAD(type, name, size, align, pad)		\
+	char __##name[ROUND(PAD_SIZE(size * sizeof(type), pad), align)  \
+		      + (align - 1)];					\
 									\
 	type *name = (type *) ALIGN((uintptr_t)__##name, align)
+#define ALLOC_ALIGN_BUFFER(type, name, size, align)		\
+	ALLOC_ALIGN_BUFFER_PAD(type, name, size, align, 1)
+#define ALLOC_CACHE_ALIGN_BUFFER_PAD(type, name, size, pad)		\
+	ALLOC_ALIGN_BUFFER_PAD(type, name, size, ARCH_DMA_MINALIGN, pad)
 #define ALLOC_CACHE_ALIGN_BUFFER(type, name, size)			\
 	ALLOC_ALIGN_BUFFER(type, name, size, ARCH_DMA_MINALIGN)
 

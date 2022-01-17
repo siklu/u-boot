@@ -142,20 +142,23 @@ int env_init(void)
  */
 int writeenv(size_t offset, u_char *buf)
 {
-	size_t end = offset + CONFIG_ENV_RANGE;
-	size_t amount_saved = 0;
-	size_t blocksize, len;
+	uint64_t end = offset + CONFIG_ENV_RANGE;
+	uint64_t amount_saved = 0;
+	uint64_t blocksize, len;
+
 	u_char *char_ptr;
 
 	blocksize = nand_info[0].erasesize;
 	len = min(blocksize, CONFIG_ENV_SIZE);
 
+	offset = CONFIG_ENV_OFFSET;
+	
 	while (amount_saved < CONFIG_ENV_SIZE && offset < end) {
 		if (nand_block_isbad(&nand_info[0], offset)) {
 			offset += blocksize;
 		} else {
 			char_ptr = &buf[amount_saved];
-			if (nand_write(&nand_info[0], offset, &len, char_ptr))
+			if (nand_write(&nand_info[0], offset, (size_t *)&len, char_ptr))
 				return 1;
 
 			offset += blocksize;
@@ -181,6 +184,8 @@ int saveenv(void)
 
 	memset(&nand_erase_options, 0, sizeof(nand_erase_options));
 	nand_erase_options.length = CONFIG_ENV_RANGE;
+	nand_erase_options.quiet = 1;
+
 
 	if (CONFIG_ENV_RANGE < CONFIG_ENV_SIZE)
 		return 1;
@@ -233,6 +238,7 @@ int saveenv(void)
 
 	memset(&nand_erase_options, 0, sizeof(nand_erase_options));
 	nand_erase_options.length = CONFIG_ENV_RANGE;
+	nand_erase_options.quiet = 1;
 	nand_erase_options.offset = CONFIG_ENV_OFFSET;
 
 	if (CONFIG_ENV_RANGE < CONFIG_ENV_SIZE)
@@ -264,9 +270,10 @@ int saveenv(void)
 
 int readenv(size_t offset, u_char *buf)
 {
-	size_t end = offset + CONFIG_ENV_RANGE;
-	size_t amount_loaded = 0;
-	size_t blocksize, len;
+	uint64_t end = offset + CONFIG_ENV_RANGE;
+	uint64_t amount_loaded = 0;
+	uint64_t blocksize, len;
+
 	u_char *char_ptr;
 
 	blocksize = nand_info[0].erasesize;
@@ -275,13 +282,15 @@ int readenv(size_t offset, u_char *buf)
 
 	len = min(blocksize, CONFIG_ENV_SIZE);
 
+	offset = CONFIG_ENV_OFFSET;
+
 	while (amount_loaded < CONFIG_ENV_SIZE && offset < end) {
 		if (nand_block_isbad(&nand_info[0], offset)) {
 			offset += blocksize;
 		} else {
 			char_ptr = &buf[amount_loaded];
 			if (nand_read_skip_bad(&nand_info[0], offset,
-					       &len, char_ptr))
+					       (size_t *)&len, char_ptr))
 				return 1;
 
 			offset += blocksize;

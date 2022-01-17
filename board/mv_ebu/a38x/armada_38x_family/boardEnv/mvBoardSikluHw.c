@@ -1,0 +1,1577 @@
+/*
+ * mvBoardSikluHw.c
+ *
+ *  Created on: Jun 9, 2016
+ *      Author: edwardk
+ */
+
+#include <common.h>
+#include <command.h>
+#include "mvCommon.h"
+#include "mvOs.h"
+#include <siklu_api.h>
+#include <i2c.h>
+#include <spi_flash.h>
+#include "../../../common/mv_hal/gpp/mvGpp.h"
+#include "siklu_board_system.h"
+
+#define msleep(a)           udelay(a * 1000)
+
+extern MV_U32 mvEthPhyAddSet(MV_U32 ethPortNum, MV_U32 phyAddr);
+extern MV_STATUS mvEthPhyInit(MV_U32 ethPortNum, int eeeEnable);
+extern void mvBoardPhyAddrSet(MV_U32 ethPortNum, MV_U32 smiAddr);
+
+#define	MV_GPP_IN	0xFFFFFFFF	/* GPP input */
+#define MV_GPP_OUT	0		/* GPP output */
+
+#define GPP12   (1<<12)
+#define GPP21   (1<<21)
+#define POWER_LED_YELLOW_GPP (GPP12)
+#define POWER_LED_GREEN_GPP  (GPP21)
+
+static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode);
+
+DECLARE_GLOBAL_DATA_PTR;
+
+static int is_pse_configured = 0;
+
+/*
+ *
+ */
+int mvSikluCpuGpioSetVal(int gppNum, int val)
+{
+    int rc = 0;
+    int group = 0;
+
+    if (gppNum >= 32)
+    {
+        group = 1;
+        gppNum -= 32;
+    }
+
+    val = !!val;
+    mvGppTypeSet(group, 1 << gppNum, (MV_GPP_OUT & (1 << gppNum))); // configure gppX as output
+    mvGppValueSet(group, 1 << gppNum, (val << gppNum));
+
+    return rc;
+
+}
+/*
+ *
+ */
+int mvSikluCpuGpioSetDirection(int gppNum, int isOutput)
+{
+    int rc = 0;
+    int group = 0;
+
+    if (gppNum >= 32)
+    {
+        group = 1;
+        gppNum -= 32;
+    }
+
+    if (isOutput)
+    {
+        mvGppTypeSet(group, 1 << gppNum, (MV_GPP_OUT & (1 << gppNum))); // configure gppX as output
+    }
+    else
+    {
+        mvGppTypeSet(group, 1 << gppNum, (MV_GPP_IN & (1 << gppNum))); // configure gppX as input
+    }
+
+    return rc;
+
+}
+/*
+ *
+ */
+int mvSikluCpuGpioGetVal(int gppNum, int* val)
+{
+    int rc = 0;
+    int group = 0;
+
+    if (gppNum >= 32)
+    {
+        gppNum -= 32;
+        group = 1;
+    }
+
+    *val = !!mvGppValueGet(group, 1 << gppNum);
+    return rc;
+}
+
+#define CONFIG_PCA9557_BUS_NUM 1
+#define CONFIG_PCA9557_DEV_ADDR	0x18
+
+#define PCA9557_INPUT_PORT_REG		0x00
+#define PCA9557_OUTPUT_PORT_REG		0x01
+#define PCA9557_POLAR_INVERT_REG	0x02
+#define PCA9557_CONFIG_REG			0x03
+
+#define PCA9557_GPIO_POE_PARS			0 // input
+#define PCA9557_GPIO_SFP_P3_TX_DIS		1 // output
+#define PCA9557_GPIO_SFP_P2_TX_DIS		2 // output
+#define PCA9557_GPIO_WG0_DIS			3 // output
+#define PCA9557_GPIO_WG1_DIS			4 // output
+#define PCA9557_GPIO_WLAN_DIS			5 // output
+#define PCA9557_GPIO_BLE_DIS			6 // output
+#define PCA9557_GPIO_VHV_DIS			7 // output
+
+/*
+ * I/O extender
+ 0	PoE_Pairs		In		PoE Pairs status (0: 2 pairs, 1: 4 pairs)
+ 1	PSE_P3_RST_n	Out		SFP_P3_TX_DIS	PSE ports 3 Rest or SFP port 3 Tx Disable
+ 2	PSE_P2_RST_n	Out		SFP_P2_TX_DIS	PSE ports 2 Rest or SFP port 2 Tx Disable
+ 3	WG0_DISABLE_n	Out		WiGig Modem 0 Chip Disable (active low)
+ 4	WG1_DISABLE_n	Out		WiGig Modem 1 Chip Disable (active low)
+ 5	WLAN_Disable	Out		WLAN (mini-PCIe) Disable (active low)
+ 6	BLE_RST_n		Out		BLE chip Reset (active low)
+ 7	VHV enable		Out		Enable 1.8V for eFuse burning
+ */
+static int mvSikluExtndrGpioConf(void)
+{
+    int rc = 0, count;
+
+    mvSikluExtndrGpioSetDirection(0, 0);
+    for (count = 1; count <= 7; count++)
+    {
+        mvSikluExtndrGpioSetDirection(count, 1);
+    }
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+    i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, PCA9557_POLAR_INVERT_REG, 0); // disable polarity inversion for all inputs
+    i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, PCA9557_OUTPUT_PORT_REG, 0x0); // set GPIO[7..1] be output val = 0 (all in reset)
+
+    i2c_set_bus_num(old_bus);
+    return rc;
+}
+/*
+ * Configure SoC MPP pins siklu_remarkM11
+ */
+static int mvSikluCpuGpioConf(void)
+{
+    int rc = 0;
+
+    // configure MPP6 GPHY port2 reset, active low output
+    mvSikluCpuGpioSetDirection(6, 1);
+    mvSikluCpuGpioSetVal(6, 1); // change to reset
+
+    // configure MPP12 Power Led Yellow output
+    mvSikluCpuGpioSetDirection(12, 1);
+
+    // configure MPP13 SFP P2 exists input
+    mvSikluCpuGpioSetDirection(13, 0);
+    // configure MPP14 SFP P2 FAULT input
+    mvSikluCpuGpioSetDirection(14, 0);
+    // configure MPP15-18  HW ID input
+    mvSikluCpuGpioSetDirection(15, 0);
+    mvSikluCpuGpioSetDirection(16, 0);
+    mvSikluCpuGpioSetDirection(17, 0);
+    mvSikluCpuGpioSetDirection(18, 0);
+
+    // configure MPP21 Powe LED Green output
+    mvSikluCpuGpioSetDirection(21, 1);
+
+    // configure MPP43 SFP P3 LOS	input
+    mvSikluCpuGpioSetDirection(43, 0);
+
+    // configure MPP44 WIGIG0 CHIP reset active low output
+    mvSikluCpuGpioSetDirection(44, 1);
+    mvSikluCpuGpioSetVal(44, 1); // change to reset!
+    // configure MPP47 WIGIG1 CHIP reset active low output
+    mvSikluCpuGpioSetDirection(47, 1);
+    mvSikluCpuGpioSetVal(47, 1); // change to reset!
+    // configure MPP48 RF LED Green output
+    mvSikluCpuGpioSetDirection(48, 1);
+    // configure MPP49 RF LED Yellow  	output
+    mvSikluCpuGpioSetDirection(49, 1);
+
+    // configure MPP50 PHY Port3 LED output
+    mvSikluCpuGpioSetDirection(50, 1);
+    mvSikluCpuGpioSetVal(50, 1); // Write '1' turns led off
+    // configure MPP51 WIGIG2 CHIP reset active low output
+    mvSikluCpuGpioSetDirection(51, 1);
+    mvSikluCpuGpioSetVal(51, 1); // change to reset!
+    // configure MPP52 RST Factory default input
+    mvSikluCpuGpioSetDirection(52, 0);
+
+    // configure MPP53  PHY P1 Reset output
+    mvSikluCpuGpioSetDirection(53, 1);
+    mvSikluCpuGpioSetVal(53, 1); // change to reset!
+    // configure MPP54  SFP P3 Exists  input
+    mvSikluCpuGpioSetDirection(54, 0);
+    // configure MPP55 	SFP P3 Fault input
+    mvSikluCpuGpioSetDirection(55, 0);
+
+    return rc;
+}
+
+/*
+ *  IIC PCA9557 GPI Extender for 8 IO
+ */
+int mvSikluExtndrGpioSetVal(int gpio, int val)
+{
+    int rc = 0;
+    if (gpio >= 8)
+        return -1;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+    MV_U8 reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR,
+    PCA9557_OUTPUT_PORT_REG);
+    if (val)
+        reg_val |= (1 << gpio);
+    else
+        reg_val &= ~(1 << gpio);
+
+    i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, PCA9557_OUTPUT_PORT_REG, reg_val);
+    i2c_set_bus_num(old_bus);
+
+    return rc;
+}
+/*
+ *  IIC PCA9557 GPI Extender for 8 IO
+ */
+int mvSikluExtndrGpioSetDirection(int gpio, int isOutput)
+{
+    int rc = 0;
+    if (gpio >= 8)
+        return -1;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+    MV_U8 reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR,
+    PCA9557_CONFIG_REG);
+    if (!isOutput)
+        reg_val |= (1 << gpio);
+    else
+        reg_val &= ~(1 << gpio);
+
+    i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, PCA9557_CONFIG_REG, reg_val);
+    i2c_set_bus_num(old_bus);
+
+    return rc;
+}
+/*
+ *  IIC PCA9557 GPI Extender for 8 IO
+ */
+int mvSikluExtndrCpuGpioGetVal(int gpio, int* val)
+{
+    int rc = 0;
+    if (gpio >= 8)
+        return -1;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+    MV_U8 reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR,
+    PCA9557_INPUT_PORT_REG);
+    if (reg_val & (1 << gpio))
+        *val = 1;
+    else
+        *val = 0;
+    i2c_set_bus_num(old_bus);
+    return rc;
+}
+// siklu_remarkM43
+typedef enum
+{
+    MV_SIKLU_BOARD_WD_START,    //
+    MV_SIKLU_BOARD_WD_STOP,    //
+    MV_SIKLU_BOARD_WD_PING,
+} MV_SIKLU_BOARD_WD_CMD;
+
+static int wdt_start(int timeout_sec)
+{
+#define BOARD_CLOCK_RATE 25000000
+
+    if (timeout_sec >= 170) // max value for not overload register
+        timeout_sec = 170;
+
+    uint32_t timeout = (BOARD_CLOCK_RATE) * timeout_sec;
+    MV_REG_WRITE(0x20334, timeout); // set timeout
+    printf("Start Board WDT timeout %d\n", timeout_sec);
+
+    /* preset parameters in SOC Global Timers Control Register 0x20300 page 651
+     * bit10 GlobalWDTimer25MhzEn = 1
+     * bit9  GlobalWDTimerAuto = 0
+     * bit8  GlobalWDTimerEn  - write '1' but later below
+     */
+    uint32_t val = MV_REG_READ(0x20300);
+    val |= (1 << 10);
+    val &= ~(1 << 9);
+
+    //----------------
+    // val &= ~(0x7 << 16);  // clear Ratio field
+    // val |=  2<<16; // set ratio = 4
+    //------------------
+    MV_REG_WRITE(0x20300, val);
+
+    val = MV_REG_READ(0x20304); // clear expiration bit
+    val &= ~(1 << 31);
+    MV_REG_WRITE(0x20304, val);
+
+    val = MV_REG_READ(0x20300); // enable WD Timer
+    val |= (1 << 8);
+    MV_REG_WRITE(0x20300, val);
+
+    val = MV_REG_READ(0x20704); // enable Reset on WDT
+    val |= (1 << 8);
+    MV_REG_WRITE(0x20704, val);
+
+    val = MV_REG_READ(0x18260); // RST out mask
+    val &= ~(1 << 10);
+    MV_REG_WRITE(0x18260, val);
+
+    return 0;
+}
+
+int wdt_stop(void)
+{
+    // printf("Stop Board WDT\n"); 
+
+    uint32_t val = MV_REG_READ(0x18260); // disable reset on WDT
+    val |= (1 << 10);
+    MV_REG_WRITE(0x18260, val);
+
+    val = MV_REG_READ(0x20704); //
+    val &= ~(1 << 8);
+    MV_REG_WRITE(0x20704, val);
+
+    val = MV_REG_READ(0x20300); // disable WD Timer
+    val &= ~(1 << 8);
+    MV_REG_WRITE(0x20300, val);
+
+    return 0;
+}
+
+/*
+ *
+ */
+int mvSikluWdtControl(MV_SIKLU_BOARD_WD_CMD cmd, int param)
+{
+    int rc = 0;
+    static int is_active = 0;
+    static int timeout_sec = 0;
+    static int first_time_run = 1;
+
+    switch (cmd)
+    {
+    case MV_SIKLU_BOARD_WD_START:
+    {
+        if (param <= 0) // timeout should be > 0
+        {
+            printf(" Start command requires timeout > 0");
+            return -1;
+        }
+        timeout_sec = param;
+
+        if (first_time_run)
+        {
+            wdt_stop();
+            first_time_run = 0;
+        }
+        if (!is_active) // init + set timeout interval
+        {
+            wdt_start(timeout_sec);
+        }
+        else // set timeout interval only
+        {
+            uint32_t timeout = BOARD_CLOCK_RATE * timeout_sec;
+            MV_REG_WRITE(0x20334, timeout); // set timeout
+        }
+        is_active = 1;
+    }
+        break;
+    case MV_SIKLU_BOARD_WD_PING:
+    {
+        if (!is_active)
+            return -1; // for pin should be started
+
+        uint32_t timeout = BOARD_CLOCK_RATE * timeout_sec;
+        MV_REG_WRITE(0x20334, timeout); // set timeout
+    }
+        break;
+    case MV_SIKLU_BOARD_WD_STOP:
+    {
+
+        if (!is_active)
+            return 0; // already stopped, do nothing
+        wdt_stop();
+        is_active = 0;
+    }
+        break;
+    default:
+        return -1;
+        break;
+
+    }
+    return rc;
+}
+
+/* ##########################################################################################################
+ ########################################################################################################## */
+static int do_siklu_pca9557_access(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]) //
+{
+    int rc = CMD_RET_SUCCESS;
+    MV_U8 reg_val;
+    MV_U8 reg_addr;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+    switch (argc)
+    {
+    case 1: // no args, print all registers
+    {
+        int count;
+        for (count = PCA9557_INPUT_PORT_REG; count <= PCA9557_CONFIG_REG; count++)
+        {
+            reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, count);
+            printf(" 0x%x: val 0x%x\n", count, reg_val);
+        }
+    }
+        break;
+    case 2: // read specif register
+        reg_addr = simple_strtoul(argv[1], NULL, 16);
+        reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, reg_addr);
+        printf(" 0x%x: val 0x%x\n", reg_addr, reg_val);
+        break;
+    case 3: // write specif register
+        reg_addr = simple_strtoul(argv[1], NULL, 16);
+        reg_val = simple_strtoul(argv[2], NULL, 16);
+        i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, reg_addr, reg_val);
+        break;
+    }
+
+    i2c_set_bus_num(old_bus);
+    return rc;
+}
+/*
+ *
+ */
+int mvSikluHwResetCntrl(SKL_MODULE_RESET_CNTRL_E dev, int isEna)
+{
+    int rc = 0;
+
+    switch (dev)
+    {
+    case SKL_WIGIG0_RF_RESET:
+        mvSikluExtndrGpioSetVal(PCA9557_GPIO_WG0_DIS, !isEna);
+        break;
+    case SKL_WIGIG1_RF_RESET:
+        mvSikluExtndrGpioSetVal(PCA9557_GPIO_WG1_DIS, !isEna);
+        break;
+    case SKL_WIFI_RESET:
+        mvSikluExtndrGpioSetVal(PCA9557_GPIO_WLAN_DIS, !isEna);
+        break;
+    case SKL_BLE_RESET:
+        mvSikluExtndrGpioSetVal(PCA9557_GPIO_BLE_DIS, !isEna);
+        break;
+    case SKL_WIGIG0_CHIP_RESET:
+        mvSikluCpuGpioSetVal(44, !isEna);
+        break;
+    case SKL_WIGIG1_CHIP_RESET:
+        mvSikluCpuGpioSetVal(47, !isEna);
+        break;
+    case SKL_WIGIG2_CHIP_RESET:
+        mvSikluCpuGpioSetVal(51, !isEna);
+        break;
+    case SKL_GPHY_0_RESET:
+        mvSikluCpuGpioSetVal(53, !isEna);
+        break;
+    case SKL_GPHY_1_RESET:
+        mvSikluCpuGpioSetVal(6, !isEna);
+        break;
+    case SKL_GPHY_2_RESET:
+        mvSikluCpuGpioSetVal(50, !isEna);
+        break;
+    default:
+        break;
+    }
+
+    return rc;
+}
+extern int siklu_control_sfp_led(int is_on);
+int arch_early_init_r(void)
+{
+
+    // Start WD 150 sec timeout  siklu_remarkM43
+    wdt_start(150);
+
+    // configure IIC GPIO Extender
+    mvSikluExtndrGpioConf();
+
+    // configure CPU GPIO
+    mvSikluCpuGpioConf();
+
+    // siklu_remarkM11 - follow part remove after debug. we do not need PCIe enabled by default
+    mvSikluHwResetCntrl(SKL_WIGIG0_RF_RESET, 0); // enable WIGIG radio ???
+    mvSikluHwResetCntrl(SKL_WIGIG1_RF_RESET, 0); // enable WIGIG radio ???
+    mvSikluHwResetCntrl(SKL_WIFI_RESET, 0);
+    mvSikluHwResetCntrl(SKL_BLE_RESET, 1);
+
+    mvSikluHwResetCntrl(SKL_WIGIG0_CHIP_RESET, 0);
+    mvSikluHwResetCntrl(SKL_WIGIG1_CHIP_RESET, 0);
+    mvSikluHwResetCntrl(SKL_WIGIG2_CHIP_RESET, 0);
+
+    mvSikluHwResetCntrl(SKL_GPHY_0_RESET, 0);
+    mvSikluHwResetCntrl(SKL_GPHY_1_RESET, 0);
+    mvSikluHwResetCntrl(SKL_GPHY_2_RESET, 0);  // edikk only if exists!
+
+    siklu_set_led_cpu_mpp(SKL_LED_POWER, SKL_LED_MODE_GREEN_BLINK);
+    siklu_set_led_cpu_mpp(SKL_LED_WLAN, SKL_LED_MODE_OFF);
+    siklu_control_sfp_led(0);
+
+
+    if (1) { // on demand Ziv   15.03.2018
+    	// printf("Set CPU core power limit to 1.15V\n");
+		MV_REG_WRITE(0xe4130, 0x10023225); // Set CPU core power limit to 1.15V (AVS) See data-sheet
+		// table 2479
+	}
+
+
+    udelay(10000);
+
+    return 0;
+}
+/*
+ *
+ */
+static int siklu_configure_eth2_copper_1g_mode(void)
+{
+
+    // un-reset PHY2
+    mvSikluCpuGpioSetDirection(50, 1); // set output
+    mvSikluCpuGpioSetVal(50, 0);    // Set PHY to reset
+    udelay(100);
+    mvSikluCpuGpioSetVal(50, 1);    // release reset
+
+    // MPP10 controls connect MDC/MDIO bus to ETH2 port
+    mvSikluCpuGpioSetDirection(10, 1); // set output
+    mvSikluCpuGpioSetVal(10, 0);    // Value '0' - connect 3rd PHY to eth#2
+
+    mvBoardPhyAddrSet(2, 1);
+    mvEthPhyAddSet(2, 1);    // Set PHY address = 1
+
+    udelay(1000);
+
+    mvEthPhyInit(2, 1);  // siklu_remarkM21
+
+    // after setup return MPP10 to eth1
+    mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 3rd PHY to eth#1
+
+    return 0;
+}
+
+/*
+ * If eth2 is copper port => MPP10 switches MDC/MDIO bus between
+ * eth1 and eth0, therefore connect MDC/MDIO bus here to eth1
+ */
+int siklu_config_eth1(void)
+{
+    int rc = 0;
+    SIKLU_NETWORK_PORT_TYPE_E eth2_type = siklu_get_network_port_type(2);
+    if (eth2_type == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        // MPP10 controls connect MDC/MDIO bus to ETH2 port
+        mvSikluCpuGpioSetDirection(10, 1); // set output
+        mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 3rd PHY to eth#1
+    }
+    return rc;
+
+}
+
+int siklu_config_eth2(void)
+{
+    int rc = 0;
+    SIKLU_NETWORK_PORT_TYPE_E eth2_type = siklu_get_network_port_type(2);
+    if (eth2_type == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        printf("\n Configure eth2 port copper,1G Mode\n");
+        siklu_configure_eth2_copper_1g_mode();
+    }
+    else if (eth2_type == SIKLU_NETWORK_PORT_TYPE_FIBER)
+    {
+        printf("\n Configure eth2 port fiber Mode\n");
+    }
+    else
+    {
+        printf("\n ETH2 is omitted\n");
+    }
+
+    return rc;
+}
+
+/*
+ * set POWER and WLAN LEDs
+ */
+static int siklu_set_led_cpu_mpp(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int rc = 0;
+
+    if (led == SKL_LED_WLAN)
+    { // mpp48 and mpp49
+        mvSikluCpuGpioSetDirection(48, 1); // set output
+        mvSikluCpuGpioSetDirection(49, 1); // set output
+        switch (mode)
+        {
+        case SKL_LED_MODE_OFF: // mpp12='h', mpp21='h'
+            mvSikluCpuGpioSetVal(48, 1);
+            mvSikluCpuGpioSetVal(49, 1);
+            break;
+        case SKL_LED_MODE_GREEN: // mpp49='h', mpp48='l'
+            mvSikluCpuGpioSetVal(49, 1);
+            mvSikluCpuGpioSetVal(48, 0);
+            break;
+        case SKL_LED_MODE_YELLOW: // mpp49='l', mpp48='h'
+            mvSikluCpuGpioSetVal(48, 1);
+            mvSikluCpuGpioSetVal(49, 0);
+            break;
+        default:
+            return -1;
+        }
+
+    }
+    else if (led == SKL_LED_POWER) // mpp12 and mpp21
+    {
+        mvSikluCpuGpioSetDirection(12, 1); // set output
+        mvSikluCpuGpioSetDirection(21, 1); // set output
+
+        switch (mode)
+        {
+        case SKL_LED_MODE_OFF: // mpp12='h', mpp21='h'
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 1);
+            break;
+        case SKL_LED_MODE_GREEN_BLINK:
+            // siklu_remarkM27
+            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_ON, 0x9000000);
+            mvGppBlinkCounterSet(GPP_BLINK_COUNTER_A, GPP_BLINK_COUNTER_DURATION_OFF, 0x9000000);
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 0);
+            mvGppBlinkEn(0, POWER_LED_GREEN_GPP, POWER_LED_GREEN_GPP);
+            break;
+        case SKL_LED_MODE_GREEN: // mpp12='h', mpp21='l'
+            mvSikluCpuGpioSetVal(12, 1);
+            mvSikluCpuGpioSetVal(21, 0);
+            mvGppBlinkEn(0, POWER_LED_GREEN_GPP, 0);
+            break;
+        case SKL_LED_MODE_YELLOW: // mpp12='l', mpp21='h'
+            mvSikluCpuGpioSetVal(12, 0);
+            mvSikluCpuGpioSetVal(21, 1);
+            break;
+        default:
+            return -1; // unsupported mode
+            break;
+        }
+    }
+    return rc;
+}
+/*
+ * Set variable LED modes via 88e1512 PHY
+ */
+static int siklu_set_eth_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    __u32 phy_addr = 0;
+    __u32 bank = 3;
+    __u32 reg_addr = 16; // see Datasheet
+    __u16 reg_val = 0x101E;  // this is a default value of register 16(0x10) in bank 3
+
+    int port_is_fiber = 0;
+    int port_is_copper = 0;
+    int mdc_switch_required = 0;
+
+    if (siklu_get_network_port_type(2) == SIKLU_NETWORK_PORT_TYPE_FIBER)
+        port_is_fiber = 1;
+    else if (siklu_get_network_port_type(2) == SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        mdc_switch_required = 1; /* if eth2 and eth3 both copper with PHY, need
+         control MDC switch via GPIO10  */
+        port_is_copper = 1;
+        mvSikluCpuGpioSetDirection(10, 1); // set output
+    }
+
+    int rc = 0;
+    switch (led)
+    {
+    case SKL_LED_ETH1:
+        phy_addr = 0;
+        break;
+    case SKL_LED_ETH2:
+        phy_addr = 1;
+
+        if (mdc_switch_required)
+            mvSikluCpuGpioSetVal(10, 1);    // Value '1' - connect 2nd PHY
+
+        break;
+    case SKL_LED_ETH3:
+    {
+        if (port_is_fiber)
+        { // fiber port led controlled via GPIO50
+            mvSikluCpuGpioSetDirection(50, 1); // set output
+            if (mode == SKL_LED_MODE_OFF)
+                mvSikluCpuGpioSetVal(50, 1);
+            else if (mode == SKL_LED_MODE_GREEN)
+            {
+                mvSikluCpuGpioSetVal(50, 0);
+                return 0; // do not continue, exit
+            }
+            else
+                return -1; // unsupported led
+        }
+        else if (port_is_copper) // copper led
+        {
+            phy_addr = 1; // same address for ETH2
+            mvSikluCpuGpioSetVal(10, 0);    // requires set MDC switch! Value '0' - connect 3rd PHY
+        }
+        else
+        {
+            return -1;    // port not installed, exit
+        }
+    }
+        break;
+    default:
+        return -1; // unsupported led
+        break;
+    }
+    reg_val &= 0xFF00; // preset mask
+    switch (mode)
+    {
+    case SKL_LED_MODE_OFF:
+        reg_val |= 0x0088;
+        break;
+    case SKL_LED_MODE_GREEN:
+        reg_val |= 0x0089;
+        break;
+    case SKL_LED_MODE_YELLOW:
+        reg_val |= 0x0098;
+        break;
+    case SKL_LED_MODE_GREEN_BLINK:
+        reg_val |= 0x008B;
+        break;
+    case SKL_LED_MODE_YELLOW_BLINK:
+        reg_val |= 0x00B8;
+        break;
+    default:
+        return -1; // unsupported mode
+        break;
+
+    }
+
+    rc = siklu_88e512_phy_write(phy_addr, bank, reg_addr, reg_val);
+
+    //printf("%s() phy_addr %x, bank %x, reg_addr %x, reg_val %x, rc %d\n", __func__, phy_addr, bank, reg_addr, reg_val,
+    //        rc);
+
+    return rc;
+}
+/*
+ *
+ */
+int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int rc = 0;
+
+    switch (led)
+    {
+    case SKL_LED_ETH1:
+    case SKL_LED_ETH2:
+    case SKL_LED_ETH3:
+        rc = siklu_set_eth_led(led, mode);
+        break;
+    case SKL_LED_WLAN:
+    case SKL_LED_POWER:
+        rc = siklu_set_led_cpu_mpp(led, mode);
+        break;
+    case SKL_LED_BLE:
+    default:
+        return -1; // no handler!
+        break;
+    }
+    return rc;
+}
+
+/*
+ * never called
+ */
+int siklu_set_mdcio_switch(int eth_port)
+{
+    int rc = 0;
+#define MDC_MDIO_MPP_SELECTOR 10
+
+    SIKLU_NETWORK_PORT_TYPE_E third_port_type = siklu_get_network_port_type(2);
+    if (third_port_type != SIKLU_NETWORK_PORT_TYPE_COPPER)
+    {
+        ; // do nothing
+    }
+    else
+    {
+        mvSikluCpuGpioSetDirection(MDC_MDIO_MPP_SELECTOR, 1); // set MPP10 output
+
+        switch (eth_port)
+        {
+        case 1:
+            mvSikluCpuGpioSetVal(MDC_MDIO_MPP_SELECTOR, 1);
+            break;
+        case 2:
+            mvSikluCpuGpioSetVal(MDC_MDIO_MPP_SELECTOR, 0);
+            break;
+        default: // do nothing
+            break;
+        }
+    }
+    return rc;
+}
+
+/*
+ *
+ */
+static int do_siklu_pca9557_config(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]) //
+{
+    int rc = CMD_RET_SUCCESS;
+    mvSikluExtndrGpioConf();
+
+    return rc;
+}
+
+typedef enum
+{
+    BIST_MODE_DISABLED = 0, //
+    BIST_MODE_ON = 1, //
+    BIST_MODE_AND_MONITORING = 2, //
+    BIST_MODE_LAST = BIST_MODE_AND_MONITORING, //
+} BIST_MODE_E;
+
+/*
+ *
+ */
+static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
+
+    if (argc == 1) // show current mode
+    {
+        char *bist_state;
+        bist_state = siklu_mutable_env_get(SIKLU_BIST_MUT_ENVIRONMENT_NAME);//  getenv(SIKLU_BIST_ENVIRONMENT_NAME);
+
+        if (bist_state == NULL)
+        {
+            printf("No BIST mode\n");
+        }
+        else
+        {
+            BIST_MODE_E state = (BIST_MODE_E) simple_strtol(bist_state, NULL, 10);
+            switch (state)
+            {
+            case BIST_MODE_DISABLED:
+                printf("No BIST mode\n");
+                break;
+            case BIST_MODE_ON:
+                printf("System in BIST mode\n");
+                break;
+            case BIST_MODE_AND_MONITORING:
+                printf("System in BIST mode with Monitoring\n");
+                break;
+            default:
+                printf("Wrong BIST mode! Disable BIST for future runs\n");
+                siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
+                // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+                // saveenv();
+                break;
+            }
+        }
+    }
+
+    else if (argc == 2)
+    {
+        // set new BIST mode
+        BIST_MODE_E bist_mode = simple_strtoul(argv[1], NULL, 10);
+
+        switch (bist_mode)
+        {
+        case BIST_MODE_DISABLED:
+            printf("Disable BIST mode\n");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
+            break;
+        case BIST_MODE_ON:
+            printf("Set System in BIST mode\n");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, "1");
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, "1",1);
+            break;
+        case BIST_MODE_AND_MONITORING:
+            printf("System in BIST mode with Monitoring\n");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, "2");
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, "2",1);
+            break;
+        default:
+            printf("Wrong BIST mode! Disable BIST for future runs\n");
+            // setenv(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
+            siklu_mutable_env_set(SIKLU_BIST_MUT_ENVIRONMENT_NAME, NULL,1);
+            break;
+        }
+        saveenv();
+    }
+    else
+    {
+        // wrong arguments
+        printf("Wrong arguments\n");
+        printf("Usage:\n%s\n", cmdtp->usage);
+        return CMD_RET_FAILURE;
+    }
+
+    return rc;
+}
+
+static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    struct spi_flash *flash = NULL;
+    char buffer[32];
+    int mpp15, mpp16, mpp17, mpp18;
+    extern int seeprom_get_assembly_type_v1(char* assembly);
+// octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
+// do not change format below! each new line should include "key" and "value" delimited by ":" !!!
+//printf("Product name        : %s\n", siklu_get_board_product_name());
+    seeprom_get_assembly_type_v1(buffer);
+    printf("Board HW name       : %s\n", buffer);
+//printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
+//printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
+//printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
+    printf("DDR clock           : %u MHz\n", gd->ddr_clk);
+//printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
+//printf("CPLD version        : 0x%02x\n", siklu_get_cpld_ver());
+//printf("CPLD board version  : 0x%02x\n", siklu_get_cpld_board_ver());
+//printf("Assembly version    : 0x%02x\n", siklu_get_assembly());
+//printf("Num ETH ports       : %d\n", siklu_get_product_num_eth_ports());
+
+    extern struct spi_flash *get_spi_flash_data(void);
+
+    flash = get_spi_flash_data();
+    if (flash)
+        printf("SF                  : %s\n", flash->name);
+
+// Display HW ID  MPP input pins 15-18  siklu_remarkM06
+    mvSikluCpuGpioSetDirection(15, 0);
+    mvSikluCpuGpioSetDirection(16, 0);
+    mvSikluCpuGpioSetDirection(17, 0);
+    mvSikluCpuGpioSetDirection(18, 0);
+
+    mvSikluCpuGpioGetVal(15, &mpp15);
+    mvSikluCpuGpioGetVal(16, &mpp16);
+    mvSikluCpuGpioGetVal(17, &mpp17);
+    mvSikluCpuGpioGetVal(18, &mpp18);
+    printf("HW ID               : %x\n", (mpp18 << 3) | (mpp17 << 2) | (mpp16 << 1) | (mpp15 << 0));
+
+    return rc;
+}
+
+/*
+ * Notice: access internal Marvell CPU regs occured via offset - #define INTER_REGS_BASE         0xF1000000
+ *
+ *
+ */
+static int do_siklu_rtc_correction_factor(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
+#define RTC_CLOCK_CORRECTION_REGISTER  0xA3818
+
+    if (argc == 1) // show current mode
+    {
+        volatile unsigned int temp;
+        temp = MV_REG_READ(RTC_CLOCK_CORRECTION_REGISTER);
+        printf("%d %d\n", temp & (1 << 15), temp & ((1 << 15) - 1));
+        rc = CMD_RET_SUCCESS;
+    }
+    else if (argc == 3) // set mode
+    {
+        volatile unsigned int mode, val;
+        mode = simple_strtoul(argv[1], NULL, 10) & 0x1;
+        val = simple_strtoul(argv[2], NULL, 10) & 0x7fff;
+        MV_REG_WRITE(RTC_CLOCK_CORRECTION_REGISTER, (mode << 15) | val);
+        printf(" Done\n");
+        rc = CMD_RET_SUCCESS;
+    }
+    else
+    {
+        // wrong arguments
+        printf("Wrong arguments\n");
+        printf("Usage:\n%s\n", cmdtp->usage);
+        rc = CMD_RET_FAILURE;
+    }
+
+    return rc;
+}
+
+/*
+ *
+ */
+static int do_siklu_access_mrv_regs(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_FAILURE; // return false for prevent command be repeatable
+    volatile unsigned int offs, val;
+
+    if (argc == 2) // show register value
+    {
+        offs = simple_strtoul(argv[1], NULL, 16);
+        val = MV_REG_READ(offs);
+        printf("reg 0x%x, val 0x%x\n", offs, val);
+        rc = CMD_RET_SUCCESS;
+    }
+    else if (argc == 3) // set register value
+    {
+        offs = simple_strtoul(argv[1], NULL, 16);
+        val = simple_strtoul(argv[2], NULL, 16);
+        MV_REG_WRITE(offs, val);
+        rc = CMD_RET_SUCCESS;
+    }
+    else
+    {
+        // wrong arguments
+        printf("Wrong arguments\n");
+        printf("Usage:\n%s\n", cmdtp->usage);
+        rc = CMD_RET_FAILURE;
+    }
+
+    return rc;
+}
+
+
+#define TEST_DURATION_MSEC  3000
+#define TEST_INTERVAL_MSEC  50
+#define SAMPLES_IN_1_SEC    1000 /  TEST_INTERVAL_MSEC
+
+/*
+ #1 find first rising edge, count '1' until first '0' (fall edge)
+ #2 count '0' until first '1'
+ #3 number '1' should be +- equal to number of '0'
+ */
+static int calc_freq(int* samples, int num_samples, int* freq)
+{
+    typedef enum
+    {
+        CALC_FREQ_WAIT4_1ST_RAISE_EDGE, //
+        CALC_FREQ_WAIT4_1ST_FALL_EDGE, //
+        CALC_FREQ_WAIT4_2ND_RAISE_EDGE,
+    } CALC_FREQ_STATE;
+
+    int rc = 0, i;
+    CALC_FREQ_STATE state = CALC_FREQ_WAIT4_1ST_RAISE_EDGE;
+    int prev_val, cur_val;
+    int countH = 0, countL = 0;
+
+    *freq = 0;
+    prev_val = cur_val = samples[0];
+
+    for (i = 0; i < num_samples; i++)
+    {
+        switch (state)
+        {
+        case CALC_FREQ_WAIT4_1ST_RAISE_EDGE:
+            if ((prev_val == 0) && (samples[i] == 1))
+            {
+                state = CALC_FREQ_WAIT4_1ST_FALL_EDGE;
+                countH++;
+            }
+            break;
+        case CALC_FREQ_WAIT4_1ST_FALL_EDGE:
+            if ((prev_val == 1) && (samples[i] == 0))
+            {
+                state = CALC_FREQ_WAIT4_2ND_RAISE_EDGE;
+                countL++;
+            }
+            else
+                countH++;
+            break;
+        case CALC_FREQ_WAIT4_2ND_RAISE_EDGE:
+            if ((prev_val == 0) && (samples[i] == 1))
+                goto end_calc;
+            else
+                countL++;
+            break;
+        default:
+            break;
+        }
+        prev_val = samples[i];
+    }
+
+    end_calc:
+
+    // each of counters should be > '0'
+    if ((countL == 0) || (countH == 0))
+    {
+        printf(" Error in algorithm, one or two counters are '0': %d, %d\n", countL, countH);
+        return -1;
+    }
+
+    // calculate frequency
+    *freq = SAMPLES_IN_1_SEC / (countL + countH);
+
+    return rc;
+}
+
+/*
+ * The test continues 4 seconds
+ */
+static int do_siklu_pse_display_load_status(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int test_delay = 0, ret;
+    int led0_pin, led1_pin, i = 0, k = 0;
+
+    // sample_S samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)]; // really we need 3000/50 = 60 samples
+    int led0_val_samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)];
+    int led1_val_samples[2 * (TEST_DURATION_MSEC / TEST_INTERVAL_MSEC)];
+
+    int eth_num = simple_strtoul(argv[1], NULL, 10);
+
+    if (eth_num == 2)
+    {
+        led0_pin = 13;
+        led1_pin = 14;
+    }
+    else if (eth_num == 3)
+    {
+        led0_pin = 54;
+        led1_pin = 55;
+    }
+    else
+    {
+        printf("Wrong Eth port number %d\n", eth_num);
+        return CMD_RET_USAGE;
+    }
+
+    if (!is_pse_configured)
+    {
+        // PSE Port #2 status, if exists
+        mvSikluCpuGpioSetDirection(13, 0);
+        mvSikluCpuGpioSetDirection(14, 0);
+
+        mvSikluCpuGpioSetDirection(54, 0);
+        mvSikluCpuGpioSetDirection(55, 0);
+
+        is_pse_configured = 1;
+    }
+
+    memset(led0_val_samples, 0, sizeof(led0_val_samples));
+    memset(led1_val_samples, 0, sizeof(led1_val_samples));
+
+    // step #1 measure pin value on test interval
+    do
+    {
+
+        mvSikluCpuGpioGetVal(led0_pin, &led0_val_samples[i]);
+        mvSikluCpuGpioGetVal(led1_pin, &led1_val_samples[i]);
+
+        led0_val_samples[i] = !led0_val_samples[i];  // LED0 and LED1 status pins need invert value
+        led1_val_samples[i] = !led1_val_samples[i];
+
+        i++;
+        mdelay(TEST_INTERVAL_MSEC);
+        test_delay += TEST_INTERVAL_MSEC;
+    } while (test_delay <= TEST_DURATION_MSEC); // 3 sec test
+
+    // detect pin status:
+    int l0_comulative_stat = 0, l1_comulative_stat = 0;
+
+    for (k = 0; k < i; k++)
+    {
+        if (led0_val_samples[k] == 1)
+            l0_comulative_stat += 1;
+        if (led1_val_samples[k] == 1)
+            l1_comulative_stat += 1;
+    }
+
+    //printf(" i %d, k %d, l0_comulative_stat %d, l1_comulative_stat %d\n",
+    //        i, k, l0_comulative_stat, l1_comulative_stat ); 
+
+    // check each pin
+    if (l0_comulative_stat >= (k - 5))
+        printf("LED0 always '1'\n");
+    else if (l0_comulative_stat <= 5)
+        printf("LED0 always '0'\n");
+    else
+    {
+        int freq;
+        // LED0 status is alternate
+        printf(" l0_comulative_stat %d, k %d\n", l0_comulative_stat, k);
+        ret = calc_freq(led0_val_samples, k, &freq);
+        if (ret == 0)
+        {
+            printf(" LED0 output freq: %d Hz\n", freq);
+        }
+        else
+        {
+            printf(" Measure LED0 output status error\n");
+        }
+    }
+
+    if (l1_comulative_stat >= (k - 5))
+        printf("LED1 always '1'\n");
+    else if (l1_comulative_stat <= 5)
+        printf("LED1 always '0'\n");
+    else
+    {
+        int freq;
+        // LED1 status is alternate
+        printf(" l1_comulative_stat %d, k %d\n", l1_comulative_stat, k);
+        ret = calc_freq(led1_val_samples, k, &freq);
+        if (ret == 0)
+        {
+            printf(" LED1 output freq: %d Hz\n", freq);
+        }
+        else
+        {
+            printf(" Measure LED1 output status error\n");
+        }
+    }
+
+    return rc;
+}
+
+/*
+ *  Display status of PSE69101 LED0 and LED1 output pins
+ *
+ */
+static int do_siklu_pse_display_current_status(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+
+    int val[4];
+
+    mvSikluCpuGpioGetVal(13, &val[0]);
+    mvSikluCpuGpioGetVal(14, &val[1]);
+    mvSikluCpuGpioGetVal(54, &val[2]);
+    mvSikluCpuGpioGetVal(55, &val[3]);
+
+	// LED0 and LED1 status pins need invert value
+	printf("       LED0-LED1\n");
+    printf("port#2 %d-%d\n", !val[0], !val[1]);
+    printf("port#3 %d-%d\n", !val[2], !val[3]);
+    return rc;
+}
+
+/*
+ *
+ *
+ */
+static int do_siklu_pse_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int eth_num;
+    char state; // = argv[2][0];
+    MV_U8 mask;
+
+    if (argc != 3)
+    {
+        printf("Wrong number arguments\n");
+        return CMD_RET_USAGE;
+    }
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+    eth_num = simple_strtoul(argv[1], NULL, 10);
+    state = argv[2][0];
+
+    if (eth_num == 2)
+        mask = 1 << 2;
+    else if (eth_num == 3)
+        mask = 1 << 1;
+    else
+    {
+        printf("Wrong Eth port %d\n", eth_num);
+        return CMD_RET_USAGE;
+    }
+
+    MV_U8 reg_val = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, 1);
+
+    if (state == 'd')
+    {
+        reg_val &= ~mask;
+    }
+    else if (state == 'e')
+    {
+        reg_val |= mask;
+    }
+    else
+    {
+        printf("Wrong state %c\n", state);
+        i2c_set_bus_num(old_bus);
+        return CMD_RET_USAGE;
+    }
+
+    i2c_reg_write(CONFIG_PCA9557_DEV_ADDR, 1, reg_val);
+
+    i2c_set_bus_num(old_bus);
+
+    return rc;
+}
+
+/*
+ *
+ */
+static int do_siklu_poe_num_pairs_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    MV_U8 num_pairs;
+
+    int old_bus = i2c_get_bus_num();
+    i2c_set_bus_num(CONFIG_PCA9557_BUS_NUM);
+
+    num_pairs = i2c_reg_read(CONFIG_PCA9557_DEV_ADDR, PCA9557_INPUT_PORT_REG) & 0x01;
+    if (num_pairs)
+        printf("\t4 pairs\n");
+    else
+        printf("\t2 pairs\n");
+
+    i2c_set_bus_num(old_bus);
+    return CMD_RET_SUCCESS;
+}
+
+static int do_siklu_push_button_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int val, msec_counter = 0;
+    int is_pb_pressed = 0;
+
+    mvSikluCpuGpioSetDirection(52, 0);
+    printf("Start Push-Button Test\n");
+    printf("The test should stop after press-release PB, or Enter Ctrl-C terminal command\n");
+
+    do
+    {
+        if (ctrlc())
+        {
+            printf(" CTRL-C pressed, Exit\n");
+            return rc;
+        }
+        mvSikluCpuGpioGetVal(52, &val);
+        if ((val) && (is_pb_pressed))
+        {
+            printf(" PB released, pressed time %d msec\n", msec_counter);
+            break;
+        }
+        if (!val)
+        {
+            is_pb_pressed = 1;
+            msec_counter += 100;
+        }
+        msleep(100);
+    } while (1);
+
+    return rc;
+}
+
+/*
+ * 
+ */
+static int do_siklu_push_button_stat_show(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int val;
+
+    mvSikluCpuGpioSetDirection(52, 0);
+    mvSikluCpuGpioGetVal(52, &val);
+    if (val)
+        printf("\tPB released\n");
+    else
+        printf("\tPB pressed\n");
+
+    return rc;
+}
+
+static int do_siklu_marvell_mpp_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    int mpp, val;
+
+    mpp = simple_strtoul(argv[1], NULL, 10);
+    val = !!simple_strtoul(argv[2], NULL, 10);
+
+    switch (mpp)
+    {
+    case 6: //  if eth1=copper PHY reset control, if eth1=fiber SFP LED Control
+    case 10: // Select between MDC2 and MDC3 (only when PHY3 assembled)
+    case 12: // LED
+    case 21: // LED
+    case 48: // LED
+    case 49: // LED
+    case 50: // if eth2=copper, PHY controls reset, if eth2=fiber, controls SFP LED
+    case 53: // PHY eth0 port reset control
+        mvSikluCpuGpioSetDirection(mpp, 1); // set output
+        mvSikluCpuGpioSetVal(mpp, val);
+        break;
+    default:
+        printf("Wrong MPP Value\n");
+        break;
+    }
+
+    return rc;
+}
+
+/*
+ *
+ */
+static int do_siklu_watchdog_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+
+    int ret;
+
+    if (argc != 2)  // wrong parameters
+    {
+        printf("Usage:  %s\n", cmdtp->usage);
+        return 1;
+    }
+
+    if (argv[1][0] == '0') // disable WDT
+    {
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_STOP, 0);
+    }
+    else if (argv[1][0] == '-') // ping WDT
+    {
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_PING, 0);
+    }
+    else
+    {  // enable WDT with timeout from argv[1]
+        int timeout = simple_strtoul(argv[1], NULL, 10);
+        ret = mvSikluWdtControl(MV_SIKLU_BOARD_WD_START, timeout);
+    }
+
+    if (ret == 0)
+        return CMD_RET_SUCCESS;
+    else
+        return CMD_RET_FAILURE;
+}
+
+/*
+ *
+ */
+static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    int rc = CMD_RET_SUCCESS;
+    char led[30];
+    char state[30];
+    SKL_BOARD_LED_MODE_E _mode;
+    SKL_BOARD_LED_TYPE_E _led;
+
+    if (argc == 3)
+    {
+        strcpy(led, argv[1]);
+        strcpy(state, argv[2]);
+    }
+    else
+    {
+        printf("sled [led] [state]\n");
+        printf(" led:   ble/wlan/eth1/eth2/eth3/power\n");
+        printf(" state: \n\to - off\n\tg - green\n\ty - yellow\n\tgb - green blink\n\tyb - yellow blink\n");
+        return rc;
+    }
+
+    if (strcmp(led, "ble") == 0)
+    {
+        _led = SKL_LED_BLE;
+
+    } //
+    else if (strcmp(led, "wlan") == 0)
+    {
+        _led = SKL_LED_WLAN;
+    } //
+    else if (strcmp(led, "eth1") == 0)
+    {
+        _led = SKL_LED_ETH1;
+    } //
+    else if (strcmp(led, "eth2") == 0)
+    {
+        _led = SKL_LED_ETH2;
+    } //
+    else if (strcmp(led, "eth3") == 0)
+    {
+        _led = SKL_LED_ETH3;
+    } //
+    else if (strcmp(led, "power") == 0)
+    {
+        _led = SKL_LED_POWER;
+    } //
+    else
+    {
+        printf("Wrong LED type\n");
+        return CMD_RET_USAGE;
+    }
+
+    if (strcmp(state, "o") == 0)
+    {
+        _mode = SKL_LED_MODE_OFF;
+    }
+    else if (strcmp(state, "g") == 0)
+    {
+        _mode = SKL_LED_MODE_GREEN;
+    }
+    else if (strcmp(state, "y") == 0)
+    {
+        _mode = SKL_LED_MODE_YELLOW;
+    }
+    else if (strcmp(state, "gb") == 0)
+    {
+        _mode = SKL_LED_MODE_GREEN_BLINK;
+    }
+    else if (strcmp(state, "yb") == 0)
+    {
+        _mode = SKL_LED_MODE_YELLOW_BLINK;
+    }
+    else
+    {
+        printf("Wrong LED mode\n");
+        return CMD_RET_USAGE;
+    }
+
+    rc = siklu_set_led(_led, _mode);
+    if (rc != 0)
+    {
+        printf(" Error or unsupported mode\n");
+        rc = CMD_RET_SUCCESS; // return success here
+    }
+
+    return rc;
+}
+
+//############################################################################################
+//############################################################################################
+//############################################################################################
+//############################################################################################
+
+U_BOOT_CMD(spca9557, 7, 1, do_siklu_pca9557_access, "Read/Write PCA9557 IIC Extender", //
+        "[reg] [val*] Read/Write PCA9557 IIC Extender");
+
+U_BOOT_CMD(spca9557c, 7, 1, do_siklu_pca9557_config, "Config PCA9557 IIC Extender to default values", //
+        "Config PCA9557 IIC Extender to default values");
+
+U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
+U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " Display Board HW info");
+
+U_BOOT_CMD(srtccf, 5, 1, do_siklu_rtc_correction_factor, "Show/Set Internal CPU RTC correction factor",
+        " [Mode 0/1]* [Decimal Value]* Without params - show");
+
+U_BOOT_CMD(smrvr, 5, 1, do_siklu_access_mrv_regs, "Access Marvell SoC registers", "[reg] [val*] Show/Set Reg val");
+
+U_BOOT_CMD(spbs, 3, 1, do_siklu_push_button_stat_show, "Show Siklu board Push-Button Status",
+        "Show Siklu board Push-Button Status");
+
+U_BOOT_CMD(spbt, 3, 1, do_siklu_push_button_test, "Push-Button Test", "Push-Button Test");
+
+U_BOOT_CMD(spoe, 3, 1, do_siklu_poe_num_pairs_show, "Show POE number pairs Status", "Show POE number pairs Status");
+
+U_BOOT_CMD(spsec, 3, 1, do_siklu_pse_control, "Control PSE Outputs", "[2/3] [e/d] Control PSE Outputs");
+U_BOOT_CMD(spses, 3, 1, do_siklu_pse_display_current_status, "Show PSE Current Output Status",
+        "Show PSE Current Output Status");
+U_BOOT_CMD(spset, 3, 1, do_siklu_pse_display_load_status, "Show PSE Load Detection Output Status",
+        " [eth_num] Show PSE Load Detection Output Status");
+
+U_BOOT_CMD(smpp, 3, 1, do_siklu_marvell_mpp_control, "Control CPU MPP 6/10/12/21/48/49/50/53 Control",
+        "[mpp_num] [0/1] Set 0/1 on required MPP number");
+
+U_BOOT_CMD(sled, 3, 1, do_siklu_board_led_control, "Control Onboard LEDs", "[led] [state] Control Onboard LEDs");
+
+U_BOOT_CMD(swdt, 3, 1, do_siklu_watchdog_control, "Watch-Dog Control",
+        "[time-out sec] - set 0 for disable, '-' for ping");

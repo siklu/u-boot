@@ -34,6 +34,8 @@
 #include <asm/byteorder.h>
 #include <asm/io.h>
 
+#ifndef CONFIG_MARVELL
+
 #if defined(CONFIG_IDE_8xx_DIRECT) || defined(CONFIG_IDE_PCMCIA)
 # include <pcmcia.h>
 #endif
@@ -455,6 +457,8 @@ void ide_init(void)
 		ide_dev_desc[i].dev = i;
 		ide_dev_desc[i].part_type = PART_TYPE_UNKNOWN;
 		ide_dev_desc[i].blksz = 0;
+		ide_dev_desc[i].log2blksz =
+			LOG2_INVALID(typeof(ide_dev_desc[i].log2blksz));
 		ide_dev_desc[i].lba = 0;
 		ide_dev_desc[i].block_read = ide_read;
 		ide_dev_desc[i].block_write = ide_write;
@@ -806,6 +810,7 @@ static void ide_ident(block_dev_desc_t *dev_desc)
 	/* assuming HD */
 	dev_desc->type = DEV_TYPE_HARDDISK;
 	dev_desc->blksz = ATA_BLOCKSIZE;
+	dev_desc->log2blksz = LOG2(dev_desc->blksz);
 	dev_desc->lun = 0;	/* just to fill something in... */
 
 #if 0				/* only used to test the powersaving mode,
@@ -827,7 +832,7 @@ static void ide_ident(block_dev_desc_t *dev_desc)
 
 /* ------------------------------------------------------------------------- */
 
-ulong ide_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer)
+ulong ide_read(int device, lbaint_t blknr, lbaint_t blkcnt, void *buffer)
 {
 	ulong n = 0;
 	unsigned char c;
@@ -841,7 +846,7 @@ ulong ide_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer)
 		lba48 = 1;
 	}
 #endif
-	debug("ide_read dev %d start %lX, blocks " LBAF " buffer at %lX\n",
+	debug("ide_read dev %d start " LBAF ", blocks " LBAF " buffer at %lX\n",
 	      device, blknr, blkcnt, (ulong) buffer);
 
 	ide_led(DEVICE_LED(device), 1);	/* LED on       */
@@ -931,8 +936,8 @@ ulong ide_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer)
 
 		if ((c & (ATA_STAT_DRQ | ATA_STAT_BUSY | ATA_STAT_ERR)) !=
 		    ATA_STAT_DRQ) {
-			printf("Error (no IRQ) dev %d blk %ld: status %#02x\n",
-				device, blknr, c);
+			printf("Error (no IRQ) dev %d blk " LBAF ": status "
+			       "%#02x\n", device, blknr, c);
 			break;
 		}
 
@@ -951,7 +956,7 @@ IDE_READ_E:
 /* ------------------------------------------------------------------------- */
 
 
-ulong ide_write(int device, ulong blknr, lbaint_t blkcnt, const void *buffer)
+ulong ide_write(int device, lbaint_t blknr, lbaint_t blkcnt, const void *buffer)
 {
 	ulong n = 0;
 	unsigned char c;
@@ -1019,8 +1024,8 @@ ulong ide_write(int device, ulong blknr, lbaint_t blkcnt, const void *buffer)
 
 		if ((c & (ATA_STAT_DRQ | ATA_STAT_BUSY | ATA_STAT_ERR)) !=
 		    ATA_STAT_DRQ) {
-			printf("Error (no IRQ) dev %d blk %ld: status %#02x\n",
-				device, blknr, c);
+			printf("Error (no IRQ) dev %d blk " LBAF ": status "
+				"%#02x\n", device, blknr, c);
 			goto WR_OUT;
 		}
 
@@ -1448,6 +1453,7 @@ static void atapi_inquiry(block_dev_desc_t *dev_desc)
 	dev_desc->lun = 0;
 	dev_desc->lba = 0;
 	dev_desc->blksz = 0;
+	dev_desc->log2blksz = LOG2_INVALID(typeof(dev_desc->log2blksz));
 	dev_desc->type = iobuf[0] & 0x1f;
 
 	if ((iobuf[1] & 0x80) == 0x80)
@@ -1492,6 +1498,7 @@ static void atapi_inquiry(block_dev_desc_t *dev_desc)
 	dev_desc->blksz = ((unsigned long) iobuf[4] << 24) +
 		((unsigned long) iobuf[5] << 16) +
 		((unsigned long) iobuf[6] << 8) + ((unsigned long) iobuf[7]);
+	dev_desc->log2blksz = LOG2(dev_desc->blksz);
 #ifdef CONFIG_LBA48
 	/* ATAPI devices cannot use 48bit addressing (ATA/ATAPI v7) */
 	dev_desc->lba48 = 0;
@@ -1568,3 +1575,4 @@ U_BOOT_CMD(ide, 5, 1, do_ide,
 
 U_BOOT_CMD(diskboot, 3, 1, do_diskboot,
 	   "boot from IDE device", "loadAddr dev:part");
+#endif

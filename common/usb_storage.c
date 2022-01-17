@@ -156,12 +156,19 @@ struct us_data {
 	trans_cmnd	transport;		/* transport routine */
 };
 
-#ifdef CONFIG_USB_EHCI
+/*
+ * The U-Boot XHCI driver can not handle the EHCI transfer length limit
+ * Successfully tested transfer length <= 4000
+ * Values > 4000 cause failures when reading files with XHCI
+ */
+#if defined(CONFIG_USB_XHCI)
+#define USB_MAX_XFER_BLK	3800
 /*
  * The U-Boot EHCI driver can handle any transfer length as long as there is
  * enough free heap space left, but the SCSI READ(10) and WRITE(10) commands are
  * limited to 65535 blocks.
  */
+#elif defined(CONFIG_USB_EHCI)
 #define USB_MAX_XFER_BLK	65535
 #else
 #define USB_MAX_XFER_BLK	20
@@ -178,9 +185,9 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *us,
 		      block_dev_desc_t *dev_desc);
 int usb_storage_probe(struct usb_device *dev, unsigned int ifnum,
 		      struct us_data *ss);
-unsigned long usb_stor_read(int device, unsigned long blknr,
+unsigned long usb_stor_read(int device, lbaint_t blknr,
 			    lbaint_t blkcnt, void *buffer);
-unsigned long usb_stor_write(int device, unsigned long blknr,
+unsigned long usb_stor_write(int device, lbaint_t blknr,
 			     lbaint_t blkcnt, const void *buffer);
 struct usb_device * usb_get_dev_index(int index);
 void uhci_show_temp_int_td(void);
@@ -233,6 +240,17 @@ static unsigned int usb_get_max_lun(struct us_data *us)
 	return (len > 0) ? *result : 0;
 }
 
+/********************************************************************************
+ * A hierarchical support (HISUP) bit set to zero indicates the SCSI target device does
+ * not use the hierarchical addressing model to assign LUNs to logical units. A HISUP bit
+ * set to one indicates the SCSI target device uses the hierarchical addressing model
+ * to assign LUNs to logical units
+ *
+ * read hiSup status in usb_inquiry() routine: 3rd byte of inquiry DATA, bit4:
+ * if hiSup bit is enabled, read positive max LUN from device and use it as index.
+ */
+int gHiSup = -1;
+
 /*******************************************************************************
  * scan the usb and reports device info
  * to the user if mode = 1
@@ -270,17 +288,25 @@ int usb_stor_scan(int mode)
 			/* OK, it's a storage device.  Iterate over its LUNs
 			 * and populate `usb_dev_desc'.
 			 */
-			int lun, max_lun, start = usb_max_devs;
+			int lun, start = usb_max_devs;
+			unsigned int max_lun_index;
 
-			max_lun = usb_get_max_lun(&usb_stor[usb_max_devs]);
+			max_lun_index = usb_get_max_lun(&usb_stor[usb_max_devs]);
+			/*if valid, convert logic unit count to logic unit index: decrease it by 1 */
+			if (max_lun_index > 0)
+				max_lun_index--;
+
 			for (lun = 0;
-			     lun <= max_lun && usb_max_devs < USB_MAX_STOR_DEV;
+			     lun <= max_lun_index && usb_max_devs < USB_MAX_STOR_DEV;
 			     lun++) {
 				usb_dev_desc[usb_max_devs].lun = lun;
 				if (usb_stor_get_info(dev, &usb_stor[start],
-						      &usb_dev_desc[usb_max_devs]) == 1) {
-				usb_max_devs++;
-		}
+				    &usb_dev_desc[usb_max_devs]) == 1) {
+					usb_max_devs++;
+				}
+				/* hiSup bit is tested in usb_inquiry(): if disabled --> logical units are not supported */
+				if (!gHiSup)
+					max_lun_index = 0;
 			}
 		}
 		/* if storage device */
@@ -511,7 +537,7 @@ static int usb_stor_BBB_comdat(ccb *srb, struct us_data *us)
 	dir_in = US_DIRECTION(srb->cmd[0]);
 
 #ifdef BBB_COMDAT_TRACE
-	printf("dir %d lun %d cmdlen %d cmd %p datalen %d pdata %p\n",
+	printf("dir %d lun %d cmdlen %d cmd %p datalen %lu pdata %p\n",
 		dir_in, srb->lun, srb->cmdlen, srb->cmd, srb->datalen,
 		srb->pdata);
 	if (srb->cmdlen) {
@@ -853,7 +879,7 @@ do_retry:
 	psrb->cmd[4] = 18;
 	psrb->datalen = 18;
 	psrb->pdata = &srb->sense_buf[0];
-	psrb->cmdlen = 12;
+	psrb->cmdlen=6; /*12*/
 	/* issue the command */
 	result = usb_stor_CB_comdat(psrb, us);
 	USB_STOR_PRINTF("auto request returned %d\n", result);
@@ -921,7 +947,7 @@ static int usb_inquiry(ccb *srb, struct us_data *ss)
 		srb->cmd[1] = srb->lun << 5;
 		srb->cmd[4] = 36;
 		srb->datalen = 36;
-		srb->cmdlen = 12;
+		srb->cmdlen=6; /*12*/
 		i = ss->transport(srb, ss);
 		USB_STOR_PRINTF("inquiry returns %d\n", i);
 		if (i == 0)
@@ -946,7 +972,7 @@ static int usb_request_sense(ccb *srb, struct us_data *ss)
 	srb->cmd[4] = 18;
 	srb->datalen = 18;
 	srb->pdata = &srb->sense_buf[0];
-	srb->cmdlen = 12;
+	srb->cmdlen=6; /*12*/
 	ss->transport(srb, ss);
 	USB_STOR_PRINTF("Request Sense returned %02X %02X %02X\n",
 			srb->sense_buf[2], srb->sense_buf[12],
@@ -964,7 +990,7 @@ static int usb_test_unit_ready(ccb *srb, struct us_data *ss)
 		srb->cmd[0] = SCSI_TST_U_RDY;
 		srb->cmd[1] = srb->lun << 5;
 		srb->datalen = 0;
-		srb->cmdlen = 12;
+		srb->cmdlen=6; /*12*/
 		if (ss->transport(srb, ss) == USB_STOR_TRANSPORT_GOOD) {
 			ss->flags |= USB_READY;
 			return 0;
@@ -980,7 +1006,7 @@ static int usb_test_unit_ready(ccb *srb, struct us_data *ss)
 		if ((srb->sense_buf[2] == 0x02) &&
 		    (srb->sense_buf[12] == 0x3a))
 			return -1;
-		mdelay(100);
+		mdelay(1000);
 	} while (retries--);
 
 	return -1;
@@ -996,7 +1022,7 @@ static int usb_read_capacity(ccb *srb, struct us_data *ss)
 		srb->cmd[0] = SCSI_RD_CAPAC;
 		srb->cmd[1] = srb->lun << 5;
 		srb->datalen = 8;
-		srb->cmdlen = 12;
+		srb->cmdlen=10; /*12*/
 		if (ss->transport(srb, ss) == USB_STOR_TRANSPORT_GOOD)
 			return 0;
 	} while (retry--);
@@ -1016,7 +1042,7 @@ static int usb_read_10(ccb *srb, struct us_data *ss, unsigned long start,
 	srb->cmd[5] = ((unsigned char) (start)) & 0xff;
 	srb->cmd[7] = ((unsigned char) (blocks >> 8)) & 0xff;
 	srb->cmd[8] = (unsigned char) blocks & 0xff;
-	srb->cmdlen = 12;
+	srb->cmdlen=10; /*12 */
 	USB_STOR_PRINTF("read10: start %lx blocks %x\n", start, blocks);
 	return ss->transport(srb, ss);
 }
@@ -1062,7 +1088,7 @@ static void usb_bin_fixup(struct usb_device_descriptor descriptor,
 }
 #endif /* CONFIG_USB_BIN_FIXUP */
 
-unsigned long usb_stor_read(int device, unsigned long blknr,
+unsigned long usb_stor_read(int device, lbaint_t blknr,
 			    lbaint_t blkcnt, void *buffer)
 {
 	lbaint_t start, blks;
@@ -1135,7 +1161,7 @@ retry_it:
 	return blkcnt;
 }
 
-unsigned long usb_stor_write(int device, unsigned long blknr,
+unsigned long usb_stor_write(int device, lbaint_t blknr,
 				lbaint_t blkcnt, const void *buffer)
 {
 	lbaint_t start, blks;
@@ -1218,6 +1244,7 @@ int usb_storage_probe(struct usb_device *dev, unsigned int ifnum,
 {
 	struct usb_interface *iface;
 	int i;
+	struct usb_endpoint_descriptor *ep_desc;
 	unsigned int flags = 0;
 
 	int protocol = 0;
@@ -1300,24 +1327,25 @@ int usb_storage_probe(struct usb_device *dev, unsigned int ifnum,
 	 * We will ignore any others.
 	 */
 	for (i = 0; i < iface->desc.bNumEndpoints; i++) {
+		ep_desc = &iface->ep_desc[i];
 		/* is it an BULK endpoint? */
-		if ((iface->ep_desc[i].bmAttributes &
+		if ((ep_desc->bmAttributes &
 		     USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
-			if (iface->ep_desc[i].bEndpointAddress & USB_DIR_IN)
-				ss->ep_in = iface->ep_desc[i].bEndpointAddress &
-					USB_ENDPOINT_NUMBER_MASK;
+			if (ep_desc->bEndpointAddress & USB_DIR_IN)
+				ss->ep_in = ep_desc->bEndpointAddress &
+						USB_ENDPOINT_NUMBER_MASK;
 			else
 				ss->ep_out =
-					iface->ep_desc[i].bEndpointAddress &
+					ep_desc->bEndpointAddress &
 					USB_ENDPOINT_NUMBER_MASK;
 		}
 
 		/* is it an interrupt endpoint? */
-		if ((iface->ep_desc[i].bmAttributes &
-		    USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT) {
-			ss->ep_int = iface->ep_desc[i].bEndpointAddress &
-				USB_ENDPOINT_NUMBER_MASK;
-			ss->irqinterval = iface->ep_desc[i].bInterval;
+		if ((ep_desc->bmAttributes &
+		     USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT) {
+			ss->ep_int = ep_desc->bEndpointAddress &
+						USB_ENDPOINT_NUMBER_MASK;
+			ss->irqinterval = ep_desc->bInterval;
 		}
 	}
 	USB_STOR_PRINTF("Endpoints In %d Out %d Int %d\n",
@@ -1361,7 +1389,6 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, usb_stor_buf, 36);
 	unsigned long *capacity, *blksz;
 	ccb *pccb = &usb_ccb;
-
 	pccb->pdata = usb_stor_buf;
 
 	dev_desc->target = dev->devnum;
@@ -1371,6 +1398,7 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 	if (usb_inquiry(pccb, ss))
 		return -1;
 
+    udelay(5000000);
 	perq = usb_stor_buf[0];
 	modi = usb_stor_buf[1];
 
@@ -1394,6 +1422,11 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 #endif /* CONFIG_USB_BIN_FIXUP */
 	USB_STOR_PRINTF("ISO Vers %X, Response Data %X\n", usb_stor_buf[2],
 			usb_stor_buf[3]);
+
+	/* INQUIRY data byte3, bit4 is hiSup bit (hierarchical support).
+	 * if HISUP bit is not set, disregard LUN index value (scan only unit#0) */
+	gHiSup = usb_stor_buf[3] & (1<<4) ? 1 : 0;
+
 	if (usb_test_unit_ready(pccb, ss)) {
 		printf("Device NOT ready\n"
 		       "   Request Sense returned %02X %02X %02X\n",
@@ -1430,6 +1463,7 @@ int usb_stor_get_info(struct usb_device *dev, struct us_data *ss,
 			*capacity, *blksz);
 	dev_desc->lba = *capacity;
 	dev_desc->blksz = *blksz;
+	dev_desc->log2blksz = LOG2(dev_desc->blksz);
 	dev_desc->type = perq;
 	USB_STOR_PRINTF(" address %d\n", dev_desc->target);
 	USB_STOR_PRINTF("partype: %d\n", dev_desc->part_type);

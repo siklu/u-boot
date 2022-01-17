@@ -44,9 +44,17 @@ extern ulong ide_bus_offset[];
 #ifdef CONFIG_SYS_64BIT_LBA
 typedef uint64_t lbaint_t;
 #define LBAF "%llx"
+#define IDE_BLOCK_NUMBER_MASK 0x0000fffff0000000
+#define LBA_LOW_REG_SHIFT	24
+#define LBA_MID_REG_SHIFT	32
+#define LBA_HIGH_REG_SHIFT	40
 #else
 typedef ulong lbaint_t;
 #define LBAF "%lx"
+#define IDE_BLOCK_NUMBER_MASK 0xf0000000
+#define LBA_LOW_REG_SHIFT	24
+#define LBA_MID_REG_SHIFT	0
+#define LBA_HIGH_REG_SHIFT	0
 #endif
 
 /*
@@ -54,8 +62,9 @@ typedef ulong lbaint_t;
  */
 
 void ide_init(void);
-ulong ide_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer);
-ulong ide_write(int device, ulong blknr, lbaint_t blkcnt, const void *buffer);
+ulong ide_read(int device, lbaint_t blknr, lbaint_t blkcnt, void *buffer);
+ulong ide_write(int device, lbaint_t blknr, lbaint_t blkcnt,
+		const void *buffer);
 
 #ifdef CONFIG_IDE_PREINIT
 int ide_preinit(void);

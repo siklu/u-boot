@@ -25,6 +25,7 @@
 #include <command.h>
 #include <mmc.h>
 
+extern int mmc_initiated;
 static int curr_device = -1;
 #ifndef CONFIG_GENERIC_MMC
 int do_mmc (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -106,7 +107,7 @@ static void print_mmcinfo(struct mmc *mmc)
 	printf("Rd Block Len: %d\n", mmc->read_bl_len);
 
 	printf("%s version %d.%d\n", IS_SD(mmc) ? "SD" : "MMC",
-			(mmc->version >> 4) & 0xf, mmc->version & 0xf);
+			(mmc->version >> 8) & 0xf, mmc->version & 0xff);
 
 	printf("High Capacity: %s\n", mmc->high_capacity ? "Yes" : "No");
 	puts("Capacity: ");
@@ -147,12 +148,19 @@ U_BOOT_CMD(
 	"- display info of the current MMC device"
 );
 
-static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	enum mmc_state state;
 
 	if (argc < 2)
 		return CMD_RET_USAGE;
+
+	if (mmc_initiated == 0) {       /* 	If this is not a call to rescan !!!! */
+		if (!((argc == 2) && (strncmp(argv[1], "rescan", 6) == 0))) {
+			puts ("\nWarning: Please run 'mmc rescan' before running other mmc commands \n\n");
+			return 1;
+		}
+	}
 
 	if (curr_device < 0) {
 		if (get_mmc_num() > 0)
@@ -250,6 +258,27 @@ static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 0;
 	}
 
+	else if (argc == 3 && strcmp(argv[1], "setdsr") == 0) {
+		struct mmc *mmc = find_mmc_device(curr_device);
+		u32 val = simple_strtoul(argv[2], NULL, 16);
+		int ret;
+
+		if (!mmc) {
+			printf("no mmc device at slot %x\n", curr_device);
+			return 1;
+		}
+		ret = mmc_set_dsr(mmc, val);
+		printf("set dsr %s\n", (!ret) ? "OK, force rescan" : "ERROR");
+		if (!ret) {
+			mmc->has_init = 0;
+			if (mmc_init(mmc))
+				return 1;
+			else
+				return 0;
+		}
+		return ret;
+	}
+
 	state = MMC_INVALID;
 	if (argc == 5 && strcmp(argv[1], "read") == 0)
 		state = MMC_READ;
@@ -281,6 +310,13 @@ static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				argv[1], curr_device, blk, cnt);
 
 		mmc_init(mmc);
+
+		if ((state == MMC_WRITE || state == MMC_ERASE)) {
+			if (mmc_getwp(mmc) == 1) {
+				printf("Error: card is write protected!\n");
+				return 1;
+			}
+		}
 
 		switch (state) {
 		case MMC_READ:
@@ -317,5 +353,7 @@ U_BOOT_CMD(
 	"mmc rescan\n"
 	"mmc part - lists available partition on current mmc device\n"
 	"mmc dev [dev] [part] - show or set current mmc device [partition]\n"
-	"mmc list - lists available devices");
+	"mmc list - lists available devices"
+	"mmc setdsr - set DSR register value\n"
+	);
 #endif

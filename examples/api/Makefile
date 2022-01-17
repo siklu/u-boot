@@ -24,10 +24,11 @@ ifeq ($(ARCH),powerpc)
 LOAD_ADDR = 0x40000
 endif
 ifeq ($(ARCH),arm)
-LOAD_ADDR = 0x1000000
+LOAD_ADDR = 0x2000000
 endif
 
 include $(TOPDIR)/config.mk
+include $(TOPDIR)/board/mv_ebu/common/paths.mk
 
 # Resulting ELF and binary exectuables will be named demo and demo.bin
 OUTPUT-$(CONFIG_API) = $(obj)demo
@@ -35,9 +36,10 @@ OUTPUT = $(OUTPUT-y)
 
 # Source files located in the examples/api directory
 SOBJ_FILES-$(CONFIG_API) += crt0.o
-COBJ_FILES-$(CONFIG_API) += demo.o
 COBJ_FILES-$(CONFIG_API) += glue.o
+COBJ_FILES-$(CONFIG_API) += demo.o
 COBJ_FILES-$(CONFIG_API) += libgenwrap.o
+
 
 # Source files which exist outside the examples/api directory
 EXT_COBJ_FILES-$(CONFIG_API) += lib/crc32.o
@@ -64,11 +66,11 @@ OBJS	+= $(addprefix $(obj),$(notdir $(EXT_SOBJ_FILES-y)))
 
 CPPFLAGS += -I..
 
-all:	$(obj).depend $(OUTPUT)
+all:	$(obj).depend $(OUTPUT) marvell/monext.bin
 
 #########################################################################
 
-$(OUTPUT):	$(OBJS)
+$(OUTPUT):	$(OBJS) $(SUBDIRS)
 		$(LD) -Ttext $(LOAD_ADDR) -o $@ $^ $(PLATFORM_LIBS)
 		$(OBJCOPY) -O binary $@ $(OUTPUT).bin 2>/dev/null
 
@@ -80,6 +82,10 @@ $(obj)%.o: $(SRCTREE)/lib/%.c
 $(obj)%.o: $(SRCTREE)/arch/$(ARCH)/lib/%.S
 	$(CC) -g $(CFLAGS) -c -o $@ $<
 
+#########################################################################
+marvell/monext.bin:
+	$(MAKE) all HOSTOS=$(HOSTOS) HOSTARCH=$(HOSTARCH) HOSTCFLAGS="$(HOSTCFLAGS)" HOST_LDFLAGS="$(HOST_LDFLAGS)" -C ./marvell/mon_ext
+	
 #########################################################################
 
 # defines $(obj).depend target

@@ -85,7 +85,7 @@ struct eth_device {
 	int state;
 
 	int  (*init) (struct eth_device *, bd_t *);
-	int  (*send) (struct eth_device *, void *packet, int length);
+	int  (*send) (struct eth_device *, volatile void *packet, int length);
 	int  (*recv) (struct eth_device *);
 	void (*halt) (struct eth_device *);
 #ifdef CONFIG_MCAST_TFTP
@@ -183,6 +183,8 @@ static inline __attribute__((always_inline)) void eth_halt_state_only(void)
  */
 int eth_write_hwaddr(struct eth_device *dev, const char *base_name,
 		     int eth_number);
+int eth_setenv_enetaddr_by_index(const char *base_name, int index,
+		 uchar *enetaddr);
 
 #ifdef CONFIG_MCAST_TFTP
 int eth_mcast_join(IPaddr_t mcast_addr, u8 join);
@@ -437,7 +439,7 @@ extern int		NetRestartWrap;		/* Tried all network devices */
 
 enum proto_t {
 	BOOTP, RARP, ARP, TFTPGET, DHCP, PING, DNS, NFS, CDP, NETCONS, SNTP,
-	TFTPSRV, TFTPPUT, LINKLOCAL
+	TFTPSRV, TFTPPUT, LINKLOCAL, RCVR
 };
 
 /* from net/net.c */

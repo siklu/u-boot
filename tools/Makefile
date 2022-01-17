@@ -105,6 +105,19 @@ OBJ_FILES-$(CONFIG_SHA1_CHECK_UB_IMG) += ubsha1.o
 NOPED_OBJ_FILES-y += ublimage.o
 OBJ_FILES-$(CONFIG_KIRKWOOD) += kwboot.o
 
+TOOLSUBDIRS += marvell/doimage_mv
+TOOLSUBDIRS += marvell/bin_hdr
+
+clean:
+	$(RM) doimage
+	ifeq ($(TOOLSUBDIRS),)
+		@:
+	else
+		@for dir in $(TOOLSUBDIRS) ; do \
+		    $(MAKE) clean -s -C $$dir || exit 1 ; \
+		done
+	endif
+
 # Don't build by default
 #ifeq ($(ARCH),ppc)
 #BIN_FILES-y += mpc86x_clk$(SFX)
@@ -261,7 +274,9 @@ else
 	    $(MAKE) \
 		HOSTOS=$(HOSTOS) \
 		HOSTARCH=$(HOSTARCH) \
-		-C $$dir || exit 1 ; \
+		HOSTCFLAGS="$(HOSTCFLAGS)" \
+		HOST_LDFLAGS="$(HOST_LDFLAGS)" \
+		-s -C $$dir || exit 1 ; \
 	done
 endif
 

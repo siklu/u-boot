@@ -33,14 +33,22 @@
 #include <asm/io.h>
 #include <malloc.h>
 #include <scsi.h>
-#include <ata.h>
+#include <libata.h>
 #include <linux/ctype.h>
 #include <ahci.h>
 
-static int ata_io_flush(u8 port);
 
-struct ahci_probe_ent *probe_ent = NULL;
-hd_driveid_t *ataid[AHCI_MAX_PORTS];
+static int ata_io_flush(struct ahci_probe_ent *probe_ent, u8 port);
+
+#ifndef CONFIG_SCSI_MAX_CONTROLLERS
+#define CONFIG_SCSI_MAX_CONTROLLERS	(1)
+#endif
+struct ahci_probe_ent *ahci_ent[CONFIG_SCSI_MAX_CONTROLLERS];
+static int ahci_max_devs; /* number of available ahci devices */
+struct {
+	struct ahci_probe_ent *probe_ent;
+	u8 first_port;
+} ahci_targets[CONFIG_SYS_SCSI_MAX_SCSI_ID];
 
 #define writel_with_flush(a,b)	do { writel(a,b); readl(b); } while (0)
 
@@ -55,10 +63,15 @@ hd_driveid_t *ataid[AHCI_MAX_PORTS];
 #endif
 
 /* Maximum timeouts for each event */
-#define WAIT_MS_SPINUP	10000
+#define WAIT_MS_SPINUP	20000
 #define WAIT_MS_DATAIO	5000
 #define WAIT_MS_FLUSH	5000
-#define WAIT_MS_LINKUP	4
+#define WAIT_MS_LINKUP	200
+
+#ifdef  CONFIG_SCSI_6820
+#define VENDOR_SPECIFIC_0_ADDR  0xa0
+#define VENDOR_SPECIFIC_0_DATA  0xa4
+#endif
 
 static inline u32 ahci_port_base(u32 base, u32 port)
 {
@@ -124,18 +137,38 @@ static int waiting_for_cmd_completed(volatile u8 *offset,
 	return (i < timeout_msec) ? 0 : -1;
 }
 
+int __weak ahci_link_up(struct ahci_probe_ent *probe_ent, u8 port)
+{
+	u32 tmp;
+	int j = 0;
+	u8 *port_mmio = (u8 *)probe_ent->port[port].port_mmio;
+
+	/*
+	 * Bring up SATA link.
+	 * SATA link bringup time is usually less than 1 ms; only very
+	 * rarely has it taken between 1-2 ms. Never seen it above 2 ms.
+	 */
+	while (j < WAIT_MS_LINKUP) {
+		tmp = readl(port_mmio + PORT_SCR_STAT);
+		tmp &= PORT_SCR_STAT_DET_MASK;
+		if (tmp == PORT_SCR_STAT_DET_PHYRDY)
+			return 0;
+		udelay(1000);
+		j++;
+	}
+	return 1;
+}
 
 static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 {
-#ifndef CONFIG_SCSI_AHCI_PLAT
 	pci_dev_t pdev = probe_ent->dev;
 	u16 tmp16;
 	unsigned short vendor;
-#endif
 	volatile u8 *mmio = (volatile u8 *)probe_ent->mmio_base;
 	u32 tmp, cap_save, cmd;
-	int i, j;
+	int i, j, ret;
 	volatile u8 *port_mmio;
+	u32 port_map;
 
 	debug("ahci_host_init: start\n");
 
@@ -165,18 +198,19 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 	writel(cap_save, mmio + HOST_CAP);
 	writel_with_flush(0xf, mmio + HOST_PORTS_IMPL);
 
-#ifndef CONFIG_SCSI_AHCI_PLAT
-	pci_read_config_word(pdev, PCI_VENDOR_ID, &vendor);
+	if(pdev != -1 ) {
+		pci_read_config_word(pdev, PCI_VENDOR_ID, &vendor);
 
-	if (vendor == PCI_VENDOR_ID_INTEL) {
-		u16 tmp16;
-		pci_read_config_word(pdev, 0x92, &tmp16);
-		tmp16 |= 0xf;
-		pci_write_config_word(pdev, 0x92, tmp16);
+		if (vendor == PCI_VENDOR_ID_INTEL) {
+			u16 tmp16;
+			pci_read_config_word(pdev, 0x92, &tmp16);
+			tmp16 |= 0xf;
+			pci_write_config_word(pdev, 0x92, tmp16);
+		}
 	}
-#endif
 	probe_ent->cap = readl(mmio + HOST_CAP);
 	probe_ent->port_map = readl(mmio + HOST_PORTS_IMPL);
+	port_map = probe_ent->port_map;
 	probe_ent->n_ports = (probe_ent->cap & 0x1f) + 1;
 
 	debug("cap 0x%x  port_map 0x%x  n_ports %d\n",
@@ -186,6 +220,8 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 		probe_ent->n_ports = CONFIG_SYS_SCSI_MAX_SCSI_ID;
 
 	for (i = 0; i < probe_ent->n_ports; i++) {
+		if (!(port_map & (1 << i)))
+			continue;
 		probe_ent->port[i].port_mmio = ahci_port_base((u32) mmio, i);
 		port_mmio = (u8 *) probe_ent->port[i].port_mmio;
 		ahci_setup_port(&probe_ent->port[i], (unsigned long)mmio, i);
@@ -213,19 +249,9 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 		cmd |= PORT_CMD_SPIN_UP;
 		writel_with_flush(cmd, port_mmio + PORT_CMD);
 
-		/* Bring up SATA link.
-		 * SATA link bringup time is usually less than 1 ms; only very
-		 * rarely has it taken between 1-2 ms. Never seen it above 2 ms.
-		 */
-		j = 0;
-		while (j < WAIT_MS_LINKUP) {
-			tmp = readl(port_mmio + PORT_SCR_STAT);
-			if ((tmp & 0xf) == 0x3)
-				break;
-			udelay(1000);
-			j++;
-		}
-		if (j == WAIT_MS_LINKUP) {
+		/* Bring up SATA link. */
+		ret = ahci_link_up(probe_ent, i);
+		if (ret) {
 			printf("SATA link %d timeout.\n", i);
 			continue;
 		} else {
@@ -242,11 +268,23 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 		j = 0;
 		while (j < WAIT_MS_SPINUP) {
 			tmp = readl(port_mmio + PORT_TFDATA);
-			if (!(tmp & (ATA_STAT_BUSY | ATA_STAT_DRQ)))
+			if (!(tmp & (ATA_BUSY | ATA_DRQ)))
 				break;
 			udelay(1000);
+			tmp = readl(port_mmio + PORT_SCR_STAT);
+			tmp &= PORT_SCR_STAT_DET_MASK;
+			if (tmp == PORT_SCR_STAT_DET_PHYRDY)
+				break;
 			j++;
 		}
+
+		tmp = readl(port_mmio + PORT_SCR_STAT) & PORT_SCR_STAT_DET_MASK;
+		if (tmp == PORT_SCR_STAT_DET_COMINIT) {
+			debug("SATA link %d down (COMINIT received), retrying...\n", i);
+			i--;
+			continue;
+		}
+
 		printf("Target spinup took %d ms.\n", j);
 		if (j == WAIT_MS_SPINUP)
 			debug("timeout.\n");
@@ -271,7 +309,7 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 		/* register linkup ports */
 		tmp = readl(port_mmio + PORT_SCR_STAT);
 		debug("SATA port %d status: 0x%x\n", i, tmp);
-		if ((tmp & 0xf) == 0x03)
+		if ((tmp & PORT_SCR_STAT_DET_MASK) == PORT_SCR_STAT_DET_PHYRDY)
 			probe_ent->link_port_map |= (0x01 << i);
 	}
 
@@ -280,21 +318,19 @@ static int ahci_host_init(struct ahci_probe_ent *probe_ent)
 	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
 	tmp = readl(mmio + HOST_CTL);
 	debug("HOST_CTL 0x%x\n", tmp);
-#ifndef CONFIG_SCSI_AHCI_PLAT
-	pci_read_config_word(pdev, PCI_COMMAND, &tmp16);
-	tmp |= PCI_COMMAND_MASTER;
-	pci_write_config_word(pdev, PCI_COMMAND, tmp16);
-#endif
+	if(pdev != -1 ) {
+		pci_read_config_word(pdev, PCI_COMMAND, &tmp16);
+		tmp |= PCI_COMMAND_MASTER;
+		pci_write_config_word(pdev, PCI_COMMAND, tmp16);
+	}
 	return 0;
 }
 
 
 static void ahci_print_info(struct ahci_probe_ent *probe_ent)
 {
-#ifndef CONFIG_SCSI_AHCI_PLAT
 	pci_dev_t pdev = probe_ent->dev;
 	u16 cc;
-#endif
 	volatile u8 *mmio = (volatile u8 *)probe_ent->mmio_base;
 	u32 vers, cap, cap2, impl, speed;
 	const char *speed_s;
@@ -315,19 +351,19 @@ static void ahci_print_info(struct ahci_probe_ent *probe_ent)
 	else
 		speed_s = "?";
 
-#ifdef CONFIG_SCSI_AHCI_PLAT
-	scc_s = "SATA";
-#else
-	pci_read_config_word(pdev, 0x0a, &cc);
-	if (cc == 0x0101)
-		scc_s = "IDE";
-	else if (cc == 0x0106)
+	if(pdev == -1 )
 		scc_s = "SATA";
-	else if (cc == 0x0104)
-		scc_s = "RAID";
-	else
-		scc_s = "unknown";
-#endif
+	else {
+		pci_read_config_word(pdev, 0x0a, &cc);
+		if (cc == 0x0101)
+			scc_s = "IDE";
+		else if (cc == 0x0106)
+			scc_s = "SATA";
+		else if (cc == 0x0104)
+			scc_s = "RAID";
+		else
+			scc_s = "unknown";
+	}
 	printf("AHCI %02x%02x.%02x%02x "
 	       "%u slots %u ports %s Gbps 0x%x impl %s mode\n",
 	       (vers >> 24) & 0xff,
@@ -362,28 +398,33 @@ static void ahci_print_info(struct ahci_probe_ent *probe_ent)
 	       cap2 & (1 << 0) ? "boh " : "");
 }
 
-#ifndef CONFIG_SCSI_AHCI_PLAT
 static int ahci_init_one(pci_dev_t pdev)
 {
 	u16 vendor;
-	int rc;
+	int rc, dev, i, fp;
 
-	memset((void *)ataid, 0, sizeof(hd_driveid_t *) * AHCI_MAX_PORTS);
+	if (ahci_max_devs >= CONFIG_SCSI_MAX_CONTROLLERS)
+		return -1;
+	dev = ahci_max_devs++;
+	ahci_ent[dev] = malloc(sizeof(struct ahci_probe_ent));
+	if (!ahci_ent[dev]) {
+		printf("%s: No memory for probe_ent\n", __func__);
+		return -ENOMEM;
+	}
+	memset(ahci_ent[dev], 0, sizeof(struct ahci_probe_ent));
+	ahci_ent[dev]->dev = pdev;
 
-	probe_ent = malloc(sizeof(struct ahci_probe_ent));
-	memset(probe_ent, 0, sizeof(struct ahci_probe_ent));
-	probe_ent->dev = pdev;
-
-	probe_ent->host_flags = ATA_FLAG_SATA
+	ahci_ent[dev]->host_flags = ATA_FLAG_SATA
 				| ATA_FLAG_NO_LEGACY
 				| ATA_FLAG_MMIO
 				| ATA_FLAG_PIO_DMA
 				| ATA_FLAG_NO_ATAPI;
-	probe_ent->pio_mask = 0x1f;
-	probe_ent->udma_mask = 0x7f;	/*Fixme,assume to support UDMA6 */
+	ahci_ent[dev]->pio_mask = 0x1f;
+	ahci_ent[dev]->udma_mask = 0x7f;	/*Fixme,assume to support UDMA6 */
 
-	pci_read_config_dword(pdev, PCI_BASE_ADDRESS_5, &probe_ent->mmio_base);
-	debug("ahci mmio_base=0x%08x\n", probe_ent->mmio_base);
+	ahci_ent[dev]->mmio_base = (u32)pci_map_bar(pdev,
+					PCI_BASE_ADDRESS_5, PCI_REGION_MEM);
+	debug("ahci mmio_base=0x%08x\n", ahci_ent[dev]->mmio_base);
 
 	/* Take from kernel:
 	 * JMicron-specific fixup:
@@ -394,22 +435,38 @@ static int ahci_init_one(pci_dev_t pdev)
 		pci_write_config_byte(pdev, 0x41, 0xa1);
 
 	/* initialize adapter */
-	rc = ahci_host_init(probe_ent);
+	rc = ahci_host_init(ahci_ent[dev]);
 	if (rc)
 		goto err_out;
 
-	ahci_print_info(probe_ent);
+	ahci_print_info(ahci_ent[dev]);
+
+	/* setup scsi targets */
+	for (i = 0; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++)
+		if (ahci_targets[i].probe_ent == NULL)
+			break;
+	if (i >= CONFIG_SYS_SCSI_MAX_SCSI_ID) {
+		rc = -1;
+		goto err_out;
+	}
+	fp = i;
+	for (; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++) {
+		ahci_targets[i].probe_ent = ahci_ent[dev];
+		ahci_targets[i].first_port = fp;
+		if (i - fp + 1 == ahci_ent[dev]->n_ports)
+			break;
+	}
 
 	return 0;
 
       err_out:
 	return rc;
 }
-#endif
 
 #define MAX_DATA_BYTE_COUNT  (4*1024*1024)
 
-static int ahci_fill_sg(u8 port, unsigned char *buf, int buf_len)
+static int ahci_fill_sg(struct ahci_probe_ent *probe_ent, u8 port,
+	unsigned char *buf, int buf_len)
 {
 	struct ahci_ioports *pp = &(probe_ent->port[port]);
 	struct ahci_sg *ahci_sg = pp->cmd_tbl_sg;
@@ -448,7 +505,7 @@ static void ahci_fill_cmd_slot(struct ahci_ioports *pp, u32 opts)
 
 
 #ifdef CONFIG_AHCI_SETFEATURES_XFER
-static void ahci_set_feature(u8 port)
+static void ahci_set_feature(struct ahci_probe_ent *probe_ent, u8 port)
 {
 	struct ahci_ioports *pp = &(probe_ent->port[port]);
 	volatile u8 *port_mmio = (volatile u8 *)pp->port_mmio;
@@ -459,7 +516,7 @@ static void ahci_set_feature(u8 port)
 	memset(fis, 0, sizeof(fis));
 	fis[0] = 0x27;
 	fis[1] = 1 << 7;
-	fis[2] = ATA_CMD_SETF;
+	fis[2] = ATA_CMD_SET_FEATURES;
 	fis[3] = SETFEATURES_XFER;
 	fis[12] = __ilog2(probe_ent->udma_mask + 1) + 0x40 - 0x01;
 
@@ -477,7 +534,7 @@ static void ahci_set_feature(u8 port)
 #endif
 
 
-static int ahci_port_start(u8 port)
+static int ahci_port_start(struct ahci_probe_ent *probe_ent, u8 port)
 {
 	struct ahci_ioports *pp = &(probe_ent->port[port]);
 	volatile u8 *port_mmio = (volatile u8 *)pp->port_mmio;
@@ -495,7 +552,7 @@ static int ahci_port_start(u8 port)
 	mem = (u32) malloc(AHCI_PORT_PRIV_DMA_SZ + 2048);
 	if (!mem) {
 		free(pp);
-		printf("No mem for table!\n");
+		printf("%s: No mem for table!\n", __func__);
 		return -ENOMEM;
 	}
 
@@ -542,8 +599,8 @@ static int ahci_port_start(u8 port)
 }
 
 
-static int ahci_device_data_io(u8 port, u8 *fis, int fis_len, u8 *buf,
-				int buf_len, u8 is_write)
+static int ahci_device_data_io(struct ahci_probe_ent *probe_ent, u8 port,
+	u8 *fis, int fis_len, u8 *buf, int buf_len, u8 is_write)
 {
 
 	struct ahci_ioports *pp = &(probe_ent->port[port]);
@@ -552,9 +609,9 @@ static int ahci_device_data_io(u8 port, u8 *fis, int fis_len, u8 *buf,
 	u32 port_status;
 	int sg_count;
 
-	debug("Enter %s: for port %d\n", __func__, port);
+	debug("Enter %s: for port %d / %d\n", __func__, port, probe_ent->n_ports);
 
-	if (port > probe_ent->n_ports) {
+	if (port >= probe_ent->n_ports) {
 		printf("Invalid port number %d\n", port);
 		return -1;
 	}
@@ -567,9 +624,17 @@ static int ahci_device_data_io(u8 port, u8 *fis, int fis_len, u8 *buf,
 
 	memcpy((unsigned char *)pp->cmd_tbl, fis, fis_len);
 
-	sg_count = ahci_fill_sg(port, buf, buf_len);
+	sg_count = ahci_fill_sg(probe_ent, port, buf, buf_len);
 	opts = (fis_len >> 2) | (sg_count << 16) | (is_write << 6);
 	ahci_fill_cmd_slot(pp, opts);
+
+	writel_with_flush(0x7FFFFFF, port_mmio + PORT_SCR_ERR);
+
+	/* clearing IRQ status register on Read/Write operations */
+	if (fis[2] == ATA_CMD_READ_EXT || fis[2] == ATA_CMD_WRITE_EXT)
+		writel_with_flush(0xffffffff, port_mmio + PORT_IRQ_STAT);
+
+	writel_with_flush(0, port_mmio + PORT_FIS_ADDR);
 
 	ahci_dcache_flush_sata_cmd(pp);
 	ahci_dcache_flush_range((unsigned)buf, (unsigned)buf_len);
@@ -597,42 +662,27 @@ static char *ata_id_strcpy(u16 *target, u16 *src, int len)
 	return (char *)target;
 }
 
-
-static void dump_ataid(hd_driveid_t *ataid)
-{
-	debug("(49)ataid->capability = 0x%x\n", ataid->capability);
-	debug("(53)ataid->field_valid =0x%x\n", ataid->field_valid);
-	debug("(63)ataid->dma_mword = 0x%x\n", ataid->dma_mword);
-	debug("(64)ataid->eide_pio_modes = 0x%x\n", ataid->eide_pio_modes);
-	debug("(75)ataid->queue_depth = 0x%x\n", ataid->queue_depth);
-	debug("(80)ataid->major_rev_num = 0x%x\n", ataid->major_rev_num);
-	debug("(81)ataid->minor_rev_num = 0x%x\n", ataid->minor_rev_num);
-	debug("(82)ataid->command_set_1 = 0x%x\n", ataid->command_set_1);
-	debug("(83)ataid->command_set_2 = 0x%x\n", ataid->command_set_2);
-	debug("(84)ataid->cfsse = 0x%x\n", ataid->cfsse);
-	debug("(85)ataid->cfs_enable_1 = 0x%x\n", ataid->cfs_enable_1);
-	debug("(86)ataid->cfs_enable_2 = 0x%x\n", ataid->cfs_enable_2);
-	debug("(87)ataid->csf_default = 0x%x\n", ataid->csf_default);
-	debug("(88)ataid->dma_ultra = 0x%x\n", ataid->dma_ultra);
-	debug("(93)ataid->hw_config = 0x%x\n", ataid->hw_config);
-}
-
-
 /*
  * SCSI INQUIRY command operation.
  */
-static int ata_scsiop_inquiry(ccb *pccb)
-{
-	u8 hdr[] = {
+	static const u8 hdr[] = {
 		0,
 		0,
 		0x5,		/* claim SPC-3 version compatibility */
 		2,
 		95 - 4,
 	};
+
+static int ata_scsiop_inquiry(ccb *pccb)
+{
 	u8 fis[20];
-	u8 *tmpid;
-	u8 port;
+	u16 *idbuf;
+	ALLOC_CACHE_ALIGN_BUFFER(u16, tmpid, ATA_ID_WORDS);
+	struct ahci_probe_ent *probe_ent = ahci_targets[pccb->target].probe_ent;
+	u8 port = pccb->target - ahci_targets[pccb->target].first_port;
+
+	if (!probe_ent)
+		return -EPERM;
 
 	/* Clean ccb data buffer */
 	memset(pccb->pdata, 0, pccb->datalen);
@@ -646,28 +696,34 @@ static int ata_scsiop_inquiry(ccb *pccb)
 	/* Construct the FIS */
 	fis[0] = 0x27;		/* Host to device FIS. */
 	fis[1] = 1 << 7;	/* Command FIS. */
-	fis[2] = ATA_CMD_IDENT;	/* Command byte. */
+	fis[2] = ATA_CMD_ID_ATA; /* Command byte. */
 
 	/* Read id from sata */
-	port = pccb->target;
-	if (!(tmpid = malloc(sizeof(hd_driveid_t))))
-		return -ENOMEM;
 
-	if (ahci_device_data_io(port, (u8 *) &fis, sizeof(fis), tmpid,
-				sizeof(hd_driveid_t), 0)) {
+	if (ahci_device_data_io(probe_ent, port, (u8 *) &fis, sizeof(fis),
+				(u8 *)tmpid, ATA_ID_WORDS * 2, 0)) {
 		debug("scsi_ahci: SCSI inquiry command failure.\n");
 		return -EIO;
 	}
 
-	if (ataid[port])
-		free(ataid[port]);
-	ataid[port] = (hd_driveid_t *) tmpid;
+	if (probe_ent->ataid[port] == NULL) {
+		probe_ent->ataid[port] = malloc(ATA_ID_WORDS * 2);
+		if (!probe_ent->ataid[port]) {
+			printf("%s: No memory for tmpid\n", __func__);
+			return -ENOMEM;
+	       }
+	}
+	idbuf = probe_ent->ataid[port];
+	memcpy(idbuf, tmpid, ATA_ID_WORDS * 2);
+	ata_swap_buf_le16(idbuf, ATA_ID_WORDS);
 
 	memcpy(&pccb->pdata[8], "ATA     ", 8);
-	ata_id_strcpy((u16 *) &pccb->pdata[16], (u16 *)ataid[port]->model, 16);
-	ata_id_strcpy((u16 *) &pccb->pdata[32], (u16 *)ataid[port]->fw_rev, 4);
+	ata_id_strcpy((u16 *) &pccb->pdata[16], &idbuf[ATA_ID_PROD], 16);
+	ata_id_strcpy((u16 *) &pccb->pdata[32], &idbuf[ATA_ID_FW_REV], 4);
 
-	dump_ataid(ataid[port]);
+#ifdef DEBUG
+	ata_dump_id(idbuf);
+#endif
 	return 0;
 }
 
@@ -682,6 +738,11 @@ static int ata_scsiop_read_write(ccb *pccb, u8 is_write)
 	u8 fis[20];
 	u8 *user_buffer = pccb->pdata;
 	u32 user_buffer_size = pccb->datalen;
+	struct ahci_probe_ent *probe_ent = ahci_targets[pccb->target].probe_ent;
+	u8 port = pccb->target - ahci_targets[pccb->target].first_port;
+
+	if (!probe_ent)
+		return -EPERM;
 
 	/* Retrieve the base LBA number from the ccb structure. */
 	memcpy(&lba, pccb->cmd + 2, sizeof(lba));
@@ -715,7 +776,7 @@ static int ata_scsiop_read_write(ccb *pccb, u8 is_write)
 
 		now_blocks = min(MAX_SATA_BLOCKS_READ_WRITE, blocks);
 
-		transfer_size = ATA_BLOCKSIZE * now_blocks;
+		transfer_size = ATA_SECT_SIZE * now_blocks;
 		if (transfer_size > user_buffer_size) {
 			printf("scsi_ahci: Error: buffer too small.\n");
 			return -EIO;
@@ -736,7 +797,7 @@ static int ata_scsiop_read_write(ccb *pccb, u8 is_write)
 		fis[13] = (now_blocks >> 8) & 0xff;
 
 		/* Read/Write from ahci */
-		if (ahci_device_data_io(pccb->target, (u8 *) &fis, sizeof(fis),
+		if (ahci_device_data_io(probe_ent, port, (u8 *) &fis, sizeof(fis),
 					user_buffer, user_buffer_size,
 					is_write)) {
 			debug("scsi_ahci: SCSI %s10 command failure.\n",
@@ -751,7 +812,7 @@ static int ata_scsiop_read_write(ccb *pccb, u8 is_write)
 		 * usually, one extra flush when the rare writes do happen.
 		 */
 		if (is_write) {
-			if (-EIO == ata_io_flush(pccb->target))
+			if (-EIO == ata_io_flush(probe_ent, port))
 				return -EIO;
 		}
 		user_buffer += transfer_size;
@@ -770,27 +831,26 @@ static int ata_scsiop_read_write(ccb *pccb, u8 is_write)
 static int ata_scsiop_read_capacity10(ccb *pccb)
 {
 	u32 cap;
+	u64 cap64;
 	u32 block_size;
+	struct ahci_probe_ent *probe_ent = ahci_targets[pccb->target].probe_ent;
+	u8 port = pccb->target - ahci_targets[pccb->target].first_port;
 
-	if (!ataid[pccb->target]) {
+	if (!probe_ent)
+		return -EPERM;
+
+	if (!probe_ent->ataid[port]) {
 		printf("scsi_ahci: SCSI READ CAPACITY10 command failure. "
 		       "\tNo ATA info!\n"
 		       "\tPlease run SCSI commmand INQUIRY firstly!\n");
 		return -EPERM;
 	}
 
-	cap = le32_to_cpu(ataid[pccb->target]->lba_capacity);
-	if (cap == 0xfffffff) {
-		unsigned short *cap48 = ataid[pccb->target]->lba48_capacity;
-		if (cap48[2] || cap48[3]) {
-			cap = 0xffffffff;
-		} else {
-			cap = (le16_to_cpu(cap48[1]) << 16) |
-			      (le16_to_cpu(cap48[0]));
-		}
-	}
+	cap64 = ata_id_n_sectors(probe_ent->ataid[port]);
+	if (cap64 > 0x100000000ULL)
+		cap64 = 0xffffffff;
 
-	cap = cpu_to_be32(cap);
+	cap = cpu_to_be32(cap64);
 	memcpy(pccb->pdata, &cap, sizeof(cap));
 
 	block_size = cpu_to_be32((u32)512);
@@ -807,20 +867,20 @@ static int ata_scsiop_read_capacity16(ccb *pccb)
 {
 	u64 cap;
 	u64 block_size;
+	struct ahci_probe_ent *probe_ent = ahci_targets[pccb->target].probe_ent;
+	u8 port = pccb->target - ahci_targets[pccb->target].first_port;
 
-	if (!ataid[pccb->target]) {
+	if (!probe_ent)
+		return -EPERM;
+
+	if (!probe_ent->ataid[port]) {
 		printf("scsi_ahci: SCSI READ CAPACITY16 command failure. "
 		       "\tNo ATA info!\n"
 		       "\tPlease run SCSI commmand INQUIRY firstly!\n");
 		return -EPERM;
 	}
 
-	cap = le32_to_cpu(ataid[pccb->target]->lba_capacity);
-	if (cap == 0xfffffff) {
-		memcpy(&cap, ataid[pccb->target]->lba48_capacity, sizeof(cap));
-		cap = le64_to_cpu(cap);
-	}
-
+	cap = ata_id_n_sectors(probe_ent->ataid[port]);
 	cap = cpu_to_be64(cap);
 	memcpy(pccb->pdata, &cap, sizeof(cap));
 
@@ -836,7 +896,13 @@ static int ata_scsiop_read_capacity16(ccb *pccb)
  */
 static int ata_scsiop_test_unit_ready(ccb *pccb)
 {
-	return (ataid[pccb->target]) ? 0 : -EPERM;
+	struct ahci_probe_ent *probe_ent = ahci_targets[pccb->target].probe_ent;
+	u8 port = pccb->target - ahci_targets[pccb->target].first_port;
+
+	if (!probe_ent)
+		return -EPERM;
+
+	return (probe_ent->ataid[port]) ? 0 : -EPERM;
 }
 
 
@@ -877,75 +943,105 @@ int scsi_exec(ccb *pccb)
 }
 
 
-void scsi_low_level_init(int busdevfunc)
-{
-	int i;
-	u32 linkmap;
+void scsi_low_level_init(int busdevfunc) {
+		int i;
+		u32 linkmap;
+		struct ahci_probe_ent *probe_ent;
 
-#ifndef CONFIG_SCSI_AHCI_PLAT
-	ahci_init_one(busdevfunc);
-#endif
+		if(busdevfunc != -1 ) {
+				if(ahci_init_one(busdevfunc) != 0)
+						return;
+		} else
+				ahci_max_devs = 1;
+		probe_ent = ahci_ent[ahci_max_devs - 1];
+		if(probe_ent == NULL)
+				return;
+		linkmap = probe_ent->link_port_map;
 
-	linkmap = probe_ent->link_port_map;
-
-	for (i = 0; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++) {
-		if (((linkmap >> i) & 0x01)) {
-			if (ahci_port_start((u8) i)) {
-				printf("Can not start port %d\n", i);
-				continue;
-			}
+		for(i = 0; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++) {
+				if(((linkmap >> i) & 0x01)) {
+						if(ahci_port_start(probe_ent, (u8) i)) {
+								printf("Can not start port %d\n", i);
+								continue;
+						}
 #ifdef CONFIG_AHCI_SETFEATURES_XFER
-			ahci_set_feature((u8) i);
+						ahci_set_feature(probe_ent, (u8) i);
 #endif
+				}
 		}
-	}
 }
 
-#ifdef CONFIG_SCSI_AHCI_PLAT
 int ahci_init(u32 base)
 {
-	int i, rc = 0;
+	int rc, dev, i, fp;
 	u32 linkmap;
 
-	memset(ataid, 0, sizeof(ataid));
+	if (ahci_max_devs >= CONFIG_SCSI_MAX_CONTROLLERS)
+		return -1;
+	dev = ahci_max_devs++;
+	ahci_ent[dev] = malloc(sizeof(struct ahci_probe_ent));
+	if (!ahci_ent[dev]) {
+		printf("%s: No memory for probe_ent\n", __func__);
+		return -ENOMEM;
+	}
 
-	probe_ent = malloc(sizeof(struct ahci_probe_ent));
-	memset(probe_ent, 0, sizeof(struct ahci_probe_ent));
+	memset(ahci_ent[dev], 0, sizeof(struct ahci_probe_ent));
 
-	probe_ent->host_flags = ATA_FLAG_SATA
+	ahci_ent[dev]->host_flags = ATA_FLAG_SATA
 				| ATA_FLAG_NO_LEGACY
 				| ATA_FLAG_MMIO
 				| ATA_FLAG_PIO_DMA
 				| ATA_FLAG_NO_ATAPI;
-	probe_ent->pio_mask = 0x1f;
-	probe_ent->udma_mask = 0x7f;	/*Fixme,assume to support UDMA6 */
+	ahci_ent[dev]->pio_mask = 0x1f;
+	ahci_ent[dev]->udma_mask = 0x7f;	/*Fixme,assume to support UDMA6 */
 
-	probe_ent->mmio_base = base;
-
+	ahci_ent[dev]->mmio_base = base;
+	ahci_ent[dev]->dev = -1;      /* not PCI-e controller */
 	/* initialize adapter */
-	rc = ahci_host_init(probe_ent);
+#ifdef  CONFIG_SCSI_6820
+	/* Enabling regret bit */
+	writel(0x4, base + VENDOR_SPECIFIC_0_ADDR);
+	writel(0x80, base + VENDOR_SPECIFIC_0_DATA);
+#endif
+
+	rc = ahci_host_init(ahci_ent[dev]);
 	if (rc)
 		goto err_out;
 
-	ahci_print_info(probe_ent);
+	/* ahci_print_info(ahci_ent[dev]); */
 
-	linkmap = probe_ent->link_port_map;
+	/* setup scsi targets */
+	for (i = 0; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++)
+		if (ahci_targets[i].probe_ent == NULL)
+			break;
+	if (i >= CONFIG_SYS_SCSI_MAX_SCSI_ID) {
+		rc = -1;
+		goto err_out;
+	}
+	fp = i;
+	for (; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++) {
+		ahci_targets[i].probe_ent = ahci_ent[dev];
+		ahci_targets[i].first_port = fp;
+		if (i - fp + 1 == ahci_ent[dev]->n_ports)
+			break;
+	}
+
+	linkmap = ahci_ent[dev]->link_port_map;
 
 	for (i = 0; i < CONFIG_SYS_SCSI_MAX_SCSI_ID; i++) {
 		if (((linkmap >> i) & 0x01)) {
-			if (ahci_port_start((u8) i)) {
+			if (ahci_port_start(ahci_ent[dev], (u8) i)) {
 				printf("Can not start port %d\n", i);
 				continue;
 			}
 #ifdef CONFIG_AHCI_SETFEATURES_XFER
-			ahci_set_feature((u8) i);
+			ahci_set_feature(ahci_ent[dev], (u8) i);
 #endif
 		}
 	}
 err_out:
 	return rc;
 }
-#endif
 
 /*
  * In the general case of generic rotating media it makes sense to have a
@@ -956,7 +1052,7 @@ err_out:
  * is the last write is difficult. Because writing to the disk in u-boot is
  * very rare, this flush command will be invoked after every block write.
  */
-static int ata_io_flush(u8 port)
+static int ata_io_flush(struct ahci_probe_ent *probe_ent, u8 port)
 {
 	u8 fis[20];
 	struct ahci_ioports *pp = &(probe_ent->port[port]);

@@ -33,7 +33,12 @@
 #include <scsi.h>
 #include <image.h>
 #include <pci.h>
+#include <ahci.h>
+#include <malloc.h>
 
+#ifdef CONFIG_SCSI_6820
+void board_ahci_init(void);
+#endif
 #ifdef CONFIG_SCSI_DEV_LIST
 #define SCSI_DEV_LIST CONFIG_SCSI_DEV_LIST
 #else
@@ -49,22 +54,32 @@
 #define SCSI_VEND_ID 0x10b9
 #define SCSI_DEV_ID  0x5288
 
+#elif defined CONFIG_SCSI_MV94XX
+#define SCSI_VEND_ID 0x1b4b
+#define SCSI_DEV_ID  0x9485
+
 #elif !defined(CONFIG_SCSI_AHCI_PLAT)
 #error no scsi device defined
 #endif
-#define SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}
+#define SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}, {0, 0}
 #endif
 
 #ifdef CONFIG_PCI
-const struct pci_device_id scsi_device_list[] = { SCSI_DEV_LIST };
+#if defined CONFIG_SCSI_MV94XX
+static struct pci_device_id mv94xx_pci_ids[] = {
+        {0x1b4b, 0x9485},
+        {0x1b4b, 0x9445},
+};
+#else
+static struct pci_device_id scsi_device_list[] = { SCSI_DEV_LIST };
 #endif
 static ccb tempccb;	/* temporary scsi command buffer */
 
-static unsigned char tempbuff[512]; /* temporary data buffer */
+static unsigned char *tempbuff; /* temporary data buffer */
 
 static int scsi_max_devs; /* number of highest available scsi device */
 
-static int scsi_curr_dev; /* current device */
+static int scsi_curr_dev = -1; /* current device */
 
 static block_dev_desc_t scsi_dev_desc[CONFIG_SYS_SCSI_MAX_DEVICE];
 
@@ -82,8 +97,8 @@ void scsi_ident_cpy (unsigned char *dest, unsigned char *src, unsigned int len);
 
 static int scsi_read_capacity(ccb *pccb, lbaint_t *capacity,
 			      unsigned long *blksz);
-static ulong scsi_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer);
-static ulong scsi_write(int device, ulong blknr,
+static ulong scsi_read(int device, lbaint_t blknr, lbaint_t blkcnt, void *buffer);
+static ulong scsi_write(int device, lbaint_t blknr,
 			lbaint_t blkcnt, const void *buffer);
 
 
@@ -101,11 +116,23 @@ void scsi_scan(int mode)
 	if(mode==1) {
 		printf("scanning bus for devices...\n");
 	}
-	for(i=0;i<CONFIG_SYS_SCSI_MAX_DEVICE;i++) {
+
+	if (tempbuff == NULL) {
+		tempbuff = memalign(ARCH_DMA_MINALIGN, 512);
+		if (tempbuff == NULL) {
+			if (mode == 1)
+				printf("error: cannot allocate buffer\n");
+			return;
+		}
+	}
+
+	for(i = 0; i < CONFIG_SYS_SCSI_MAX_DEVICE; i++) {
 		scsi_dev_desc[i].target=0xff;
 		scsi_dev_desc[i].lun=0xff;
 		scsi_dev_desc[i].lba=0;
 		scsi_dev_desc[i].blksz=0;
+		scsi_dev_desc[i].log2blksz =
+			LOG2_INVALID(typeof(scsi_dev_desc[i].log2blksz));
 		scsi_dev_desc[i].type=DEV_TYPE_UNKNOWN;
 		scsi_dev_desc[i].vendor[0]=0;
 		scsi_dev_desc[i].product[0]=0;
@@ -122,7 +149,7 @@ void scsi_scan(int mode)
 		pccb->target=i;
 		for(lun=0;lun<CONFIG_SYS_SCSI_MAX_LUN;lun++) {
 			pccb->lun=lun;
-			pccb->pdata=(unsigned char *)&tempbuff;
+			pccb->pdata = (unsigned char *)tempbuff;
 			pccb->datalen=512;
 			scsi_setup_inquiry(pccb);
 			if(scsi_exec(pccb)!=TRUE) {
@@ -166,6 +193,8 @@ void scsi_scan(int mode)
 			}
 			scsi_dev_desc[scsi_max_devs].lba=capacity;
 			scsi_dev_desc[scsi_max_devs].blksz=blksz;
+			scsi_dev_desc[scsi_max_devs].log2blksz =
+				LOG2(scsi_dev_desc[scsi_max_devs].blksz);
 			scsi_dev_desc[scsi_max_devs].type=perq;
 			init_part(&scsi_dev_desc[scsi_max_devs]);
 removable:
@@ -176,8 +205,8 @@ removable:
 			scsi_max_devs++;
 		} /* next LUN */
 	}
-	if(scsi_max_devs>0)
-		scsi_curr_dev=0;
+	if (scsi_max_devs > 0)
+		scsi_curr_dev = 0;
 	else
 		scsi_curr_dev = -1;
 
@@ -190,45 +219,55 @@ int scsi_get_disk_count(void)
 	return scsi_max_devs;
 }
 
-#ifdef CONFIG_PCI
+
 void scsi_init(void)
 {
-	int busdevfunc;
-	int i;
 	/*
 	 * Find a device from the list, this driver will support a single
 	 * controller.
 	 */
-	for (i = 0; i < ARRAY_SIZE(scsi_device_list); i++) {
-		/* get PCI Device ID */
-		busdevfunc = pci_find_device(scsi_device_list[i].vendor,
-					     scsi_device_list[i].device,
-					     0);
-		if (busdevfunc != -1)
-			break;
-	}
 
-	if (busdevfunc == -1) {
-		printf("Error: SCSI Controller(s) ");
-		for (i = 0; i < ARRAY_SIZE(scsi_device_list); i++) {
-			printf("%04X:%04X ",
-			       scsi_device_list[i].vendor,
-			       scsi_device_list[i].device);
-		}
-		printf("not found\n");
+#ifdef	CONFIG_SCSI_6820
+	board_ahci_init();
+#endif
+#if defined CONFIG_SCSI_MV94XX
+	int busdevfunc;
+	if ((busdevfunc = pci_find_devices (mv94xx_pci_ids, 0)) < 0) {
+		printf("MV94XX controller not present\n");
 		return;
 	}
+	if (scsi_curr_dev == -1)
+		scsi_low_level_init(busdevfunc);
+	else
+		scsi_bus_reset(); /*mult-time "scsi init", no need re-assign resource"*/
+#else
+	int i, busdevfunc, index = 0;
+	for (;;) {
+		busdevfunc = pci_find_devices(scsi_device_list, index);
+		if (busdevfunc == -1) {
+			if (index == 0) {
+				printf("Error: SCSI Controller(s) ");
+				for (i = 0; i < ARRAY_SIZE(scsi_device_list) - 1; i++) {
+					printf("%04X:%04X ",
+					       scsi_device_list[i].vendor,
+					       scsi_device_list[i].device);
+				}
+				printf("not found\n");
+			}
+			break;
+		}
 #ifdef DEBUG
-	else {
-		printf("SCSI Controller (%04X,%04X) found (%d:%d:%d)\n",
-		       scsi_device_list[i].vendor,
-		       scsi_device_list[i].device,
-		       (busdevfunc >> 16) & 0xFF,
-		       (busdevfunc >> 11) & 0x1F,
-		       (busdevfunc >> 8) & 0x7);
+		else {
+			printf("SCSI Controller found (%d:%d:%d)\n",
+			       (busdevfunc >> 16) & 0xFF,
+			       (busdevfunc >> 11) & 0x1F,
+			       (busdevfunc >> 8) & 0x7);
+		}
+#endif
+		scsi_low_level_init(busdevfunc);
+		index++;
 	}
 #endif
-	scsi_low_level_init(busdevfunc);
 	scsi_scan(1);
 }
 #endif
@@ -253,6 +292,16 @@ int do_scsiboot (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
  */
 int do_scsi (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
+	if (argc == 2 && strcmp(argv[1], "init") == 0) {
+		scsi_init();
+		return 0;
+	}
+
+	/* If the user has not yet run `sata init`, do it now */
+	if ((argc == 2) && (scsi_curr_dev == -1) && (strncmp(argv[1],"res",3) != 0))
+		printf("please run 'scsi init' first!!!\n");
+		//scsi_init();
+
 	switch (argc) {
 	case 0:
 	case 1:
@@ -261,8 +310,12 @@ int do_scsi (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	case 2:
 			if (strncmp(argv[1],"res",3) == 0) {
 				printf("\nReset SCSI\n");
+				if(scsi_curr_dev == -1)
+					scsi_init();
+				else {
 				scsi_bus_reset();
 				scsi_scan(1);
+				}
 				return 0;
 			}
 			if (strncmp(argv[1],"inf",3) == 0) {
@@ -285,8 +338,12 @@ int do_scsi (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 				return 0;
 			}
 			if (strncmp(argv[1],"scan",4) == 0) {
+				if (scsi_curr_dev < 0)
+					return 1;
+				else {
 				scsi_scan(1);
 				return 0;
+			}
 			}
 			if (strncmp(argv[1],"part",4) == 0) {
 				int dev, ok;
@@ -368,7 +425,7 @@ int do_scsi (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 #define SCSI_MAX_READ_BLK 0xFFFF /* almost the maximum amount of the scsi_ext command.. */
 
-static ulong scsi_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer)
+static ulong scsi_read(int device, lbaint_t blknr, lbaint_t blkcnt, void *buffer)
 {
 	lbaint_t start, blks;
 	uintptr_t buf_addr;
@@ -423,7 +480,7 @@ static ulong scsi_read(int device, ulong blknr, lbaint_t blkcnt, void *buffer)
 /* Almost the maximum amount of the scsi_ext command.. */
 #define SCSI_MAX_WRITE_BLK 0xFFFF
 
-static ulong scsi_write(int device, ulong blknr,
+static ulong scsi_write(int device, lbaint_t blknr,
 			lbaint_t blkcnt, const void *buffer)
 {
 	lbaint_t start, blks;

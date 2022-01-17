@@ -75,6 +75,7 @@ static int dev_index;
 static int asynch_allowed;
 
 char usb_started; /* flag for the started/stopped USB status */
+int  usb_second_reset_needed; /* WA for USB3 */
 
 #ifndef CONFIG_USB_MAX_CONTROLLER_COUNT
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 1
@@ -89,6 +90,7 @@ int usb_init(void)
 	struct usb_device *dev;
 	int i, start_index = 0;
 
+	usb_second_reset_needed = 0;
 	dev_index = 0;
 	asynch_allowed = 1;
 	usb_hub_reset();
@@ -107,6 +109,14 @@ int usb_init(void)
 			puts("lowlevel init failed\n");
 			continue;
 		}
+
+
+#if defined(MV88F68XX) || defined(MV88F69XX)
+	/* Temp WA for timing issue with Armada 38x and xHCI */
+	/* Check if currently using xHCI stack (usbType = 3) */
+	if (simple_strtoul(getenv("usbType"), NULL, 10) == 3)
+		mdelay(20);
+#endif
 		/*
 		 * lowlevel init is OK, now scan the bus for devices
 		 * i.e. search HUBs and configure them
@@ -137,7 +147,7 @@ int usb_init(void)
 		return -1;
 	}
 
-	return 0;
+	return usb_second_reset_needed;
 }
 
 /******************************************************************************
@@ -360,6 +370,7 @@ static int usb_parse_config(struct usb_device *dev,
 	int index, ifno, epno, curr_if_num;
 	int i;
 	u16 ep_wMaxPacketSize;
+	struct usb_interface *if_desc = NULL;
 
 	ifno = -1;
 	epno = -1;
@@ -387,23 +398,27 @@ static int usb_parse_config(struct usb_device *dev,
 			     &buffer[index])->bInterfaceNumber != curr_if_num) {
 				/* this is a new interface, copy new desc */
 				ifno = dev->config.no_of_if;
+				if_desc = &dev->config.if_desc[ifno];
 				dev->config.no_of_if++;
-				memcpy(&dev->config.if_desc[ifno],
-					&buffer[index], buffer[index]);
-				dev->config.if_desc[ifno].no_of_ep = 0;
-				dev->config.if_desc[ifno].num_altsetting = 1;
+				memcpy(if_desc,	&buffer[index], buffer[index]);
+				if_desc->no_of_ep = 0;
+				if_desc->num_altsetting = 1;
 				curr_if_num =
-				     dev->config.if_desc[ifno].desc.bInterfaceNumber;
+				     if_desc->desc.bInterfaceNumber;
 			} else {
 				/* found alternate setting for the interface */
-				dev->config.if_desc[ifno].num_altsetting++;
+				if (ifno >= 0) {
+					if_desc = &dev->config.if_desc[ifno];
+					if_desc->num_altsetting++;
+				}
 			}
 			break;
 		case USB_DT_ENDPOINT:
 			epno = dev->config.if_desc[ifno].no_of_ep;
+			if_desc = &dev->config.if_desc[ifno];
 			/* found an endpoint */
-			dev->config.if_desc[ifno].no_of_ep++;
-			memcpy(&dev->config.if_desc[ifno].ep_desc[epno],
+			if_desc->no_of_ep++;
+			memcpy(&if_desc->ep_desc[epno],
 				&buffer[index], buffer[index]);
 			ep_wMaxPacketSize = get_unaligned(&dev->config.\
 							if_desc[ifno].\
@@ -415,6 +430,11 @@ static int usb_parse_config(struct usb_device *dev,
 					ep_desc[epno].\
 					wMaxPacketSize);
 			USB_PRINTF("if %d, ep %d\n", ifno, epno);
+			break;
+		case USB_DT_SS_ENDPOINT_COMP:
+			if_desc = &dev->config.if_desc[ifno];
+			memcpy(&if_desc->ss_ep_comp_desc[epno],
+				&buffer[index], buffer[index]);
 			break;
 		default:
 			if (head->bLength == 0)
@@ -819,6 +839,16 @@ void usb_free_device(void)
 }
 
 /*
+ * XHCI issues Enable Slot command and thereafter
+ * allocates device contexts. Provide a weak alias
+ * function for the purpose, so that XHCI overrides it
+ * and EHCI/OHCI just work out of the box.
+ */
+__weak int usb_alloc_device(struct usb_device *udev)
+{
+	return 0;
+}
+/*
  * By the time we get here, the device has gotten a new device ID
  * and is in the default state. We need to identify the thing and
  * get the ball rolling..
@@ -830,6 +860,17 @@ int usb_new_device(struct usb_device *dev)
 	int addr, err;
 	int tmp;
 	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, tmpbuf, USB_BUFSIZ);
+
+	/*
+	 * Allocate usb 3.0 device context.
+	 * USB 3.0 (xHCI) protocol tries to allocate device slot
+	 * and related data structures first. This call does that.
+	 * Refer to sec 4.3.2 in xHCI spec rev1.0
+	 */
+	if (usb_alloc_device(dev)) {
+		printf("Cannot allocate device context to get SLOT_ID\n");
+		return -1;
+	}
 
 	/* We still haven't set the Address yet */
 	addr = dev->devnum;
@@ -861,7 +902,7 @@ int usb_new_device(struct usb_device *dev)
 	 * http://sourceforge.net/mailarchive/forum.php?
 	 * thread_id=5729457&forum_id=5398
 	 */
-	struct usb_device_descriptor *desc;
+	__maybe_unused struct usb_device_descriptor *desc;
 	int port = -1;
 	struct usb_device *parent = dev->parent;
 	unsigned short portstatus;
@@ -878,18 +919,20 @@ int usb_new_device(struct usb_device *dev)
 	dev->epmaxpacketin[0] = 64;
 	dev->epmaxpacketout[0] = 64;
 
-	err = usb_get_descriptor(dev, USB_DT_DEVICE, 0, desc, 64);
-	if (err < 0) {
-		USB_PRINTF("usb_new_device: usb_get_descriptor() failed\n");
-		return 1;
+	/* Check if currently using eHCI stack (usbType = 2) */
+	if (simple_strtoul(getenv("usbType"), NULL, 10) == 2) {
+		err = usb_get_descriptor(dev, USB_DT_DEVICE, 0, desc, 64);
+		if (err < 0) {
+			USB_PRINTF("usb_new_device: usb_get_descriptor() failed\n");
+			return 1;
+		}
+
+		dev->descriptor.bMaxPacketSize0 = desc->bMaxPacketSize0;
 	}
 
-	dev->descriptor.bMaxPacketSize0 = desc->bMaxPacketSize0;
-
-	/* find the port number we're at */
 	if (parent) {
 		int j;
-
+		/* find the port number we're at */
 		for (j = 0; j < parent->maxchild; j++) {
 			if (parent->children[j] == dev) {
 				port = j;
@@ -904,6 +947,7 @@ int usb_new_device(struct usb_device *dev)
 		/* reset the port for the second time */
 		err = hub_port_reset(dev->parent, port, &portstatus);
 		if (err < 0) {
+			usb_second_reset_needed = 1;
 			printf("\n     Couldn't reset port %i\n", port);
 			return 1;
 		}

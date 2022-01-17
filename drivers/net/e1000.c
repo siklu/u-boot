@@ -48,7 +48,11 @@ tested on both gig copper and gig fiber boards
 
 #define TOUT_LOOP   100000
 
-#define virt_to_bus(devno, v)	pci_virt_to_mem(devno, (void *) (v))
+#if defined(CONFIG_MARVELL)
+	#define virt_to_bus(devno, v)	(v)
+#else
+	#define virt_to_bus(devno, v)	pci_virt_to_mem(devno, (void *) (v))
+#endif
 #define bus_to_phys(devno, a)	pci_mem_to_phys(devno, a)
 
 #define E1000_DEFAULT_PCI_PBA	0x00000030
@@ -5001,9 +5005,9 @@ e1000_poll(struct eth_device *nic)
 /**************************************************************************
 TRANSMIT - Transmit a frame
 ***************************************************************************/
-static int e1000_transmit(struct eth_device *nic, void *packet, int length)
+static int e1000_transmit(struct eth_device *nic, volatile void *packet, int length)
 {
-	void *nv_packet = (void *)packet;
+	uint64_t nv_packet = (uint64_t)((uint32_t)packet);
 	struct e1000_hw *hw = nic->priv;
 	struct e1000_tx_desc *txp;
 	int i = 0;
@@ -5011,7 +5015,7 @@ static int e1000_transmit(struct eth_device *nic, void *packet, int length)
 	txp = tx_base + tx_tail;
 	tx_tail = (tx_tail + 1) % 8;
 
-	txp->buffer_addr = cpu_to_le64(virt_to_bus(hw->pdev, nv_packet));
+	txp->buffer_addr = (uint64_t)(cpu_to_le64(virt_to_bus(hw->pdev, nv_packet)));
 	txp->lower.data = cpu_to_le32(hw->txd_cmd | length);
 	txp->upper.data = 0;
 	E1000_WRITE_REG(hw, TDT, tx_tail);
