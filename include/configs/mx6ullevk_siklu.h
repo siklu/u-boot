@@ -143,7 +143,7 @@
 # define SIKLU_PCB19x_SWITCH_MDIO_BUS 1 /*  PCB19x requires switch 2 MDIO busses on ENET1   */
 #endif
 
-#define PHYS_SDRAM_SIZE	SZ_512M
+/* yba meaningless #define PHYS_SDRAM_SIZE	SZ_512M */
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 

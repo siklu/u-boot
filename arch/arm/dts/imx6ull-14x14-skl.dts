@@ -21,11 +21,11 @@
 	chosen {
 		stdout-path = &uart1;
 	};
-
+/* This clause is not used by any code
 	memory {
 		reg = <0x80000000 0x20000000>;
 	};
-
+*/
 
 	regulators {
 		compatible = "simple-bus";
