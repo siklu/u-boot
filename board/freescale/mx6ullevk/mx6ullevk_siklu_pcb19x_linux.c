@@ -9,6 +9,8 @@
  *
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -756,3 +758,4 @@ U_BOOT_CMD(siklu_boot, 5, 0, do_siklu_boot,
 U_BOOT_CMD(siklu_boot_ram, 5, 0, do_siklu_ram_boot,
 		"Boot Siklu software from RAM", "[uimage addr] ");
 
+#endif

@@ -19,6 +19,8 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <dm.h>
 #include <environment.h>
@@ -105,3 +107,5 @@ int siklu_sf_sys_eeprom_erase(void)
 	}
 	return rc;
 }
+
+#endif

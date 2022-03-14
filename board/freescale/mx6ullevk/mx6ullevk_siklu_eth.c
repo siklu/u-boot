@@ -4,6 +4,9 @@
  *  Created on: Dec 13, 2017
  *      Author: edwardk
  */
+
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -39,3 +42,5 @@ static int do_siklu_display_eth_mib_statistics(cmd_tbl_t * cmdtp, int flag,
 
 U_BOOT_CMD(seth_s, 1, 1, do_siklu_display_eth_mib_statistics,
 		"Display eth port statistics", " Display eth port statistics");
+
+#endif

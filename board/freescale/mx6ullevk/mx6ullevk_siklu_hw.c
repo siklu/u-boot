@@ -4,6 +4,7 @@
  *  Created on: Dec 12, 2017
  *      Author: edwardk
  */
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <linux/ctype.h>
@@ -711,3 +712,5 @@ U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " 
 U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
 
 U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
+
+#endif

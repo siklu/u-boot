@@ -6,7 +6,7 @@
  */
 
 
-
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <linux/ctype.h>
@@ -62,3 +62,4 @@ void siklu_wait_user4prevent_card_reboot(void)
 }
 
 #endif // CONFIG_SIKLU_BOARD
+#endif

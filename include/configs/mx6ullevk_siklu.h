@@ -18,6 +18,11 @@
 #include "mx6_common.h"
 #include <asm/mach-imx/gpio.h>
 
+#define is_mx6ul_9x9_evk()	CONFIG_IS_ENABLED(TARGET_MX6UL_9X9_EVK)
+
+/* SPL options */
+#include "imx6_spl.h"
+
 
 #define CONFIG_LIB_RAND /* required for CONFIG_NET_RANDOM_ETHADDR */
 

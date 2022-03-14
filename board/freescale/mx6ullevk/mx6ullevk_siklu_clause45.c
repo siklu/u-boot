@@ -10,6 +10,8 @@
  *
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <linux/ctype.h>
 #include <command.h>
@@ -442,4 +444,4 @@ U_BOOT_CMD(tlkr, 5, 1, do_siklu_read_TLK10031_reg, "Read TLK10031 Transceiver",
 
 U_BOOT_CMD(tlkw, 5, 1, do_siklu_write_TLK10031_reg,
 		"Write TLK10031 Transceiver", " [dev_addr] [reg] [val]");
-
+#endif

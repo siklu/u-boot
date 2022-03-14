@@ -5,6 +5,7 @@
  *      Author: noama
  */
 
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <command.h>
@@ -144,3 +145,4 @@ U_BOOT_CMD(
 		"\tsource is tftp.\n"
 );
 
+#endif

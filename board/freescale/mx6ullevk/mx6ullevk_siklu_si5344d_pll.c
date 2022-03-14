@@ -5,6 +5,8 @@
  *      Author: noama
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -328,3 +330,5 @@ U_BOOT_CMD(pll_burn, 1, 1, do_siklu_si5344d_pll_reg_burn, "Si5344D PLL Burn All 
 
 U_BOOT_CMD(pll_ver, 1, 1, do_siklu_si5344d_pll_get_version, "Si5344D PLL Get Version",
         "[part-number].[device-grade].[device-revision].[tool-version]\n");
+
+#endif
