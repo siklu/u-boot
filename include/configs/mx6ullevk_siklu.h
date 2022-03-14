@@ -20,8 +20,11 @@
 
 #define is_mx6ul_9x9_evk()	CONFIG_IS_ENABLED(TARGET_MX6UL_9X9_EVK)
 
-/* SPL options */
-#include "imx6_spl.h"
+/* SPL */
+#include "imx6_spl.h"			/* common IMX6 SPL configuration */
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x11400
+#define CONFIG_SPL_SPI_LOAD
+#define CONFIG_SPL_TARGET		"u-boot-with-spl.imx"
 
 
 #define CONFIG_LIB_RAND /* required for CONFIG_NET_RANDOM_ETHADDR */
@@ -182,6 +185,7 @@
 #define CONFIG_SF_DEFAULT_SPEED		10000000
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 
+#define CONFIG_SYS_UBOOT_BASE		(CONFIG_SYS_FLASH_BASE + CONFIG_SYS_SPI_U_BOOT_OFFS)
 #endif
 
 
