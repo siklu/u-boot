@@ -203,22 +203,23 @@ int siklu_si5344d_pll_reg_burn()
 	const si5344_revd_register_t * si5344_revd_registers;
 	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 	int si5344_revd_register_config_num;
-	if (board_type == SKL_BOARD_TYPE_PCB195)
-	{
-		si5344_revd_registers = si5344_v1_revd_registers;
-		si5344_revd_register_config_num = SI5344_V1_REVD_REG_CONFIG_NUM_REGS;
-	}
-	else if (board_type == SKL_BOARD_TYPE_PCB213 || board_type == SKL_BOARD_TYPE_PCB217)
-	{
-		si5344_revd_registers = si5344_v2_revd_registers;
-		si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
-	}
-	else
-	{
-		printf("Error: Unknown board type 0x%x. Burn latest registers set\n", board_type);
-		si5344_revd_registers = si5344_v2_revd_registers;
-		si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
-		return CMD_RET_FAILURE;
+
+	switch (board_type) {
+		case SKL_BOARD_TYPE_PCB195:
+			si5344_revd_registers = si5344_v1_revd_registers;
+			si5344_revd_register_config_num = SI5344_V1_REVD_REG_CONFIG_NUM_REGS;
+			break;
+		case SKL_BOARD_TYPE_PCB213:
+		case SKL_BOARD_TYPE_PCB217:
+		case SKL_BOARD_TYPE_PCB277:
+			si5344_revd_registers = si5344_v2_revd_registers;
+			si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
+			break;
+		default:
+			printf("Error: Unknown board type 0x%x. Burn latest registers set\n", board_type);
+			si5344_revd_registers = si5344_v2_revd_registers;
+			si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
+			return CMD_RET_FAILURE;
 	}
 
 	int old_bus = i2c_get_bus_num();
