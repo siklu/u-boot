@@ -27,37 +27,40 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define SKL_BOARD_TYPE_PCB195 0
-#define SKL_BOARD_TYPE_PCB213 1
-#define SKL_BOARD_TYPE_PCB217 2
-#define SKL_BOARD_TYPE_PCB277 3
+#ifndef CONFIG_SPL_BUILD
 
-#define GPIO2_IO18	IMX_GPIO_NR(2, 18)
-#define GPIO2_IO19	IMX_GPIO_NR(2, 19)
-#define GPIO2_IO20	IMX_GPIO_NR(2, 20)
-#define GPIO2_IO21	IMX_GPIO_NR(2, 21)
-
-static unsigned int get_siklu_board_id()
+/* See comment on MTDPARTS_DEFAULT in include/configs/mx6ullevk_siklu.h.
+ * This function is called in cmd/mtdparts.c. */
+void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 {
-	unsigned int id = 0;
+	static canary = 0;
+	static char *siklu_mtdparts;
+	static char ids[24];
+	
+	if (0 == canary) {
+		SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 
-	gpio_direction_input(GPIO2_IO18);
-	gpio_direction_input(GPIO2_IO19);
-	gpio_direction_input(GPIO2_IO20);
-	gpio_direction_input(GPIO2_IO21);
+		snprintf(ids, sizeof(ids), "%s", MTDIDS_DEFAULT);
 
-	id = id | gpio_get_value(GPIO2_IO21);
-	id = id << 1;
-	id = id | gpio_get_value(GPIO2_IO20);
-	id = id << 1;
-	id = id | gpio_get_value(GPIO2_IO19);
-	id = id << 1;
-	id = id | gpio_get_value(GPIO2_IO18);
-	return id;
+		switch (board_type) {
+			case SKL_BOARD_TYPE_PCB195:
+			case SKL_BOARD_TYPE_PCB213:
+			case SKL_BOARD_TYPE_PCB217:
+				siklu_mtdparts = MTDPARTS_DEFAULT_PCB217;
+				break;
+			case SKL_BOARD_TYPE_PCB277: /* EH8020 */
+				siklu_mtdparts = MTDPARTS_DEFAULT_PCB277;
+				break;
+			default:
+				siklu_mtdparts = MTDPARTS_DEFAULT_PCB217;
+				break;
+		}
+		canary = 1;
+	}
+	*mtdids = ids;
+	*mtdparts = siklu_mtdparts;
 }
 
-
-#ifndef CONFIG_SPL_BUILD
 
 /* Called from ./common/board_f.c */
 int dram_init(void)
@@ -287,9 +290,9 @@ int board_late_init(void)	/* NOT SPL */
  */
 int checkboard(void) {
 #ifdef CONFIG_SIKLU_BOARD
-	unsigned int siklu_board_id = get_siklu_board_id();
+	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 
-	switch (siklu_board_id) {
+	switch (board_type) {
 		case SKL_BOARD_TYPE_PCB195:
 			puts("Board: Siklu PCB195\n");
 			break;
@@ -322,6 +325,11 @@ int board_early_init_f(void)	/* NOT SPL */
 
 #ifdef CONFIG_SPL_BUILD
 #include <asm/arch/mx6-ddr.h>
+
+#define GPIO2_IO18	IMX_GPIO_NR(2, 18)
+#define GPIO2_IO19	IMX_GPIO_NR(2, 19)
+#define GPIO2_IO20	IMX_GPIO_NR(2, 20)
+#define GPIO2_IO21	IMX_GPIO_NR(2, 21)
 
 #define UART_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |		\
@@ -481,10 +489,35 @@ static struct mx6_ddr3_cfg eh8020_mem_ddr = {
 };
 
 
+static unsigned int spl_get_siklu_board_id()
+{
+	unsigned int id = 0;
+
+	gpio_direction_input(GPIO2_IO18);
+	gpio_direction_input(GPIO2_IO19);
+	gpio_direction_input(GPIO2_IO20);
+	gpio_direction_input(GPIO2_IO21);
+
+	id = id | gpio_get_value(GPIO2_IO21);
+	id = id << 1;
+	id = id | gpio_get_value(GPIO2_IO20);
+	id = id << 1;
+	id = id | gpio_get_value(GPIO2_IO19);
+	id = id << 1;
+	id = id | gpio_get_value(GPIO2_IO18);
+
+	/* That's the way the ID's are defined in siklu_api.h.
+	 * 0 is SKL_BOARD_TYPE_UNKNOWN: */
+	id++;
+	return id;
+}
+
+
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
 }
+
 
 static void spl_dram_init(void)
 {
@@ -494,8 +527,9 @@ static void spl_dram_init(void)
 	struct mx6_ddr_sysinfo		*ddr_sysinfo;
 	struct mx6_mmdc_calibration	*mx6_mmcd_calib;
 
-	unsigned int siklu_board_id = get_siklu_board_id();
+	unsigned int siklu_board_id = spl_get_siklu_board_id();
 
+	/* See siklu_api.h for enum defs */
 	switch (siklu_board_id) {
 		case SKL_BOARD_TYPE_PCB195:
 			puts("SKL_BOARD_TYPE_PCB195\n");
@@ -553,18 +587,18 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
         return IMX_GPIO_NR(1, 20);
 }
 
+
 void board_init_f(ulong dummy) { /* SPL */
+	/* Critical - clock tree init */
 	ccgr_init();
 
-	/* setup AIPS and disable watchdog */
+	/* Setup AIPS and disable watchdog */
 	arch_cpu_init();
 
-	//gpr_init();
-
-	/* setup GP timer (Siklu needed) */
+	/* Setup GP timer (Siklu needed) */
 	timer_init();
 
-	/* iomux and setup of i2c */
+	/* Setup console output and test it to see that the SPL is alive. */
 	setup_iomux_uart();
 	enable_uart_clk(1);
 	preloader_console_init();

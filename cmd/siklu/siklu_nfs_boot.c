@@ -27,10 +27,9 @@ void setup_bootargs(const char *bootargs) {
 	}
 	mtdparts = env_get(ENV_MTDPARTS);
 	if (! mtdparts) {
-		mtdparts = CONFIG_SIKLU_DEFAULT_MTD_PARTS;
-		SK_LOG_NFS("Using default mtdparts: %s\n", mtdparts);
+		const char *mtdids;
+		board_mtdparts_default(&mtdids, &mtdparts);
 	}
-
 
 	snprintf(formatted_bootargs, sizeof(formatted_bootargs), "%s %s %s board=siklu ver=%s.%s.%s-%srevv ",
 			bootargs, old_bootargs ? old_bootargs : "",
