@@ -31,7 +31,7 @@ VENDOR :=
 # Do not add/remove white spaces, because
 # UBOOT_MAJOR_STR, UBOOT_MINOR_STR, and UBOOT_BUILD_STR parsed in script ~/sdk_nxp/host-scripts/create_target_uboot.sh
 
-UBOOT_MAJOR_STR = "20"
+UBOOT_MAJOR_STR = "21"
 UBOOT_MINOR_STR = "0"
 UBOOT_BUILD_STR = "0"
 
