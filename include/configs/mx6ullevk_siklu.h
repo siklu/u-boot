@@ -46,8 +46,8 @@
  * MTDPARTS_DEFAULT is conditionally checked in cmd/mtdparts.c.
  * For the unified U-Boot we do not define MTDPARTS_DEFAULT because there is no
  * single default, it depends on board type. Instead, we set
- * CONFIG_SYS_MTDPARTS_RUNTIME in configs/mx6ull_14x14_skl_defconfig and we 
- * provide an access function as specified in cmd/mtdparts.c:
+ * CONFIG_SYS_MTDPARTS_RUNTIME above and we provide an access function as
+ * specified in cmd/mtdparts.c:
  * void board_mtdparts_default(const char **mtdids, const char **mtdparts);
  * at the end of the "#ifndef CONFIG_SPL_BUILD" section in 
  * board/freescale/mx6ullevk/mx6ullevk.c */
