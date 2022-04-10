@@ -96,7 +96,8 @@ static void setup_iomux_siklu_cpld(void) {
 
 /* Note: ./cmd/siklu/siklu_nfs_boot.c setup_bootargs() uses the
  * 'siklu_board_type' environment variable because this API
- * function is not available there. */
+ * function is not available there. See also spl_get_siklu_board_id()
+ * in board/freescale/mx6ullevk/mx6ullevk.c. */
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
 	static u8 is_ready = 0;

@@ -488,6 +488,8 @@ static struct mx6_ddr3_cfg eh8020_mem_ddr = {
 };
 
 
+/* See also siklu_get_board_type() in 
+ * board/freescale/mx6ullevk/mx6ullevk_siklu_hw.c. */
 static unsigned int spl_get_siklu_board_id()
 {
 	unsigned int id = 0;
