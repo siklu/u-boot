@@ -35,13 +35,12 @@ void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 {
 	static canary = 0;
 	static char *siklu_mtdparts;
-	static char ids[24];
+	static char *ids;
 	
 	if (0 == canary) {
+		ids = MTDIDS_DEFAULT;
+
 		SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
-
-		snprintf(ids, sizeof(ids), "%s", MTDIDS_DEFAULT);
-
 		switch (board_type) {
 			case SKL_BOARD_TYPE_PCB195:
 			case SKL_BOARD_TYPE_PCB213:
