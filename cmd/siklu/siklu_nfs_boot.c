@@ -27,6 +27,9 @@ void setup_bootargs(const char *bootargs) {
 	}
 	mtdparts = env_get(ENV_MTDPARTS);
 	if (! mtdparts) {
+		/* Other code that calls board_mtdparts_default() uses the
+		 * mtdids parameter. The code below uses only the mtdparts
+		 * parameter */
 		const char *mtdids;
 		board_mtdparts_default(&mtdids, &mtdparts);
 	}

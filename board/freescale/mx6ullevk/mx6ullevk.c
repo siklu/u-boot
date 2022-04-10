@@ -30,7 +30,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #ifndef CONFIG_SPL_BUILD
 
 /* See comment on MTDPARTS_DEFAULT in include/configs/mx6ullevk_siklu.h.
- * This function is called in cmd/mtdparts.c. */
+ * This function is called in cmd/mtdparts.c and cmd/siklu/siklu_nfs_boot.c. */
 void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 {
 	static canary = 0;
