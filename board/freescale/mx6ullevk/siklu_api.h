@@ -79,6 +79,8 @@ typedef enum {
 }  SKL_BOARD_TYPE_E;
 
 
+extern int board_spi_cs_gpio(unsigned bus, unsigned cs);
+
 extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
 
 extern int siklu_sf_sys_eeprom_read(const char* buf, int size);
