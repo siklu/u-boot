@@ -54,25 +54,48 @@ static sf_env_siklu_se_t* p_sf_env_siklu_se = &sf_env_siklu_se;
 
 static int syseeprom_access_init = 0;
 
-static const char siklu_default_environment_se[] = { //
-		"SE_product_name=8010FX" ";" //
-						"SE_mac=00:24:a4:00:de:ad" ";"//
-						"SE_board_serial=F123456789" ";"//
-						"SE_system_serial=0" ";"//
-						"SE_port_map=cd--" ";" "\0" //
-		};
+static const char siklu_default_8020_environment_se[] = {
+		"SE_product_name=8020F" ";"
+		"SE_mac=00:24:a4:00:de:ad" ";"
+		"SE_board_serial=F123456789" ";"
+		"SE_system_serial=0" ";"
+		"SE_port_map=cd--" ";" "\0"
+};
+
+static const char siklu_default_8010_environment_se[] = {
+		"SE_product_name=8010FX" ";"
+		"SE_mac=00:24:a4:00:de:ad" ";"
+		"SE_board_serial=F123456789" ";"
+		"SE_system_serial=0" ";"
+		"SE_port_map=cd--" ";" "\0"
+};
+
+char *siklu_default_environment_se;
 
 /*
  * called if SYSEEPROM data was damaged or not yet created
  */
 int siklu_syseeprom_restore_default(void) {
-	int rc = 0;
+	int rc = -1;
 
 	// printf("%s() called, line %d\n", __func__, __LINE__); // edikk remove
 
+	SKL_BOARD_TYPE_E bt = siklu_get_board_type();
+	switch (bt) {
+		case SKL_BOARD_TYPE_PCB213:
+		case SKL_BOARD_TYPE_PCB217:
+			siklu_default_environment_se = siklu_default_8010_environment_se;
+			break;
+		case SKL_BOARD_TYPE_PCB277:
+			siklu_default_environment_se = siklu_default_8020_environment_se;
+			break;
+		case SKL_BOARD_TYPE_UNKNOWN:
+			return rc;
+	}
+
 	memset(p_sf_env_siklu_se->buff, 0, sizeof(sf_env_siklu_se_t));
 	memcpy(p_sf_env_siklu_se->info.data, siklu_default_environment_se,
-			sizeof(siklu_default_environment_se));
+			strlen(siklu_default_environment_se));
 	p_sf_env_siklu_se->info.control_info.data_size = strlen(
 			siklu_default_environment_se);
 	p_sf_env_siklu_se->info.control_info.crc = crc32(0L,
