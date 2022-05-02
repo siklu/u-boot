@@ -35,8 +35,13 @@ UBOOT_MAJOR_STR = "21"
 UBOOT_MINOR_STR = "0"
 UBOOT_BUILD_STR = "0"
 
-SVNVERSION_STR=$(shell $(PROJECT_ROOT_DIR)/tools/get_version.sh)
+# For the following line to work when building U-Boot outside of the portfolio
+# build system you need to export PROJECT_ROOT_DIR that points to a recently
+# updated portfolio rep dir, or copy the portfolio repo tools/get_version.sh
+# script to a "tools" dir in wherever your PROJECT_ROOT_DIR happnes to be.
+SVNVERSION_STR=$(shell $(PROJECT_ROOT_DIR)/tools/get_version.sh $(shell pwd))
 SIKLU_SVNVERSION=-DU_BOOT_SVNVERSION_STR=\""$(SVNVERSION_STR)"\"
+$(info SVNVERSION_STR is "$(SVNVERSION_STR)")
 
 SIKLU_FLAGS = $(SIKLU_SVNVERSION) -D_VER_MAJOR=\"$(UBOOT_MAJOR_STR)\" -D_VER_MINOR=\"$(UBOOT_MINOR_STR)\" -D_VER_BUILD=\"$(UBOOT_BUILD_STR)\"
 
