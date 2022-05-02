@@ -11,6 +11,8 @@
  *
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -71,5 +73,4 @@ U_BOOT_CMD(sregw, 5, 0, do_siklu_soc_reg_write, "Write SoC Register",
 		" [addr] [val] - Write SoC Register");
 
 
-
-
+#endif

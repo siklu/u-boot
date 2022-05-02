@@ -75,8 +75,11 @@ typedef enum {
 	SKL_BOARD_TYPE_PCB195 = 1,
 	SKL_BOARD_TYPE_PCB213 = 2,
 	SKL_BOARD_TYPE_PCB217 = 3,
+	SKL_BOARD_TYPE_PCB277 = 4,
 }  SKL_BOARD_TYPE_E;
 
+
+extern int board_spi_cs_gpio(unsigned bus, unsigned cs);
 
 extern int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus);
 

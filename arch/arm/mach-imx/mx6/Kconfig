@@ -319,6 +319,7 @@ config TARGET_MX6ULL_14X14_EVK
 	select MX6ULL
 	select DM
 	select DM_THERMAL
+	select SUPPORT_SPL
 
 config TARGET_NITROGEN6X
 	bool "nitrogen6x"

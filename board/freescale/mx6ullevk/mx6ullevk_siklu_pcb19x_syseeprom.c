@@ -8,6 +8,8 @@
  *      Any changes here should be reflected
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -239,3 +241,4 @@ U_BOOT_CMD(sseepro, 7, 1, do_maintenance_sys_serial_eeprom,
         set <name> [<value>] - set EEPROM variable 'name' to 'value'.\n\
                                If 'value' is skipped, 'name' is deleted.");
 
+#endif

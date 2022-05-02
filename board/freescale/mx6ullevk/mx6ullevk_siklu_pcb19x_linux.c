@@ -9,6 +9,8 @@
  *
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -417,7 +419,23 @@ static int run_linux_code(int is_system_in_bist) {
 	const char* nand_ecc = env_get("nandEcc");
 	const char* skl_additional_kernel_cmd = env_get("extra_cmd"); // //   siklu_remarkM41  siklu additional kernel commands
 	if (!mtd_str) {
-		mtd_str = MTDPARTS_DEFAULT;
+		SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+
+		switch (board_type) {
+			case SKL_BOARD_TYPE_PCB195:
+				mtd_str = MTDPARTS_DEFAULT_PCB217;
+				break;
+			case SKL_BOARD_TYPE_PCB213:
+			case SKL_BOARD_TYPE_PCB217:
+			case SKL_BOARD_TYPE_PCB277:
+				mtd_str = MTDPARTS_DEFAULT_PCB277;
+				break;
+			default:
+				printf("Error: Unknown board type 0x%x. Using PCB_217\n",
+					board_type);
+				mtd_str = MTDPARTS_DEFAULT_PCB217;
+				break;
+		}
 	}
 
 	if (!nand_ecc) {
@@ -756,3 +774,4 @@ U_BOOT_CMD(siklu_boot, 5, 0, do_siklu_boot,
 U_BOOT_CMD(siklu_boot_ram, 5, 0, do_siklu_ram_boot,
 		"Boot Siklu software from RAM", "[uimage addr] ");
 
+#endif

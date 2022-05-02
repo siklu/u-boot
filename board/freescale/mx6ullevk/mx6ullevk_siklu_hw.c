@@ -4,6 +4,7 @@
  *  Created on: Dec 12, 2017
  *      Author: edwardk
  */
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <linux/ctype.h>
@@ -92,6 +93,11 @@ static void setup_iomux_siklu_cpld(void) {
 	imx_iomux_v3_setup_multiple_pads(cpld_pads, ARRAY_SIZE(cpld_pads));
 }
 
+
+/* Note: ./cmd/siklu/siklu_nfs_boot.c setup_bootargs() uses the
+ * 'siklu_board_type' environment variable because this API
+ * function is not available there. See also spl_get_siklu_board_id()
+ * in board/freescale/mx6ullevk/mx6ullevk.c. */
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
 	static u8 is_ready = 0;
@@ -106,29 +112,39 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		reg_val = readl((uint32_t*)reg_addr);
 		//printf("reg_val - 0x%x\n",reg_val);
 
-		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0)) + ((reg_val & 1<<20)?(4):(0)) + ((reg_val & 1<<21)?(8):(0));
+		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0))
+			+ ((reg_val & 1<<20)?(4):(0))
+			+ ((reg_val & 1<<21)?(8):(0));
+
 		//printf("board_id - 0x%x\n",val);
 
 		switch (val)
 		{
 		case 0:
 			board_type = SKL_BOARD_TYPE_PCB195;
+			env_set("siklu_board_type", "PCB195");
 			break;
 		case 1:
 			board_type = SKL_BOARD_TYPE_PCB213;
+			env_set("siklu_board_type", "PCB213");
 			break;
 		case 2:
 			board_type = SKL_BOARD_TYPE_PCB217;
+			env_set("siklu_board_type", "PCB217");
+			break;
+		case 3:
+			board_type = SKL_BOARD_TYPE_PCB277;
+			env_set("siklu_board_type", "PCB277");
 			break;
 		default:
 			board_type = SKL_BOARD_TYPE_UNKNOWN;
-			printf("Error: Unknown board type 0x%x !!!\n", val);
+			env_set("siklu_board_type", "unknown");
+			printf("Error: Unknown board type 0x%x\n", val);
 			break;
 		}
 
 		is_ready = 1;
 	}
-
 	return board_type;
 }
 
@@ -711,3 +727,5 @@ U_BOOT_CMD(shw, 5, 1, do_siklu_board_diplay_hw_info, "Display Board HW info", " 
 U_BOOT_CMD(sbist, 5, 1, do_siklu_board_bist_mode, "Set board to BIST Mode", "0-off,1-bist,2-bist with monitoring");
 
 U_BOOT_CMD(reboot, 5, 1, do_siklu_board_hw_reboot, "Board HW Reboot", " Board HW Reboot");
+
+#endif

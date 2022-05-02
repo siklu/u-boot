@@ -5,6 +5,7 @@
  *      Author: noama
  */
 
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <command.h>
@@ -366,3 +367,5 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
 
 
 U_BOOT_CMD(sled, 3, 1, do_siklu_board_led_control, "Control Onboard LEDs", "[led] [state] Control Onboard LEDs");
+
+#endif

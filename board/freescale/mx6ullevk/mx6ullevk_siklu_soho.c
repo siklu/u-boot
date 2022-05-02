@@ -5,6 +5,8 @@
  *      Author: edwardk
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <linux/ctype.h>
 #include <nand.h>
@@ -349,3 +351,4 @@ U_BOOT_CMD(snetw_ena, 5, 1, do_siklu_mngmnt_netw_ena_cntrl,
 		"Network Management Enable control",
 		" [is_ena 0/1] Network Management Enable control");
 
+#endif

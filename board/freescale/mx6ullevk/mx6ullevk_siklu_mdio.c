@@ -8,6 +8,7 @@
  *      ENET1 allows access MDIO bus 1 and 2
  *      The file holds code for switch busses
  */
+#ifndef CONFIG_SPL_BUILD
 
 #include <common.h>
 #include <linux/ctype.h>
@@ -74,3 +75,5 @@ int siklu_mdio_bus_connect(SIKLU_MDIO_BUS_E bus)
 
 	return rc;
 }
+
+#endif

@@ -7,6 +7,8 @@
  *      Any changes here should be reflected
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <cli.h>
 #include <command.h>
@@ -330,3 +332,4 @@ int siklu_syseeprom_init(void) {
 
 }
 
+#endif

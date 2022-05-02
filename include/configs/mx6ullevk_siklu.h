@@ -18,6 +18,11 @@
 #include "mx6_common.h"
 #include <asm/mach-imx/gpio.h>
 
+/* SPL */
+#include "imx6_spl.h"			/* common IMX6 SPL configuration */
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x11400
+#define CONFIG_SPL_SPI_LOAD
+#define CONFIG_SPL_TARGET		"u-boot-with-spl.imx"
 
 #define CONFIG_LIB_RAND /* required for CONFIG_NET_RANDOM_ETHADDR */
 
@@ -32,7 +37,21 @@
 #define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 #define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
 #define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
-#define MTDPARTS_DEFAULT   "mtdparts=gpmi-nand:128k(env),128k(env2),128k(env_t),40M(uimage0),"  \
+#define CONFIG_SYS_MTDPARTS_RUNTIME
+
+/* Note for unified U-Boot version:
+ * MTDPARTS_DEFAULT is conditionally checked in cmd/mtdparts.c.
+ * For the unified U-Boot we do not define MTDPARTS_DEFAULT because there is no
+ * single default, it depends on board type. Instead, we set
+ * CONFIG_SYS_MTDPARTS_RUNTIME above and we provide an access function as
+ * specified in cmd/mtdparts.c:
+ * void board_mtdparts_default(const char **mtdids, const char **mtdparts);
+ * at the end of the "#ifndef CONFIG_SPL_BUILD" section in 
+ * board/freescale/mx6ullevk/mx6ullevk.c */
+
+#define MTDPARTS_DEFAULT_PCB217   "mtdparts=gpmi-nand:128k(env),128k(env2),128k(env_t),40M(uimage0),"  \
+    "40M(uimage1)," "16M(conf),-(log)"
+#define MTDPARTS_DEFAULT_PCB277   "mtdparts=gpmi-nand:256k(env),256k(env2),256k(env_t),40M(uimage0),"  \
     "40M(uimage1)," "16M(conf),-(log)"
 
 #define CONFIG_NAND_ECC_BCH
@@ -177,6 +196,7 @@
 #define CONFIG_SF_DEFAULT_SPEED		10000000
 #define CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 
+#define CONFIG_SYS_UBOOT_BASE		(CONFIG_SYS_FLASH_BASE + CONFIG_SYS_SPI_U_BOOT_OFFS)
 #endif
 
 

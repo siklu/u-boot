@@ -5,6 +5,8 @@
  *      Author: edwardk
  */
 
+#ifndef CONFIG_SPL_BUILD
+
 #include <common.h>
 #include <command.h>
 #include <version.h>
@@ -451,3 +453,4 @@ U_BOOT_CMD(srficw, 5, 0, do_siklu_rfic_write, "Write RFIC register",
 U_BOOT_CMD(spoe, 5, 0, do_siklu_poe_num_pairs_show,
 		"Show POE number pairs Status", "Show POE number pairs Status");
 
+#endif

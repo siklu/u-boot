@@ -2,10 +2,6 @@
 config SIKLU
 	bool "Siklu devices"
 	   
-config SIKLU_DEFAULT_MTD_PARTS
-	string "Siklu default MTD partitions"
-	default "mtdparts=gpmi-nand:128k(env),128k(env2),128k(env_t),40M(uimage0),40M(uimage1),16M(conf),-(log)"
-
 config SIKLU_DEFAULT_EXTRA_BOOTARGS
 	string "Siklu default extra arguments to kernel line"
 	default "console=ttymxc0,115200 nfcConfig=4bitecc board=siklu "
