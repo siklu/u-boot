@@ -300,8 +300,7 @@ int siklu_syseeprom_udate(void) {
  *
  */
 int siklu_syseeprom_init(void) {
-	int rc = -1;
-	int err_line = 0;
+	int rc;
 	u32 crc;
 
 	printf("Init SYSEEPROM Data...\n");
@@ -310,47 +309,49 @@ int siklu_syseeprom_init(void) {
 	memset(key_val_pair, 0, sizeof(key_val_pair));
 	memset(p_sf_env_siklu_se, 0, sizeof(sf_env_siklu_se));
 
-	// read sf syseeprom area to struct
 	rc = siklu_sf_sys_eeprom_read(sf_env_siklu_se.buff,
 			sizeof(sf_env_siklu_se));
 	if (rc != 0) {
-		err_line = __LINE__;
-		goto _bad_data;
+		printf("%s() ERROR: siklu_sf_sys_eeprom_read() failed\n",
+				__func__);
+		goto _read_error;
 	}
 
-	// check valid key
 	if (p_sf_env_siklu_se->info.control_info.valid_key != VALID_KEY_WORD) {
+		printf("%s() WARNING: SEEPROM magic '0xDEADBEAF' not found\n",
+				__func__);
 		rc = -1;
-		err_line = __LINE__;
-		goto _bad_data;
-	}
-	// check data length
-	if (p_sf_env_siklu_se->info.control_info.data_size >= SIKLU_SF_ENV_SIZE) {
-		rc = -1;
-		err_line = __LINE__;
 		goto _bad_data;
 	}
 
-	// check crc
+	if (p_sf_env_siklu_se->info.control_info.data_size >=
+			SIKLU_SF_ENV_SIZE) {
+		printf("%s() WARNING: SEEPROM data_size too big\n", __func__);
+		rc = -1;
+		goto _bad_data;
+	}
+
 	crc = crc32(0L, (unsigned char *) p_sf_env_siklu_se->info.data,
 			p_sf_env_siklu_se->info.control_info.data_size);
 	if (crc != p_sf_env_siklu_se->info.control_info.crc) {
+		printf("%s() WARNING: SEEPROM stored CRC does not match "
+				"calculated CRC\n", __func__);
 		rc = -1;
-		err_line = __LINE__;
 		goto _bad_data;
 	}
 
-	// parce data, fill tuples
 	rc = siklu_fill_tupples_from_sf(p_sf_env_siklu_se);
 	if (rc != 0) {
-		err_line = __LINE__;
+		printf("%s() WARNING: Cannot parse SEEPROM data "
+				"(impossible to reach)\n", __func__);
 		goto _bad_data;
 	}
 	syseeprom_access_init = 1;
-	rc = 0;
-	return rc;
-	_bad_data: //
-	printf("%s() Error on line %d\n", __func__, err_line);
+	return 0;
+_bad_data:
+	printf("%s() SEEPROM is either not initialized or was corrupted\n",
+			__func__);
+_read_error:
 	return rc;
 
 }
