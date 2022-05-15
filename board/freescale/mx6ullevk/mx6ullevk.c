@@ -583,6 +583,12 @@ static void ccgr_init(void)
 }
 
 
+int board_spi_cs_gpio(unsigned bus, unsigned cs)
+{
+        return IMX_GPIO_NR(1, 20);
+}
+
+
 void board_init_f(ulong dummy) { /* SPL */
 	/* Critical - clock tree init */
 	ccgr_init();
