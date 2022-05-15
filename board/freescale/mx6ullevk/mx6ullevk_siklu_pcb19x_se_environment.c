@@ -54,12 +54,14 @@ static sf_env_siklu_se_t* p_sf_env_siklu_se = &sf_env_siklu_se;
 
 static int syseeprom_access_init = 0;
 
-static const char siklu_default_8020_environment_se[] = {
+static const char siklu_default_8020F_environment_se[] = {
 		"SE_product_name=8020F" ";"
 		"SE_mac=00:24:a4:00:de:ad" ";"
 		"SE_board_serial=F123456789" ";"
 		"SE_system_serial=0" ";"
-		"SE_port_map=cd--" ";" "\0"
+		"SE_port_map=----" ";"
+		"SE_1588=0" ";"
+		"SE_MCU_TYPE=60" ";" "\0"
 };
 
 static const char siklu_default_8010_environment_se[] = {
@@ -67,7 +69,9 @@ static const char siklu_default_8010_environment_se[] = {
 		"SE_mac=00:24:a4:00:de:ad" ";"
 		"SE_board_serial=F123456789" ";"
 		"SE_system_serial=0" ";"
-		"SE_port_map=cd--" ";" "\0"
+		"SE_port_map=cd--" ";"
+		"SE_1588=0" ";"
+		"SE_MCU_TYPE=60" ";" "\0"
 };
 
 char *siklu_default_environment_se;
@@ -87,7 +91,7 @@ int siklu_syseeprom_restore_default(void) {
 			siklu_default_environment_se = siklu_default_8010_environment_se;
 			break;
 		case SKL_BOARD_TYPE_PCB277:
-			siklu_default_environment_se = siklu_default_8020_environment_se;
+			siklu_default_environment_se = siklu_default_8020F_environment_se;
 			break;
 		case SKL_BOARD_TYPE_UNKNOWN:
 			return rc;
