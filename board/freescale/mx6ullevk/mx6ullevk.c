@@ -39,7 +39,10 @@ void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 	
 	if (0 == canary) {
 		ids = MTDIDS_DEFAULT;
-
+	       /*
+		* WARNING: Change similar code in mx6ullevk_siklu_pcb19x_linux.c
+		* run_linux_code().
+		*/
 		SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 		switch (board_type) {
 			case SKL_BOARD_TYPE_PCB195:
@@ -51,6 +54,8 @@ void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 				siklu_mtdparts = MTDPARTS_DEFAULT_PCB277;
 				break;
 			default:
+			       printf("Error: Unknown board type 0x%x. Using PCB_217\n",
+				       board_type);
 				siklu_mtdparts = MTDPARTS_DEFAULT_PCB217;
 				break;
 		}
