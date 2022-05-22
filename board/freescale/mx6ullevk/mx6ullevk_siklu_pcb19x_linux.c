@@ -419,14 +419,17 @@ static int run_linux_code(int is_system_in_bist) {
 	const char* nand_ecc = env_get("nandEcc");
 	const char* skl_additional_kernel_cmd = env_get("extra_cmd"); // //   siklu_remarkM41  siklu additional kernel commands
 	if (!mtd_str) {
+		/*
+		 * WARNING: Change similar code in mx6ullevk.c
+		 * board_mtdparts_default().
+		 */
 		SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
-
 		switch (board_type) {
 			case SKL_BOARD_TYPE_PCB195:
-				mtd_str = MTDPARTS_DEFAULT_PCB217;
-				break;
 			case SKL_BOARD_TYPE_PCB213:
 			case SKL_BOARD_TYPE_PCB217:
+				mtd_str = MTDPARTS_DEFAULT_PCB217;
+				break;
 			case SKL_BOARD_TYPE_PCB277:
 				mtd_str = MTDPARTS_DEFAULT_PCB277;
 				break;
