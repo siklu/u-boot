@@ -1,0 +1,14 @@
+This README is a starting-point roadmap for understanding Siklu's changes to
+U-Boot 2017.11.
+
+Start here:
+ * include/configs/mx6ullevk_siklu.h
+
+Then see:
+ * board/freescale/mx6ullevk/mx6ullevk_siklu_*
+ * include/config/siklu/*
+ * cmd/siklu/*
+
+MTD:
+ * cmd/mtdparts.c
+    * generate_mtdparts_save() saves the mtdparts to the environment
