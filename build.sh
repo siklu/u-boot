@@ -8,7 +8,7 @@
 # built, which is in the current directory where this script resides. [The
 # requirement is to define this variable in the U-Boot directory is a Siklu
 # design flaw that should be fixed.]
-export PROJECT_ROOT_DIR="$(pwd)"
+#export PROJECT_ROOT_DIR="$(pwd)"
 
 # This path for the cross compiler is the Siklu standard
 export CROSS_COMPILE=/opt/arm/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
@@ -16,8 +16,8 @@ export PATH=/opt/arm/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf/bin/:$
 
 # Temporarily comment out whatever you don't need.
 #make oldconfig
-make menuconfig
-#make ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} mx6ul_14x14_evk_defconfig
+#make menuconfig
+make ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} mx6ull_14x14_skl_defconfig
 
-#make clean
-#make
+make clean
+make
