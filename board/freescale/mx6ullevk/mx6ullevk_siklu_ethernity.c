@@ -23,8 +23,19 @@ static int do_siklu_ethernity_reset(cmd_tbl_t * cmdtp, int flag, int argc,
 	int rc = 0;
 	T_CPLD_LOGIC_WD_RW_REGS reset_reg;
 
+	/* Drive to 0V */
 	reset_reg.uint8 = siklu_cpld_read(R_CPLD_LOGIC_WD_RW);
 	reset_reg.s.cfg_fpga_8020_rst = 1;
+
+	rc = siklu_cpld_write(R_CPLD_LOGIC_WD_RW, reset_reg.uint8);
+	if (rc != 0) {
+		printf("%s() ERROR writing to CPLD, line %d\n", __func__, __LINE__);
+	}
+
+	mdelay(20);	/* Hold for 20ms because that's what Ethernity said to do */
+
+	/* Release back to 3.3V pullup */
+	reset_reg.s.cfg_fpga_8020_rst = 0;
 
 	rc = siklu_cpld_write(R_CPLD_LOGIC_WD_RW, reset_reg.uint8);
 	if (rc != 0) {
