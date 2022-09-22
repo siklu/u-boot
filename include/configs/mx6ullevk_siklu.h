@@ -32,12 +32,12 @@
 #endif
 #endif
 
-
-
 #define CONFIG_CMD_MTDPARTS	/* Enable MTD parts commands */
 #define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
 #define MTDIDS_DEFAULT		"nand0=gpmi-nand" //      SPI  ;spi1=spi_flash
 #define CONFIG_SYS_MTDPARTS_RUNTIME
+
+#define UBIFS_DEFAULT_VERSION	"4"
 
 /* Note for unified U-Boot version:
  * MTDPARTS_DEFAULT is conditionally checked in cmd/mtdparts.c.
