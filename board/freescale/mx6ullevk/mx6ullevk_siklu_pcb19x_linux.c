@@ -66,6 +66,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define DTB_ADDR_STR		 "84000000" //
 #define DTB_ADDR_HEX		0x84000000 //
 
+#define UBIFS_DEFAULT_VERSION	"4" 	// PORTF-1182
+
 extern int seeprom_get_assembly_type_v1(char* assembly); // siklu_remarkM24
 
 static ulong ramd_addr = RAMD_ADDR;
@@ -73,8 +75,6 @@ static ulong ramd_addr = RAMD_ADDR;
 extern void siklu_wait_user4prevent_card_reboot(void);
 
 #ifdef CONFIG_SIKLU_BOARD
-
-
 
 
 /*
@@ -158,7 +158,6 @@ static int siklu_boot_process_control(void)
 }
 
 
-
 int siklu_board_late_init_env(void)
 {
 
@@ -166,9 +165,6 @@ int siklu_board_late_init_env(void)
 	env_save();
 	return 0;
 }
-
-
-
 
 
 /*
@@ -417,8 +413,10 @@ static int run_linux_code(int is_system_in_bist) {
 	int i = 0;
 	const char* mtd_str = env_get("user_mtdparts");
 	const char* nand_ecc = env_get("nandEcc");
+	const char* ubifs_default_version = env_get("ubifs_default_version");
 	const char* skl_additional_kernel_cmd = env_get("extra_cmd"); // //   siklu_remarkM41  siklu additional kernel commands
-	if (!mtd_str) {
+
+	if ( ! mtd_str) {
 		/*
 		 * WARNING: Change similar code in mx6ullevk.c
 		 * board_mtdparts_default().
@@ -440,28 +438,17 @@ static int run_linux_code(int is_system_in_bist) {
 				break;
 		}
 	}
-
-	if (!nand_ecc) {
+	if ( ! nand_ecc) {
 		nand_ecc = "nfcConfig=4bitecc";
 	}
+	if ( ! ubifs_default_version)
+		ubifs_default_version = UBIFS_DEFAULT_VERSION;
 
-	// siklu_remarkM09   build a command line -
-	/* set boot arguments
-	 be careful - limit filesystem size to 32M!
-	 */
-#if 0
-	i +=
-	sprintf(buf + i,
-			"env set bootargs console=ttyS0,115200 %s %s fdt_skip_update=yes initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram0 r raid=noautodetect ",
-			nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-#else
-	// edikk - eval board uses different command line parameters !!!!
-	i +=
-			sprintf(buf + i,  // do not up eth0 via dhcp on boot linux
-					// "env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram r ip=dhcp ",
-					"env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x rootfstype=squashfs root=/dev/ram r ",
-					nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE);
-#endif
+	i += sprintf(buf + i, 
+		"env set bootargs console=ttymxc0,115200 %s %s initrd=0x%x,0x%x "
+			"rootfstype=squashfs root=/dev/ram r ubifs.default_version=%s ",
+				nand_ecc, mtd_str, RAMD_ADDR, RAMD_MAX_SIZE,
+					ubifs_default_version);
 
 	if (is_system_in_bist) { // add string to command line says about BIST mode
 		const char *bist_state = env_get(SIKLU_BIST_ENVIRONMENT_NAME);

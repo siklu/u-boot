@@ -276,6 +276,7 @@ int board_late_init(void)	/* NOT SPL */
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	env_set("board_name", "EVK");
 	env_set("board_rev", "14X14");
+	env_set("ubifs_default_version", UBIFS_DEFAULT_VERSION);
 #endif
 
 	siklu_primary_si5344d_pll_init();
