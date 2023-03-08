@@ -212,6 +212,8 @@ int siklu_si5344d_pll_reg_burn()
 		case SKL_BOARD_TYPE_PCB213:
 		case SKL_BOARD_TYPE_PCB217:
 		case SKL_BOARD_TYPE_PCB277:
+		case SKL_BOARD_TYPE_PCB295:
+		case SKL_BOARD_TYPE_PCB295_AES:
 			si5344_revd_registers = si5344_v2_revd_registers;
 			si5344_revd_register_config_num = SI5344_V2_REVD_REG_CONFIG_NUM_REGS;
 			break;

@@ -88,6 +88,8 @@ int siklu_syseeprom_restore_default(void) {
 	switch (bt) {
 		case SKL_BOARD_TYPE_PCB213:
 		case SKL_BOARD_TYPE_PCB217:
+		case SKL_BOARD_TYPE_PCB295:
+		case SKL_BOARD_TYPE_PCB295_AES:
 			siklu_default_environment_se = siklu_default_8010_environment_se;
 			break;
 		case SKL_BOARD_TYPE_PCB277:

@@ -48,6 +48,8 @@ void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 			case SKL_BOARD_TYPE_PCB195:
 			case SKL_BOARD_TYPE_PCB213:
 			case SKL_BOARD_TYPE_PCB217:
+			case SKL_BOARD_TYPE_PCB295:
+			case SKL_BOARD_TYPE_PCB295_AES:
 				siklu_mtdparts = MTDPARTS_DEFAULT_PCB217;
 				break;
 			case SKL_BOARD_TYPE_PCB277: /* EH8020 */
@@ -310,6 +312,12 @@ int checkboard(void) {
 		case SKL_BOARD_TYPE_PCB277:
 			puts("Board: Siklu PCB277\n");
 			break;
+		case SKL_BOARD_TYPE_PCB295:
+			puts("Board: Siklu PCB295\n");
+			break;
+		case SKL_BOARD_TYPE_PCB295_AES:
+			puts("Board: Siklu PCB295_AES\n");
+			break;
 		default:
 			puts("Board: Siklu Unknown\n");
 			break;
@@ -544,6 +552,10 @@ static void spl_dram_init(void)
 			puts("SKL_BOARD_TYPE_PCB213\n");
 		case SKL_BOARD_TYPE_PCB217:
 			puts("SKL_BOARD_TYPE_PCB217\n");
+		case SKL_BOARD_TYPE_PCB295:
+			puts("SKL_BOARD_TYPE_PCB295\n");
+		case SKL_BOARD_TYPE_PCB295_AES:
+			puts("SKL_BOARD_TYPE_PCB295_AES\n");
 			/* K4B4G1646E-BMMA 500 MB
 			 * https://semiconductor.samsung.com/resources/data-sheet/DS_K4B4G1646E_BY_M_Rev1_11-0.pdf */
 			mem_ddr		= &eh8010_mem_ddr;
