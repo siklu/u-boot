@@ -426,6 +426,8 @@ static int run_linux_code(int is_system_in_bist) {
 			case SKL_BOARD_TYPE_PCB195:
 			case SKL_BOARD_TYPE_PCB213:
 			case SKL_BOARD_TYPE_PCB217:
+			case SKL_BOARD_TYPE_PCB295:
+			case SKL_BOARD_TYPE_PCB295_AES:
 				mtd_str = MTDPARTS_DEFAULT_PCB217;
 				break;
 			case SKL_BOARD_TYPE_PCB277:

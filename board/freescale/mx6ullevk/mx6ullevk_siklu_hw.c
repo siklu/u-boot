@@ -136,6 +136,14 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 			board_type = SKL_BOARD_TYPE_PCB277;
 			env_set("siklu_board_type", "PCB277");
 			break;
+		case 4:
+			board_type = SKL_BOARD_TYPE_PCB295;
+			env_set("siklu_board_type", "PCB295");
+			break;
+		case 5:
+			board_type = SKL_BOARD_TYPE_PCB295_AES;
+			env_set("siklu_board_type", "PCB295_AES");
+			break;
 		default:
 			board_type = SKL_BOARD_TYPE_UNKNOWN;
 			env_set("siklu_board_type", "unknown");
