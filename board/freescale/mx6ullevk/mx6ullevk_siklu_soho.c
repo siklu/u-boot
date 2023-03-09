@@ -239,6 +239,7 @@ int siklu_cpu_netw_cntrl(int is_ena) {
 #define SOHO_FIRST_PORT			0
 #define SOHO_LAST_PORT  		0xA
 #define SOHO_HOST_CPU_PORT  	0x0
+#define SOHO_HOST_CPU_PORT_8012 0x8
 #define SOHO_MNGM_PORT  		0x5
 #define SOHO_PORT_CONTROL_REG	4
 
@@ -250,12 +251,18 @@ int siklu_cpu_netw_cntrl(int is_ena) {
 		}
 	}
 
-	siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
+	if ((siklu_get_board_type() == SKL_BOARD_TYPE_PCB295) || (siklu_get_board_type() == SKL_BOARD_TYPE_PCB295_AES))
+		siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT_8012, SOHO_PORT_CONTROL_REG, 0x7F);
+	else
+		siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 	siklu_88e639x_reg_write(SOHO_MNGM_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 
 	if (siklu_get_board_type() != SKL_BOARD_TYPE_PCB195) {
 		// follow setup required only for SOHO on PCB1213
-		rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, 0, 0xD05);
+		if ((siklu_get_board_type() == SKL_BOARD_TYPE_PCB295) || (siklu_get_board_type() == SKL_BOARD_TYPE_PCB295_AES))
+			rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT_8012, 0, 0xD05);
+		else
+			rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, 0, 0xD05);
 	}
 
 
