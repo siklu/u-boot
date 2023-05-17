@@ -577,6 +577,8 @@ int siklu_board_hw_reboot(void)
  */
 static int do_siklu_board_hw_reboot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
+    puts ("resetting ...\n");
+    udelay (50000);				/* wait 50 ms */
     return siklu_board_hw_reboot();
 }
 
