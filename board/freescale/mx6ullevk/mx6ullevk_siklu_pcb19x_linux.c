@@ -557,7 +557,7 @@ static int execute_siklu_boot(int forced_image) {
 			char new_part[20];
 			sprintf(new_part, "%d", img2load);
 			env_set("SK_primary_image", new_part);
-			// required reset here
+			env_save();
 			printf(
 					"\n\n\tSwap boot partition due to bad current. The system will up after reboot\n\n");
 			udelay(1000);
