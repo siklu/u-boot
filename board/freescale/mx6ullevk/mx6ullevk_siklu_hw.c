@@ -116,7 +116,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 			+ ((reg_val & 1<<20)?(4):(0))
 			+ ((reg_val & 1<<21)?(8):(0));
 
-		//printf("board_id - 0x%x\n",val);
+		printf("board_id - 0x%x\n",val);
 
 		switch (val)
 		{
@@ -153,6 +153,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 
 		is_ready = 1;
 	}
+	printf("board_type - 0x%x\n", (int)board_type);
 	return board_type;
 }
 

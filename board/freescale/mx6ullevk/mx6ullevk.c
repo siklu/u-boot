@@ -319,7 +319,7 @@ int checkboard(void) {
 			puts("Board: Siklu PCB295_AES\n");
 			break;
 		default:
-			puts("Board: Siklu Unknown\n");
+			printf("Board: Siklu Unknown (0x%02X)\n", (int)board_type);
 			break;
 	}
 #else
