@@ -103,6 +103,8 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	static u8 is_ready = 0;
 	static SKL_BOARD_TYPE_E board_type;
 
+	printf("calling siklu_get_board_type(), is_ready=%d, board_type=0x%x\n", (int)is_ready, (int)board_type);
+
 	if (!is_ready)
 	{
 		uint32_t reg_val;
