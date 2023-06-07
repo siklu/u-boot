@@ -102,7 +102,7 @@ static int board_type_known = 0;
 static SKL_BOARD_TYPE_E board_type;
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
-	printf("calling siklu_get_board_type(), board_type_known=%d, board_type=0x%x\n", board_type_known, (int)board_type);
+	printf("calling siklu_get_board_type(), board_type_known=%d, board_type=0x%x, &board_type_known=%p\n", board_type_known, (int)board_type, &board_type_known);
 
 	if (!board_type_known)
 	{
