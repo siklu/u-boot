@@ -104,6 +104,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	static SKL_BOARD_TYPE_E board_type;
 	
 	printf("calling siklu_get_board_type(), board_type_known=%d, board_type=0x%x, &board_type_known=%p\n", board_type_known, (int)board_type, &board_type_known);
+	printf("gd->flags=0x%08X, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
 
 	if (board_type_known != 1)
 	{
