@@ -103,7 +103,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	static int is_ready = 0;
 	static SKL_BOARD_TYPE_E board_type;
 	
-	if ((gd->flags & GD_FLG_RELOC == 0) || (is_ready != 1))
+        if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
 	{
 		uint32_t reg_val;
 		ulong reg_addr = 0x20A0000;
@@ -151,7 +151,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 			break;
 		}
 
-		if (gd->flags & GD_FLG_RELOC != 0) {
+		if ((gd->flags & GD_FLG_RELOC) != 0) {
 			is_ready = 1;
 		}
 	}
