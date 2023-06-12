@@ -103,20 +103,24 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	static int is_ready = 0;
 	static SKL_BOARD_TYPE_E board_type;
 	
-        if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
+	printf("calling siklu_get_board_type(), is_ready=%d, board_type=0x%x, &is_ready=%p\n", is_ready, (int)board_type, &is_ready);
+	printf("gd->flags=0x%08X, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
+
+	if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
 	{
 		uint32_t reg_val;
 		ulong reg_addr = 0x20A0000;
 		u8 val;
 
+		printf("checking board type\n");
 		reg_val = readl((uint32_t*)reg_addr);
-		//printf("reg_val - 0x%x\n",reg_val);
+		printf("reg_val - 0x%x\n",reg_val);
 
 		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0))
 			+ ((reg_val & 1<<20)?(4):(0))
 			+ ((reg_val & 1<<21)?(8):(0));
 
-		//printf("board_id - 0x%x\n",val);
+		printf("board_id - 0x%x\n",val);
 
 		switch (val)
 		{
@@ -155,6 +159,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 			is_ready = 1;
 		}
 	}
+	printf("board_type - 0x%x\n", (int)board_type);
 	return board_type;
 }
 
