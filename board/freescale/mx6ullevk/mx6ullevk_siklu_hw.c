@@ -100,13 +100,14 @@ static void setup_iomux_siklu_cpld(void) {
  * in board/freescale/mx6ullevk/mx6ullevk.c. */
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
-	static int is_ready = 0;
+	static u8 is_ready = 0;
 	static SKL_BOARD_TYPE_E board_type;
 	
-	printf("calling siklu_get_board_type(), is_ready=%d, board_type=0x%x, &is_ready=%p\n", is_ready, (int)board_type, &is_ready);
+	printf("calling siklu_get_board_type(), is_ready=%d, board_type=0x%x, &is_ready=%p\n", (int)is_ready, (int)board_type, &is_ready);
 	printf("gd->flags=0x%08X, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
 
-	if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
+	//if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
+	if (is_ready != 1) 
 	{
 		uint32_t reg_val;
 		ulong reg_addr = 0x20A0000;
@@ -155,9 +156,9 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 			break;
 		}
 
-		if ((gd->flags & GD_FLG_RELOC) != 0) {
+//		if ((gd->flags & GD_FLG_RELOC) != 0) {
 			is_ready = 1;
-		}
+//		}
 	}
 	printf("board_type - 0x%x\n", (int)board_type);
 	return board_type;
