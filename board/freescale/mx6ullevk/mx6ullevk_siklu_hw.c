@@ -106,15 +106,15 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	printf("calling siklu_get_board_type(), is_ready=%d, board_type=%d, &is_ready=%p\n", (int)is_ready, (int)board_type, &is_ready);
 	printf("gd->flags=0x%x, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
 
-	//if ((gd->flags & GD_FLG_RELOC) == 0 || is_ready != 1) 
-	if (!is_ready)
+	if ((gd->flags & GD_FLG_RELOC) == 0 || !is_ready)
 	{
 		uint32_t reg_val;
 		ulong reg_addr = 0x20A0000;
 		u8 val;
+		char *board_type_str = NULL;
 
 		reg_val = readl((uint32_t*)reg_addr);
-		//printf("reg_val - 0x%x\n",reg_val);
+		printf("reg_val - 0x%x\n",reg_val);
 
 		val = ((reg_val & 1<<18)?(1):(0)) + ((reg_val & 1<<19)?(2):(0))
 			+ ((reg_val & 1<<20)?(4):(0))
@@ -126,38 +126,40 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		{
 		case 0:
 			board_type = SKL_BOARD_TYPE_PCB195;
-			env_set("siklu_board_type", "PCB195");
+			board_type_str = "PCB195";
 			break;
 		case 1:
 			board_type = SKL_BOARD_TYPE_PCB213;
-			env_set("siklu_board_type", "PCB213");
+			board_type_str = "PCB213";
 			break;
 		case 2:
 			board_type = SKL_BOARD_TYPE_PCB217;
-			env_set("siklu_board_type", "PCB217");
+			board_type_str = "PCB217";
 			break;
 		case 3:
 			board_type = SKL_BOARD_TYPE_PCB277;
-			env_set("siklu_board_type", "PCB277");
+			board_type_str = "PCB277";
 			break;
 		case 4:
 			board_type = SKL_BOARD_TYPE_PCB295;
-			env_set("siklu_board_type", "PCB295");
+			board_type_str = "PCB295";
 			break;
 		case 5:
 			board_type = SKL_BOARD_TYPE_PCB295_AES;
-			env_set("siklu_board_type", "PCB295_AES");
+			board_type_str = "PCB295_AES";
 			break;
 		default:
 			board_type = SKL_BOARD_TYPE_UNKNOWN;
-			env_set("siklu_board_type", "unknown");
+			board_type_str = "unknown";
 			printf("Error: Unknown board type 0x%x\n", val);
 			break;
 		}
 
-//		if ((gd->flags & GD_FLG_RELOC) != 0) {
+		if ((gd->flags & GD_FLG_RELOC) != 0) {
 			is_ready = 1;
-//		}
+			printf("calling env_set('siklu_board_type', '%s')\n", board_type_str);
+			env_set("siklu_board_type", board_type_str);
+		}
 	}
 	printf("board_type - %d\n", (int)board_type);
 	return board_type;

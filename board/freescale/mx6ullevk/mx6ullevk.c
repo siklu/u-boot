@@ -547,15 +547,10 @@ static void spl_dram_init(void)
 	/* See siklu_api.h for enum defs */
 	switch (siklu_board_id) {
 		case SKL_BOARD_TYPE_PCB195:
-			puts("SKL_BOARD_TYPE_PCB195\n");
 		case SKL_BOARD_TYPE_PCB213:
-			puts("SKL_BOARD_TYPE_PCB213\n");
 		case SKL_BOARD_TYPE_PCB217:
-			puts("SKL_BOARD_TYPE_PCB217\n");
 		case SKL_BOARD_TYPE_PCB295:
-			puts("SKL_BOARD_TYPE_PCB295\n");
 		case SKL_BOARD_TYPE_PCB295_AES:
-			puts("SKL_BOARD_TYPE_PCB295_AES\n");
 			/* K4B4G1646E-BMMA 500 MB
 			 * https://semiconductor.samsung.com/resources/data-sheet/DS_K4B4G1646E_BY_M_Rev1_11-0.pdf */
 			mem_ddr		= &eh8010_mem_ddr;
@@ -565,7 +560,6 @@ static void spl_dram_init(void)
 			mx6_mmcd_calib	= &eh8010_mmcd_calib;
 			break;
 		case SKL_BOARD_TYPE_PCB277: /* EH8020 */
-			puts("SKL_BOARD_TYPE_PCB277\n");
 			/* IS43TR16512B-107MBLI 1GB
 			 * https://www.issi.com/WW/pdf/43-46TR16512B-81024BL.pdf */
 			mem_ddr		= &eh8020_mem_ddr;
@@ -575,7 +569,7 @@ static void spl_dram_init(void)
 			mx6_mmcd_calib	= &eh8020_mmcd_calib;
 			break;
 		default:
-			puts("Siklu unrecognized board id\n");
+			puts("Siklu unrecognized board id %u\n", siklu_board_id);
 			break;
 	}
 	mx6ul_dram_iocfg(mem_ddr->width, mx6_ddr_ioregs, mx6_grp_ioregs);
