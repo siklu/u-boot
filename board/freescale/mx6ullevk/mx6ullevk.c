@@ -569,7 +569,7 @@ static void spl_dram_init(void)
 			mx6_mmcd_calib	= &eh8020_mmcd_calib;
 			break;
 		default:
-			puts("Siklu unrecognized board id %u\n", siklu_board_id);
+			printf("Siklu unrecognized board id %u\n", siklu_board_id);
 			break;
 	}
 	mx6ul_dram_iocfg(mem_ddr->width, mx6_ddr_ioregs, mx6_grp_ioregs);

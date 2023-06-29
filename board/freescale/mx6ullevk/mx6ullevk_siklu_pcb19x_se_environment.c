@@ -95,7 +95,8 @@ int siklu_syseeprom_restore_default(void) {
 		case SKL_BOARD_TYPE_PCB277:
 			siklu_default_environment_se = siklu_default_8020F_environment_se;
 			break;
-		case SKL_BOARD_TYPE_UNKNOWN:
+		default:
+			printf("siklu_syseeprom_restore_default: Unknown board type\n");
 			return rc;
 	}
 

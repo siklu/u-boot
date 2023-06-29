@@ -94,24 +94,21 @@ static void setup_iomux_siklu_cpld(void) {
 }
 
 
-/* Note: ./cmd/siklu/siklu_nfs_boot.c setup_bootargs() uses the
- * 'siklu_board_type' environment variable because this API
- * function is not available there. See also spl_get_siklu_board_id()
- * in board/freescale/mx6ullevk/mx6ullevk.c. */
+/* See also spl_get_siklu_board_id() in board/freescale/mx6ullevk/mx6ullevk.c. */
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
-	static u8 is_ready = 0;
-	static SKL_BOARD_TYPE_E board_type;
+	//static u8 is_ready = 0;
+	SKL_BOARD_TYPE_E board_type;
 	
 	printf("calling siklu_get_board_type(), is_ready=%d, board_type=%d, &is_ready=%p\n", (int)is_ready, (int)board_type, &is_ready);
 	printf("gd->flags=0x%x, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
 
-	if ((gd->flags & GD_FLG_RELOC) == 0 || !is_ready)
+	//if ((gd->flags & GD_FLG_RELOC) == 0 || !is_ready)
 	{
 		uint32_t reg_val;
 		ulong reg_addr = 0x20A0000;
 		u8 val;
-		char *board_type_str = NULL;
+		//char *board_type_str = NULL;
 
 		reg_val = readl((uint32_t*)reg_addr);
 		printf("reg_val - 0x%x\n",reg_val);
@@ -126,40 +123,41 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		{
 		case 0:
 			board_type = SKL_BOARD_TYPE_PCB195;
-			board_type_str = "PCB195";
+			//board_type_str = "PCB195";
 			break;
 		case 1:
 			board_type = SKL_BOARD_TYPE_PCB213;
-			board_type_str = "PCB213";
+			//board_type_str = "PCB213";
 			break;
 		case 2:
 			board_type = SKL_BOARD_TYPE_PCB217;
-			board_type_str = "PCB217";
+			//board_type_str = "PCB217";
 			break;
 		case 3:
 			board_type = SKL_BOARD_TYPE_PCB277;
-			board_type_str = "PCB277";
+			//board_type_str = "PCB277";
 			break;
 		case 4:
 			board_type = SKL_BOARD_TYPE_PCB295;
-			board_type_str = "PCB295";
+			//board_type_str = "PCB295";
 			break;
 		case 5:
 			board_type = SKL_BOARD_TYPE_PCB295_AES;
-			board_type_str = "PCB295_AES";
+			//board_type_str = "PCB295_AES";
 			break;
 		default:
 			board_type = SKL_BOARD_TYPE_UNKNOWN;
-			board_type_str = "unknown";
+			//board_type_str = "unknown";
 			printf("Error: Unknown board type 0x%x\n", val);
 			break;
 		}
 
-		if ((gd->flags & GD_FLG_RELOC) != 0) {
-			is_ready = 1;
-			printf("calling env_set('siklu_board_type', '%s')\n", board_type_str);
-			env_set("siklu_board_type", board_type_str);
-		}
+		//if ((gd->flags & GD_FLG_RELOC) != 0) {
+		//	printf("now we are ready\n");
+		//	is_ready = 1;
+			//printf("calling env_set('siklu_board_type', '%s')\n", board_type_str);
+			//env_set("siklu_board_type", board_type_str);
+		//}
 	}
 	printf("board_type - %d\n", (int)board_type);
 	return board_type;

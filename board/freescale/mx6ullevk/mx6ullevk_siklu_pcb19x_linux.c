@@ -379,12 +379,13 @@ static int unpack_uimage(uint uimage_ram_addr) {
 		return -1;
 	}
 	uint32_t ramd_hex_addr = ramd_addr;
+	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 	debugp(" Copy ROOTFS from %x to %x, size %x\n", (uint32_t)data, (uint32_t)ramd_hex_addr, (uint32_t)len);
 	memcpy((char*) ramd_hex_addr, (char*) data, len + 100);
 
 	// ############################# extract DEvice tree DTB file
 	// uimage is composed from 6 files: 1.rootfs 2.kernel 3.dtb file 4.uboot 5.mamangment convert script 6.8012 dtb file
-	if ((siklu_get_board_type() == SKL_BOARD_TYPE_PCB295) || (siklu_get_board_type() == SKL_BOARD_TYPE_PCB295_AES))
+	if ((board_type == SKL_BOARD_TYPE_PCB295) || (board_type == SKL_BOARD_TYPE_PCB295_AES))
 		sprintf(buf, "imx %x 6 " DTB_ADDR_STR, uimage_ram_addr);// same as DTB_ADDR_HEX;
 	else
 		sprintf(buf, "imx %x 3 " DTB_ADDR_STR, uimage_ram_addr);// same as DTB_ADDR_HEX;
