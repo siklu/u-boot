@@ -100,7 +100,8 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	//static u8 is_ready = 0;
 	SKL_BOARD_TYPE_E board_type;
 	
-	printf("calling siklu_get_board_type(), is_ready=%d, board_type=%d, &is_ready=%p\n", (int)is_ready, (int)board_type, &is_ready);
+	printf("calling siklu_get_board_type()\n");
+	//printf("calling siklu_get_board_type(), is_ready=%d, board_type=%d, &is_ready=%p\n", (int)is_ready, (int)board_type, &is_ready);
 	printf("gd->flags=0x%x, GD_FLG_RELOC=%d\n", (int)(gd->flags), (int)(gd->flags & GD_FLG_RELOC));
 
 	//if ((gd->flags & GD_FLG_RELOC) == 0 || !is_ready)
