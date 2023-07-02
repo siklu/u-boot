@@ -52,7 +52,7 @@ void board_mtdparts_default(const char **mtdids, const char **mtdparts)
 			case SKL_BOARD_TYPE_PCB295_AES:
 				siklu_mtdparts = MTDPARTS_DEFAULT_PCB217;
 				break;
-			case SKL_BOARD_TYPE_PCB277: /* EH8020 */
+			case SKL_BOARD_TYPE_PCB277: /* EH8020F */
 				siklu_mtdparts = MTDPARTS_DEFAULT_PCB277;
 				break;
 			default:
@@ -559,7 +559,7 @@ static void spl_dram_init(void)
 			ddr_sysinfo	= &eh8010_ddr_sysinfo;
 			mx6_mmcd_calib	= &eh8010_mmcd_calib;
 			break;
-		case SKL_BOARD_TYPE_PCB277: /* EH8020 */
+		case SKL_BOARD_TYPE_PCB277: /* EH8020F */
 			/* IS43TR16512B-107MBLI 1GB
 			 * https://www.issi.com/WW/pdf/43-46TR16512B-81024BL.pdf */
 			mem_ddr		= &eh8020_mem_ddr;

@@ -134,7 +134,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		break;
 	default:
 		board_type = SKL_BOARD_TYPE_UNKNOWN;
-		printf("Error: Unknown board type 0x%x\n", val);
+		printf("Error: Unknown board type 0x%x\n", (int)val);
 		break;
 	}
 	return board_type;
