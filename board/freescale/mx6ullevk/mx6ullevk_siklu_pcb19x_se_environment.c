@@ -84,8 +84,8 @@ int siklu_syseeprom_restore_default(void) {
 
 	// printf("%s() called, line %d\n", __func__, __LINE__); // edikk remove
 
-	SKL_BOARD_TYPE_E bt = siklu_get_board_type();
-	switch (bt) {
+	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+	switch (board_type) {
 		case SKL_BOARD_TYPE_PCB213:
 		case SKL_BOARD_TYPE_PCB217:
 		case SKL_BOARD_TYPE_PCB295:

@@ -225,8 +225,8 @@ int siklu_soho_power_up_init(void) {
 int siklu_cpu_netw_cntrl(int is_ena) {
 	int rc = 0, count;
 	T_CPLD_LOGIC_MODEM_LEDS_CTRL_REGS reset_reg;
-	SKL_BOARD_TYPE_E bt = siklu_get_board_type();
-	if (bt == SKL_BOARD_TYPE_UNKNOWN) {
+	SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+	if (board_type == SKL_BOARD_TYPE_UNKNOWN) {
 		printf("%s() Unknown Siklu board type\n", __func__);
 		return -1;
 	}
@@ -256,15 +256,15 @@ int siklu_cpu_netw_cntrl(int is_ena) {
 		}
 	}
 
-	if ((bt == SKL_BOARD_TYPE_PCB295) || (bt == SKL_BOARD_TYPE_PCB295_AES))
+	if ((board_type == SKL_BOARD_TYPE_PCB295) || (board_type == SKL_BOARD_TYPE_PCB295_AES))
 		siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT_8012, SOHO_PORT_CONTROL_REG, 0x7F);
 	else
 		siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 	siklu_88e639x_reg_write(SOHO_MNGM_PORT, SOHO_PORT_CONTROL_REG, 0x7F);
 
-	if (bt != SKL_BOARD_TYPE_PCB195) {
+	if (board_type != SKL_BOARD_TYPE_PCB195) {
 		// follow setup required only for SOHO on PCB1213
-		if ((bt == SKL_BOARD_TYPE_PCB295) || (bt == SKL_BOARD_TYPE_PCB295_AES))
+		if ((board_type == SKL_BOARD_TYPE_PCB295) || (board_type == SKL_BOARD_TYPE_PCB295_AES))
 			rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT_8012, 0, 0xD05);
 		else
 			rc = siklu_88e639x_reg_write(SOHO_HOST_CPU_PORT, 0, 0xD05);
