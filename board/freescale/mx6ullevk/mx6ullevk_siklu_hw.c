@@ -140,7 +140,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	return board_type;
 }
 
-char * siklu_get_board_hw_name(void)
+const char * siklu_get_board_hw_name(void)
 {
     SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 
