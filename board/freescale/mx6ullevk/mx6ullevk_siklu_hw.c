@@ -596,14 +596,12 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     int rc = CMD_RET_SUCCESS;
     int cpld_hw_ver = 0;
     u32 val;
-    char *board_hw_name;
     int boardId0, boardId1, boardId2, boardId3;
     u8 device_grade, device_revision;
     u16 part_number;
     u32 tool_version;
 
-    board_hw_name = siklu_get_board_hw_name();
-    printf("Board HW name       : %s\n", board_hw_name);
+    printf("Board HW name       : %s\n", siklu_get_board_hw_name());
 //printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
 //printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
 //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
