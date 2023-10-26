@@ -140,6 +140,29 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 	return board_type;
 }
 
+char * siklu_get_board_hw_name(void)
+{
+    SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+
+    switch (board_type)
+    {
+        case SKL_BOARD_TYPE_PCB195:
+            return "PCB195"; break;
+        case SKL_BOARD_TYPE_PCB213:
+            return "PCB213"; break;
+        case SKL_BOARD_TYPE_PCB217:
+            return "PCB217"; break;
+        case SKL_BOARD_TYPE_PCB277:
+            return "PCB277"; break;
+        case SKL_BOARD_TYPE_PCB295:
+            return "PCB295"; break;
+        case SKL_BOARD_TYPE_PCB295_AES:
+            return "PCB295_AES"; break;
+        default:
+            return ""; break;
+    }
+}
+
 static void setup_iomux_siklu_board_id(void) {
 	imx_iomux_v3_setup_multiple_pads(board_id_pads, ARRAY_SIZE(board_id_pads));
 }
@@ -571,24 +594,20 @@ static int do_siklu_board_hw_reboot(cmd_tbl_t *cmdtp, int flag, int argc, char *
 static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
     int rc = CMD_RET_SUCCESS;
-    char buffer[32];
     int cpld_hw_ver = 0;
     u32 val;
-    const char *se_asm = "SE_assembly";
+    char *board_hw_name;
     int boardId0, boardId1, boardId2, boardId3;
     u8 device_grade, device_revision;
     u16 part_number;
     u32 tool_version;
 
-// octeon_model_get_string_buffer(cvmx_get_proc_id(), buffer);
-// do not change format below! each new line should include "key" and "value" delimited by ":" !!!
-//printf("Product name        : %s\n", siklu_get_board_product_name());
-    siklu_syseeprom_get_val(se_asm, buffer);
-    printf("Board HW name       : %s\n", buffer);
+    board_hw_name = siklu_get_board_hw_name();
+    printf("Board HW name       : %s\n", board_hw_name);
 //printf("CPU type            : 0x%02x  (%s)\n", siklu_get_cpu_type(), buffer);
 //printf("Core clock          : %lld MHz\n", DIV_ROUND_UP(cvmx_clock_get_rate(CVMX_CLOCK_CORE), 1000000));
 //printf("IO clock            : %lld MHz\n", divide_nint(cvmx_clock_get_rate(CVMX_CLOCK_SCLK), 1000000));
-    printf("DDR clock           : %lu MHz\n", gd->mem_clk);
+//printf("DDR clock           : %lu MHz\n", gd->mem_clk);
 //printf("Board ID            : 0x%02x\n", siklu_get_board_hw_major()); // read from 4bits CPU GPIO
 
 	rc = get_siklu_cpld_version(CONFIG_CPLD_DEFAULT_MODE, &val);
@@ -618,8 +637,13 @@ static int do_siklu_board_diplay_hw_info(cmd_tbl_t *cmdtp, int flag, int argc, c
     get_cpld_hw_ver(&cpld_hw_ver);
     printf("HW Version          : %x\n", cpld_hw_ver);
 
-    get_88x3310_phy_version(&val);
-    printf("88x3310 Phy Version : 0x%04x\n", val);
+    SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
+    if ( (board_type == SKL_BOARD_TYPE_PCB195) || (board_type == SKL_BOARD_TYPE_PCB213) || (board_type == SKL_BOARD_TYPE_PCB217) )
+    {
+        get_88x3310_phy_version(&val);
+        printf("88x3310 Phy Version : 0x%04x\n", val);
+    }
+
     get_TLK10031_version(&val);
     printf("TLK10031 Version    : 0x%04x\n", val);
 
