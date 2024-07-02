@@ -113,15 +113,52 @@ int siklu_set_cpld_eth_led_color(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E 
 	{
 		eth_leds.s.cfg_eth2_1_led_color = val;
 	}
+    else if (led == SKL_LED_ETH2)
+    {
+        eth_leds.s.cfg_eth2_0_led_color = val;
+    }
+    else if (led == SKL_LED_ETH3)
+    {
+        eth_leds.s.cfg_eth2_1_led_color = val;
+    }
+    else if (led == SKL_LED_XPIC)
+    {
+        eth_leds.s.cfg_xpic_led_color = val;
+    }
 	else
 	{
     	printf("Invalid led type");
-        return -1; // invalid mode
+        return CMD_RET_FAILURE; // invalid mode
 	}
 
 	rc = siklu_cpld_write(R_CPLD_LOGIC_ETHERNET_LEDS_CTRL, eth_leds.uint8);
 	return rc;
 }
+
+
+int siklu_set_cpld_eth_xpic_leds_on_off(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    T_CPLD_LOGIC_ETHERNET_LEDS_CTRL_REGS eth_leds;
+    int rc;
+    u8 on_off = mode == SKL_LED_MODE_OFF ? 1 : 0;
+
+    eth_leds.uint8 = siklu_cpld_read(R_CPLD_LOGIC_ETHERNET_LEDS_CTRL);
+
+    if (led == SKL_LED_ETH2)
+        eth_leds.s.cfg_eth2_led_state = on_off;
+    else if (led == SKL_LED_ETH3)
+        eth_leds.s.cfg_eth3_led_state = on_off;
+    else if (led == SKL_LED_XPIC)
+        eth_leds.s.cfg_xpic_led_state = on_off;
+    else {
+        printf("Invalid led type");
+        return CMD_RET_FAILURE; // invalid mode
+    }
+
+    rc = siklu_cpld_write(R_CPLD_LOGIC_ETHERNET_LEDS_CTRL, eth_leds.uint8);
+    return rc;
+}
+
 
 static int set_eth1_led_to_direct_mode(void)
 {
@@ -243,9 +280,26 @@ int siklu_set_eth2_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 	return ret;
 }
 
+
+int siklu_set_eth_2_3_xpic_leds(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
+{
+    int ret = CMD_RET_FAILURE;
+
+    if (mode == SKL_LED_MODE_GREEN_BLINK || mode == SKL_LED_MODE_YELLOW_BLINK)
+        return ret; // blink Led is not supported
+
+    ret = siklu_set_cpld_eth_xpic_leds_on_off(led, mode);
+    if (mode != SKL_LED_MODE_OFF && ret == CMD_RET_SUCCESS)
+        ret = siklu_set_cpld_eth_led_color(led, mode);
+
+    return ret;
+}
+
+
 int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
 {
     int rc = CMD_RET_FAILURE;
+    SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 
     switch (led)
     {
@@ -256,6 +310,11 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
     case SKL_LED_ETH2_1:
         rc = siklu_set_eth2_led(led, mode);
         break;
+    case SKL_LED_ETH2:
+    case SKL_LED_ETH3:
+    case SKL_LED_XPIC:
+        rc = siklu_set_eth_2_3_xpic_leds(led, mode);
+        break;
     case SKL_LED_POWER:
         rc = siklu_set_led_power(mode);
         break;
@@ -264,10 +323,17 @@ int siklu_set_led(SKL_BOARD_LED_TYPE_E led, SKL_BOARD_LED_MODE_E mode)
     	break;
     case SKL_LED_ALL:
 		rc = siklu_set_eth1_led(mode);
-		rc = siklu_set_eth2_led(SKL_LED_ETH2_0, mode);
-		rc = siklu_set_eth2_led(SKL_LED_ETH2_1, mode);
 		rc = siklu_set_led_power(mode);
 		rc = siklu_set_led_modem(mode);
+        if (board_type == SKL_BOARD_TYPE_PCB295 || board_type == SKL_BOARD_TYPE_PCB295_AES) {
+            rc = siklu_set_eth_2_3_xpic_leds(SKL_LED_ETH2, mode);
+            rc = siklu_set_eth_2_3_xpic_leds(SKL_LED_ETH3, mode);
+            rc = siklu_set_eth_2_3_xpic_leds(SKL_LED_XPIC, mode);
+        }
+        else {
+            rc = siklu_set_eth2_led(SKL_LED_ETH2_0, mode);
+            rc = siklu_set_eth2_led(SKL_LED_ETH2_1, mode);
+        }
 		break;
     default:
         return -1; // no handler!
@@ -283,6 +349,7 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     char state[30];
     SKL_BOARD_LED_MODE_E _mode;
     SKL_BOARD_LED_TYPE_E _led;
+    SKL_BOARD_TYPE_E board_type = siklu_get_board_type();
 
     if (argc == 3)
     {
@@ -292,7 +359,11 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     else
     {
         printf("sled [led] [state]\n");
-        printf(" led:   eth1/eth2_0/eth2_1/modem/power/all\n");
+
+        if (board_type == SKL_BOARD_TYPE_PCB295 || board_type == SKL_BOARD_TYPE_PCB295_AES)
+            printf(" led:   eth1/eth2/eth3/modem/power/xpic/all\n");
+        else
+            printf(" led:   eth1/eth2_0/eth2_1/modem/power/all\n");
         printf(" state: \n\to - off\n\tg - green\n\ty - yellow\n\tgb - green blink\n\tyb - yellow blink\n");
         return rc;
     }
@@ -310,6 +381,14 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     {
         _led = SKL_LED_ETH2_1;
     }
+    else if (strcmp(led, "eth2") == 0)
+    {
+        _led = SKL_LED_ETH2;
+    }
+    else if (strcmp(led, "eth3") == 0)
+    {
+        _led = SKL_LED_ETH3;
+    }
     else if (strcmp(led, "modem") == 0)
     {
         _led = SKL_LED_MODEM;
@@ -317,6 +396,10 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     else if (strcmp(led, "power") == 0)
     {
         _led = SKL_LED_POWER;
+    }
+    else if (strcmp(led, "xpic") == 0)
+    {
+        _led = SKL_LED_XPIC;
     }
     else if (strcmp(led, "all") == 0)
 	{
@@ -326,6 +409,20 @@ static int do_siklu_board_led_control(cmd_tbl_t *cmdtp, int flag, int argc, char
     {
         printf("Wrong LED type\n");
         return CMD_RET_USAGE;
+    }
+
+
+    if (board_type == SKL_BOARD_TYPE_PCB295 || board_type == SKL_BOARD_TYPE_PCB295_AES) {
+        if (_led == SKL_LED_ETH2_0 || _led == SKL_LED_ETH2_1) {
+            printf("Wrong LED type\n");
+            return CMD_RET_USAGE;
+        }
+    }
+    else {
+        if (_led == SKL_LED_ETH2 || _led == SKL_LED_ETH3 || _led == SKL_LED_XPIC) {
+            printf("Wrong LED type\n");
+            return CMD_RET_USAGE;
+        }
     }
 
     if (strcmp(state, "o") == 0)
