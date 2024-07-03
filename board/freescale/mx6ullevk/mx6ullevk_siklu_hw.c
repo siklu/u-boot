@@ -659,8 +659,7 @@ typedef enum
 {
     BIST_MODE_DISABLED = 0,
     BIST_MODE_ON = 1,
-    BIST_MODE_AND_MONITORING = 2,
-    BIST_MODE_LAST = BIST_MODE_AND_MONITORING,
+    BIST_MODE_LAST = BIST_MODE_ON,
 } BIST_MODE_E;
 
 /*
@@ -690,9 +689,6 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
             case BIST_MODE_ON:
                 printf("System in BIST mode\n");
                 break;
-            case BIST_MODE_AND_MONITORING:
-                printf("System in BIST mode with Monitoring\n");
-                break;
             default:
                 printf("Wrong BIST mode! Disable BIST for future runs\n");
                 env_set(SIKLU_BIST_ENVIRONMENT_NAME, NULL);
@@ -716,10 +712,6 @@ static int do_siklu_board_bist_mode(cmd_tbl_t *cmdtp, int flag, int argc, char *
         case BIST_MODE_ON:
             printf("Set System in BIST mode\n");
             env_set(SIKLU_BIST_ENVIRONMENT_NAME, "1");
-            break;
-        case BIST_MODE_AND_MONITORING:
-            printf("System in BIST mode with Monitoring\n");
-            env_set(SIKLU_BIST_ENVIRONMENT_NAME, "2");
             break;
         default:
             printf("Wrong BIST mode! Disable BIST for future runs\n");
