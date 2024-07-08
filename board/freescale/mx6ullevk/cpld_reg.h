@@ -235,10 +235,14 @@ typedef union
 	u8 uint8;
 	struct
 	{
-		u8 cfg_eth1_led_color:1;	// 0 - green , 1 - yellow
-		u8 cfg_eth2_0_led_color:1;	// 0 - green , 1 - yellow
-		u8 cfg_eth2_1_led_color:1;	// 0 - green , 1 - yellow
-		u8 padding0:5;
+        u8 cfg_eth1_led_color:1;    // 0 - green , 1 - yellow
+        u8 cfg_eth2_0_led_color:1;  // 0 - green , 1 - yellow
+        u8 cfg_eth2_1_led_color:1;  // 0 - green , 1 - yellow
+        u8 cfg_xpic_led_color:1;    // 0 - green , 1 - yellow
+        u8 cfg_dummy_1:1;           // 0 - not used
+        u8 cfg_eth2_led_state:1;    // 0 - on , 1 - off
+        u8 cfg_eth3_led_state:1;    // 0 - on , 1 - off
+        u8 cfg_xpic_led_state:1;    // 0 - on , 1 - off
 	} s;
 } T_CPLD_LOGIC_ETHERNET_LEDS_CTRL_REGS;
 

@@ -57,7 +57,10 @@ typedef enum {
     SKL_LED_ETH1,
     SKL_LED_ETH2_0,
     SKL_LED_ETH2_1,
+    SKL_LED_ETH2,
+    SKL_LED_ETH3,
     SKL_LED_POWER,
+    SKL_LED_XPIC,
     SKL_LED_ALL,
 } SKL_BOARD_LED_TYPE_E;
 
