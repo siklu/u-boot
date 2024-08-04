@@ -97,8 +97,9 @@ static void setup_iomux_siklu_cpld(void) {
 /* See also spl_get_siklu_board_id() in board/freescale/mx6ullevk/mx6ullevk.c. */
 SKL_BOARD_TYPE_E siklu_get_board_type(void)
 {
-	SKL_BOARD_TYPE_E board_type;
-	
+	SKL_BOARD_TYPE_E board_type = SKL_BOARD_TYPE_PCB295_AES;
+
+#if 0	
 	uint32_t reg_val;
 	ulong reg_addr = 0x20A0000;
 	u8 val;
@@ -137,6 +138,7 @@ SKL_BOARD_TYPE_E siklu_get_board_type(void)
 		printf("Error: Unknown board type 0x%x\n", (int)val);
 		break;
 	}
+#endif
 	return board_type;
 }
 
